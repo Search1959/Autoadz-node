@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: #f8fafc;
+  font-family: var(--font-sans);
+  color: #0f172a;
+}
+
+/* Glassmorphism utility classes */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-card-dark {
+  background: rgba(11, 31, 77, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Persistent Dark Theme overrides using the defined #0B1F4D color palette */
+.dark-theme-active {
+  background-color: #05122f !important; /* Extremely dark deep blue for outer background contrast */
+  color: #f8fafc !important;
+}
+
+/* All container cards and panels transition to the defined #0B1F4D color palette */
+.dark-theme-active .bg-white,
+.dark-theme-active .bg-slate-50,
+.dark-theme-active .bg-slate-100,
+.dark-theme-active .bg-slate-150,
+.dark-theme-active .bg-[#F4F7FE],
+.dark-theme-active .glass-card {
+  background-color: #0B1F4D !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Nested list items, select containers, and inner elements get a slightly lighter dark blue for separation */
+.dark-theme-active .bg-slate-50,
+.dark-theme-active .bg-slate-100,
+.dark-theme-active .bg-slate-200,
+.dark-theme-active .bg-slate-200\/50,
+.dark-theme-active .bg-slate-100\/50,
+.dark-theme-active .bg-orange-50\/50,
+.dark-theme-active .bg-slate-100\/50 {
+  background-color: #122b64 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Input elements styling */
+.dark-theme-active select,
+.dark-theme-active input,
+.dark-theme-active textarea {
+  background-color: #122b64 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark-theme-active input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-theme-active select option {
+  background-color: #0B1F4D !important;
+  color: #ffffff !important;
+}
+
+/* Typography contrast settings for Night Mode visibility */
+.dark-theme-active .text-slate-900,
+.dark-theme-active .text-slate-800,
+.dark-theme-active .text-slate-700,
+.dark-theme-active .text-slate-600 {
+  color: #f1f5f9 !important;
+}
+
+.dark-theme-active .text-slate-500,
+.dark-theme-active .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Border visibility at night */
+.dark-theme-active .border,
+.dark-theme-active .border-slate-100,
+.dark-theme-active .border-slate-150,
+.dark-theme-active .border-slate-200,
+.dark-theme-active .border-orange-200,
+.dark-theme-active .border-slate-700\/60 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Master Header & custom gradients stay crisp */
+.dark-theme-active header,
+.dark-theme-active .bg-\[\#0B1F4D\],
+.dark-theme-active .bg-gradient-to-r {
+  background-color: #0B1F4D !important;
+  color: #ffffff !important;
+}
+
+/* Keep warning and alert states readable */
+.dark-theme-active .bg-green-100,
+.dark-theme-active .bg-orange-100,
+.dark-theme-active .bg-blue-100,
+.dark-theme-active .bg-amber-100 {
+  background-color: rgba(251, 146, 60, 0.1) !important;
+  color: #ffaa44 !important;
+}
+
+.dark-theme-active .text-green-700,
+.dark-theme-active .text-green-600 {
+  color: #4ade80 !important;
+}
+
+.dark-theme-active .text-blue-700,
+.dark-theme-active .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+/* Beautiful map canvas background in night mode */
+.dark-theme-active .bg-slate-900 {
+  background-color: #05122f !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Pulse effects */
+.dark-theme-active .animate-pulse {
+  opacity: 0.8;
+}
