@@ -3,7 +3,6 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
-import { Campaign, Driver, Proof, WalletTransaction, NotificationItem } from "./src/types";
 
 dotenv.config();
 
@@ -11,7 +10,7 @@ const app = express();
 const PORT = 3000;
 
 // Initialize Google GenAI if key is present
-let ai: GoogleGenAI | null = null;
+let ai = null;
 if (process.env.GEMINI_API_KEY) {
   try {
     ai = new GoogleGenAI({
@@ -28,7 +27,7 @@ if (process.env.GEMINI_API_KEY) {
 }
 
 // In-Memory Database (mocking durable state)
-let campaigns: Campaign[] = [
+let campaigns = [
   {
     id: "camp_1",
     title: "Tata Punch EV Launch Bangalore",
@@ -88,7 +87,7 @@ let campaigns: Campaign[] = [
   },
 ];
 
-let drivers: Driver[] = [
+let drivers = [
   {
     id: "driver_1",
     name: "Rajesh Kumar",
@@ -130,7 +129,7 @@ let drivers: Driver[] = [
   },
 ];
 
-let proofs: Proof[] = [
+let proofs = [
   {
     id: "proof_1",
     driverId: "driver_1",
@@ -169,7 +168,7 @@ let proofs: Proof[] = [
   },
 ];
 
-let walletTransactions: WalletTransaction[] = [
+let walletTransactions = [
   {
     id: "tx_1",
     userId: "advertiser_main",
@@ -208,7 +207,7 @@ let walletTransactions: WalletTransaction[] = [
   },
 ];
 
-let notifications: NotificationItem[] = [
+let notifications = [
   {
     id: "notif_1",
     title: "Campaign Approved",
@@ -276,7 +275,7 @@ app.get("/api/campaigns", (req, res) => {
 
 app.post("/api/campaigns", (req, res) => {
   const { title, client, city, area, budget, autosCount, creativeUrl } = req.body;
-  const newCampaign: Campaign = {
+  const newCampaign = {
     id: `camp_${Date.now()}`,
     title: title || "New Campaign",
     client: client || "Independent Advertiser",
@@ -351,7 +350,7 @@ app.get("/api/drivers", (req, res) => {
 
 app.post("/api/drivers", (req, res) => {
   const { name, phone, autoNumber, location } = req.body;
-  const newDriver: Driver = {
+  const newDriver = {
     id: `driver_${Date.now()}`,
     name: name || "Anonymous Driver",
     phone: phone || "9999999999",
@@ -404,7 +403,7 @@ app.post("/api/proofs", (req, res) => {
   const driver = drivers.find((d) => d.id === driverId);
   const campaign = campaigns.find((c) => c.id === campaignId);
 
-  const newProof: Proof = {
+  const newProof = {
     id: `proof_${Date.now()}`,
     driverId: driverId || "driver_1",
     driverName: driver ? driver.name : "Unknown Driver",
@@ -469,7 +468,7 @@ app.get("/api/wallet/transactions", (req, res) => {
 
 app.post("/api/wallet/transactions", (req, res) => {
   const { userId, type, amount, description } = req.body;
-  const newTx: WalletTransaction = {
+  const newTx = {
     id: `tx_${Date.now()}`,
     userId: userId || "advertiser_main",
     type: type || "deposit",
@@ -542,14 +541,12 @@ Do not use markdown blocks for entire replies, just structure nicely with normal
       },
     });
 
-    // Provide the short chat history
-    let replyText = "";
     // Send the last message
     const result = await chatSession.sendMessage({ message: userPrompt });
-    replyText = result.text || "I apologize, but I couldn't compute an answer. Please check back shortly.";
+    const replyText = result.text || "I apologize, but I couldn't compute an answer. Please check back shortly.";
 
     res.json({ reply: replyText });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Gemini API Error:", error);
     res.status(500).json({
       error: "AI Generation Failed",
