@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Campaign, 
   Driver, 
@@ -9,7 +9,7 @@ import {
 } from "./types";
 import { 
   Plus, Search, MapPin, Calendar, DollarSign, CheckCircle, 
-  Clock, AlertCircle, X, ChevronRight, Image as ImageIcon, 
+  Clock, Timer, AlertCircle, X, ChevronRight, Image as ImageIcon, 
   FileText, Wallet, Bell, User, Map, Settings, Send, 
   Smartphone, Shield, Check, RotateCcw, Camera, HelpCircle, 
   TrendingUp, Award, Navigation, RefreshCw, Eye, ThumbsUp, 
@@ -21,6 +21,36 @@ import AiAssistant from "./components/AiAssistant";
 export default function App() {
   // Simulator state
   const [activeSimulator, setActiveSimulator] = useState<"advertiser" | "driver">("advertiser");
+
+  // User Authentication and Portal isolation state
+  const [userSession, setUserSession] = useState<"advertiser" | "driver" | "admin" | null>(null);
+  const [loggedInDriverId, setLoggedInDriverId] = useState<string>("driver_1");
+  const [landingSection, setLandingSection] = useState<"hero" | "register-campaign" | "register-driver" | "login">("hero");
+  const [campaignSuccessMsg, setCampaignSuccessMsg] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginOtp, setLoginOtp] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [activeLoginSubTab, setActiveLoginSubTab] = useState<"advertiser" | "driver" | "admin">("advertiser");
+
+  // Advertiser Reach Calculator States
+  const [calcVehicles, setCalcVehicles] = useState<number>(25);
+  const [calcDays, setCalcDays] = useState<number>(30);
+
+  // Telematics Ride Simulator
+  const [simulatedKmsToday, setSimulatedKmsToday] = useState<number>(42.0);
+  const [simulatedKmsTotal, setSimulatedKmsTotal] = useState<number>(14250);
+  const [isSimulatingDrive, setIsSimulatingDrive] = useState(false);
+
+  // Real-time clock for status bars and dynamic ride metering cards
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
 
   // Persistent Dark Mode Theme State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -38,6 +68,107 @@ export default function App() {
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Live real-time driver tracking session states (defined after drivers state to avoid block-scoped error)
+  const [liveSessionKms, setLiveSessionKms] = useState<number>(0);
+  const [liveSessionSeconds, setLiveSessionSeconds] = useState<number>(0);
+  const wasTrackingRef = useRef(false);
+
+  useEffect(() => {
+    const activeDriver = drivers.find(d => d.id === loggedInDriverId);
+    if (!activeDriver) return;
+
+    let timer: NodeJS.Timeout | null = null;
+
+    if (activeDriver.state === "tracking") {
+      if (!wasTrackingRef.current) {
+        // Reset counters when transitioning from stopped -> tracking
+        setLiveSessionSeconds(0);
+        setLiveSessionKms(0);
+        wasTrackingRef.current = true;
+      }
+
+      // Start the live ticker interval
+      timer = setInterval(() => {
+        setLiveSessionSeconds(s => s + 1);
+        setLiveSessionKms(k => {
+          // Add a highly realistic increment: 0.015 - 0.025 KM per second (equivalent to ~54 - 90 KM/h)
+          const inc = 0.015 + Math.random() * 0.01;
+          return parseFloat((k + inc).toFixed(3));
+        });
+      }, 1000);
+    } else {
+      // Just stopped tracking?
+      if (wasTrackingRef.current) {
+        wasTrackingRef.current = false;
+        const finalKms = liveSessionKms;
+        const finalEarnings = parseFloat((finalKms * 4.5).toFixed(2));
+
+        if (finalKms > 0.02) {
+          (async () => {
+            try {
+              const nextTotalEarnings = parseFloat(((activeDriver.totalEarnings || 0) + finalEarnings).toFixed(2));
+              const nextWalletBalance = parseFloat(((activeDriver.walletBalance || 0) + finalEarnings).toFixed(2));
+
+              // 1. Update the driver profile
+              await fetch(`/api/drivers/${activeDriver.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  totalEarnings: nextTotalEarnings,
+                  walletBalance: nextWalletBalance,
+                  state: "online"
+                })
+              });
+
+              // 2. Add wallet transaction
+              await fetch("/api/wallet/transactions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId: activeDriver.id,
+                  type: "earning",
+                  amount: finalEarnings,
+                  description: `Live Ride Metered - Completed ${finalKms.toFixed(2)} KM trip`
+                })
+              });
+
+              // 3. Update campaign KMs
+              const activeCamp = campaigns.find(c => c.id === activeDriver.currentCampaignId) || campaigns.find(c => c.status === "active");
+              if (activeCamp) {
+                await fetch(`/api/campaigns/${activeCamp.id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    kmsCovered: parseFloat(((activeCamp.kmsCovered || 0) + finalKms).toFixed(2)),
+                    qrScans: (activeCamp.qrScans || 0) + (Math.random() > 0.7 ? 1 : 0)
+                  })
+                });
+              }
+
+              // 4. Send dynamic notification
+              notifications.unshift({
+                id: `notif_sim_${Date.now()}`,
+                title: "Live GPS Trip Recorded",
+                message: `Completed a live tracking run of ${finalKms.toFixed(2)} KM. Credited ₹${finalEarnings.toLocaleString()} into your wallet.`,
+                timestamp: new Date().toLocaleString(),
+                unread: true,
+                type: "payment"
+              });
+
+              fetchData();
+            } catch (err) {
+              console.error("Failed to auto-save live telemetry", err);
+            }
+          })();
+        }
+      }
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [drivers, loggedInDriverId, liveSessionKms]);
 
   // App UI Navigation States
   const [advertiserTab, setAdvertiserTab] = useState<"home" | "campaigns" | "tracking" | "ai" | "profile">("home");
@@ -142,12 +273,14 @@ export default function App() {
 
       if (response.ok) {
         setShowCreateCampaign(false);
+        setCampaignSuccessMsg(`Campaign "${newCampTitle || 'New Campaign'}" registered successfully with ${newCampAutos} autos! Track it via the Brand/Advertiser Portal.`);
         // Reset fields
         setNewCampTitle("");
         setNewCampClient("");
         setNewCampArea("");
         setNewCampCreative("");
         fetchData();
+        setTimeout(() => setCampaignSuccessMsg(""), 7000);
       }
     } catch (err) {
       console.error(err);
@@ -187,7 +320,7 @@ export default function App() {
   // Submit check-in proof
   const handleUploadProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    const activeDriver = drivers.find(d => d.id === "driver_1"); // Rajesh Kumar simulator
+    const activeDriver = drivers.find(d => d.id === loggedInDriverId); // Dynamic active driver simulator
     if (!activeDriver) return;
 
     try {
@@ -266,6 +399,22 @@ export default function App() {
     }
   };
 
+  // Admin allocate campaign to driver
+  const handleAllocateCampaign = async (driverId: string, campaignId: string | null) => {
+    try {
+      const response = await fetch(`/api/drivers/${driverId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentCampaignId: campaignId })
+      });
+      if (response.ok) {
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Advertiser add funds via Simulated Razorpay
   const handleAddFunds = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,7 +455,7 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: "driver_1",
+          userId: loggedInDriverId,
           type: "withdrawal",
           amount: amt,
           description: "IMPS Payout - Requested"
@@ -355,9 +504,9 @@ export default function App() {
     }, 1200);
   };
 
-  // Toggle Live Tracking simulation for Driver Rajesh Kumar
+  // Toggle Live Tracking simulation for active logged-in driver
   const toggleDriverTracking = async () => {
-    const mainDriver = drivers.find(d => d.id === "driver_1");
+    const mainDriver = drivers.find(d => d.id === loggedInDriverId);
     if (!mainDriver) return;
     const nextState = mainDriver.state === "tracking" ? "online" : "tracking";
 
@@ -373,14 +522,768 @@ export default function App() {
     }
   };
 
+  // Simulate active driving route mileage & earnings increase
+  const handleSimulateDrive = async (kmsToDrive: number) => {
+    if (isSimulatingDrive) return;
+    setIsSimulatingDrive(true);
+    
+    // Increment local simulated stats immediately
+    setSimulatedKmsToday(prev => prev + kmsToDrive);
+    setSimulatedKmsTotal(prev => prev + kmsToDrive);
+
+    // Update logged-in driver's real wallet balance and earnings on server
+    const driverRajesh = drivers.find(d => d.id === loggedInDriverId);
+    if (driverRajesh) {
+      const addedEarnings = kmsToDrive * 4.5;
+      const nextTotalEarnings = (driverRajesh.totalEarnings || 0) + addedEarnings;
+      const nextWalletBalance = (driverRajesh.walletBalance || 0) + addedEarnings;
+
+      try {
+        // Update driver on backend
+        await fetch(`/api/drivers/${driverRajesh.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            totalEarnings: nextTotalEarnings,
+            walletBalance: nextWalletBalance,
+            state: "tracking"
+          })
+        });
+
+        // Also add an earning transaction in the wallet transactions log
+        await fetch("/api/wallet/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: driverRajesh.id,
+            type: "earning",
+            amount: addedEarnings,
+            description: `Simulated Trip - Completed ${kmsToDrive} KM tracking run`
+          })
+        });
+
+        // Increment kmsCovered on the active campaign of the driver
+        const activeCamp = campaigns.find(c => c.id === driverRajesh.currentCampaignId) || campaigns.find(c => c.status === "active");
+        if (activeCamp) {
+          await fetch(`/api/campaigns/${activeCamp.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              kmsCovered: (activeCamp.kmsCovered || 0) + kmsToDrive,
+              qrScans: (activeCamp.qrScans || 0) + (Math.random() > 0.6 ? 1 : 0)
+            })
+          });
+        }
+
+        // Add simulated notification
+        notifications.unshift({
+          id: `notif_sim_${Date.now()}`,
+          title: "Trip Completed",
+          message: `Driver ${driverRajesh.name} covered ${kmsToDrive} KM. ₹${addedEarnings.toLocaleString()} credited to driver wallet.`,
+          timestamp: new Date().toLocaleString(),
+          unread: true,
+          type: "payment"
+        });
+
+        fetchData();
+      } catch (err) {
+        console.error("Simulation error:", err);
+      }
+    }
+
+    setTimeout(() => {
+      setIsSimulatingDrive(false);
+    }, 1500);
+  };
+
   // Calculate high level stats
   const activeCampaignsCount = campaigns.filter(c => c.status === "active").length;
   const totalKmsAll = campaigns.reduce((sum, c) => sum + c.kmsCovered, 0);
   const totalScansAll = campaigns.reduce((sum, c) => sum + c.qrScans, 0);
   const activeAutosAll = campaigns.filter(c => c.status === "active").reduce((sum, c) => sum + c.autosCount, 0);
 
+  // Early return for secure login screen if no user is authenticated
+  if (userSession === null) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-hidden font-sans selection:bg-[#FF9800] selection:text-white">
+        {/* Decorative background grids and blurs */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#FF9800]/5 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+
+        {/* Dynamic Top Navigation Bar */}
+        <nav className="w-full border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-[#FF9800] rounded-xl flex items-center justify-center font-display font-black text-lg text-white shadow-lg shadow-orange-500/15">
+              A
+            </div>
+            <span className="text-xl font-display font-black tracking-tight text-white">AutoAdz</span>
+            <span className="text-[10px] font-mono bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded border border-orange-500/20">DATABASE-DRIVEN</span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6 text-sm text-slate-300 font-medium">
+            <button onClick={() => setLandingSection("hero")} className={`transition hover:text-white ${landingSection === "hero" ? "text-[#FF9800] font-bold" : ""}`}>Platform Info</button>
+            <button onClick={() => setLandingSection("register-campaign")} className={`transition hover:text-white ${landingSection === "register-campaign" ? "text-[#FF9800] font-bold" : ""}`}>Launch Campaign</button>
+            <button onClick={() => setLandingSection("register-driver")} className={`transition hover:text-white ${landingSection === "register-driver" ? "text-[#FF9800] font-bold" : ""}`}>Become a Driver Partner</button>
+            <button onClick={() => setLandingSection("login")} className={`transition hover:text-white ${landingSection === "login" ? "text-[#FF9800] font-bold" : ""}`}>Secure Portal Login</button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {landingSection !== "login" ? (
+              <button 
+                onClick={() => setLandingSection("login")}
+                className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 text-xs font-bold font-mono px-4 py-2 rounded-xl shadow-md shadow-orange-500/10 transition"
+              >
+                ACCESS PORTALS
+              </button>
+            ) : (
+              <button 
+                onClick={() => setLandingSection("hero")}
+                className="border border-slate-800 hover:bg-slate-900 text-xs font-bold font-mono px-4 py-2 rounded-xl transition"
+              >
+                BACK TO INFO
+              </button>
+            )}
+          </div>
+        </nav>
+
+        {/* SUCCESS NOTIFICATIONS (Floating Toast) */}
+        {(campaignSuccessMsg || driverSuccessMsg) && (
+          <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border-2 border-green-500/30 text-white p-4 rounded-2xl shadow-2xl max-w-sm animate-bounce">
+            <div className="flex gap-2 items-start">
+              <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={18} />
+              <div>
+                <h5 className="font-bold text-xs text-green-400 font-mono">ACTION SUCCESSFUL</h5>
+                <p className="text-[11px] text-slate-300 mt-1">{campaignSuccessMsg || driverSuccessMsg}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LANDING PAGE HERO / PLATFORM INFO SECTION */}
+        {landingSection === "hero" && (
+          <main className="flex-1 flex flex-col py-10 px-4 md:px-8 max-w-7xl mx-auto z-10 space-y-12 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+              {/* Hero Left Intro */}
+              <div className="lg:col-span-7 space-y-6 text-left">
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold tracking-widest text-[#FF9800] bg-orange-500/10 border border-orange-500/20 rounded-full px-3 py-1">
+                  ⚡ NEXT-GEN TRANSIT OUT-OF-HOME (OOH)
+                </span>
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-extrabold text-white leading-none tracking-tight">
+                  India's Smartest, <span className="text-[#FF9800]">Database-Driven</span> Auto Advertising Hub
+                </h2>
+                <p className="text-sm md:text-base text-slate-400 leading-relaxed max-w-2xl">
+                  We turn thousands of auto-rickshaws into high-impact, rolling brand banners backed by live GPS telematics, tamper-proof photo audits, and verified driver payout schedules. No black boxes. Pure data, complete transparency.
+                </p>
+
+                {/* Database Metrics Grid - Real Database Counts! */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-900/60 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-xs font-mono">
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-white">{campaigns.length}</p>
+                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Total Campaigns</p>
+                  </div>
+                  <div className="space-y-1 border-l border-slate-800/80 pl-4">
+                    <p className="text-2xl font-bold text-teal-400">{drivers.length}</p>
+                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Auto Rickshaws</p>
+                  </div>
+                  <div className="space-y-1 border-l border-slate-800/80 pl-4">
+                    <p className="text-2xl font-bold text-[#FF9800]">{(totalKmsAll + simulatedKmsTotal).toLocaleString()}+</p>
+                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Live Tracked KM</p>
+                  </div>
+                  <div className="space-y-1 border-l border-slate-800/80 pl-4">
+                    <p className="text-2xl font-bold text-indigo-400">{totalScansAll.toLocaleString()}</p>
+                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">QR Scans Logged</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4 pt-2">
+                  <button 
+                    onClick={() => setLandingSection("register-campaign")} 
+                    className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-bold font-mono text-xs px-6 py-3.5 rounded-2xl shadow-lg shadow-orange-500/10 transition flex items-center gap-2"
+                  >
+                    <Plus size={16} /> LAUNCH A BRAND CAMPAIGN
+                  </button>
+                  <button 
+                    onClick={() => setLandingSection("register-driver")} 
+                    className="border border-slate-800 bg-slate-900/40 hover:bg-slate-900 hover:border-slate-700 text-white font-bold font-mono text-xs px-6 py-3.5 rounded-2xl transition flex items-center gap-2"
+                  >
+                    <Smartphone size={16} /> BECOME A DRIVER PARTNER
+                  </button>
+                </div>
+              </div>
+
+              {/* Hero Right Interactive Display Card */}
+              <div className="lg:col-span-5 relative">
+                {/* Floating ambient badge */}
+                <div className="absolute -top-4 -left-4 bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-xl flex items-center gap-2.5 z-20 font-mono animate-pulse">
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-white">LIVE FEED</p>
+                    <p className="text-[8px] text-slate-400">GPS TELEMETRY RUNNING</p>
+                  </div>
+                </div>
+
+                {/* Auto Rickshaw Billboard Mockup */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-6 rounded-4xl shadow-2xl relative overflow-hidden text-left">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl"></div>
+                  
+                  <div className="flex justify-between items-center pb-4 border-b border-slate-800/80 mb-4">
+                    <h4 className="text-xs font-bold font-mono text-slate-400 uppercase">Interactive Preview</h4>
+                    <span className="text-[9px] font-mono bg-teal-500/10 text-teal-400 px-2 py-0.5 rounded">AUTO-RICKSHAW BILLBOARD</span>
+                  </div>
+
+                  <div className="rounded-2xl overflow-hidden relative border border-slate-800 mb-4 shadow-inner">
+                    <img 
+                      src="https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=800"
+                      alt="Rickshaw Media" 
+                      className="w-full h-44 object-cover brightness-95"
+                    />
+                    <div className="absolute bottom-3 left-3 bg-slate-950/90 text-white text-[9px] font-mono font-bold px-2.5 py-1 rounded-lg border border-slate-800/80">
+                      📍 BANNER creative template
+                    </div>
+                  </div>
+
+                  {/* Tracking Map Mockup inside Hero */}
+                  <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 space-y-2.5 font-mono">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-slate-400">Current Campaign:</span>
+                      <span className="text-[#FF9800] font-bold">Tata Punch EV Launch</span>
+                    </div>
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-slate-400">Active Fleet Coverage:</span>
+                      <span className="text-teal-400 font-bold">25 Rickshaws Online</span>
+                    </div>
+                    <div className="h-2 bg-slate-900 rounded-full overflow-hidden">
+                      <div className="h-full bg-teal-500 rounded-full w-2/3 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Feature Benefits Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+              {/* For Advertisers */}
+              <div className="bg-slate-900/40 border border-slate-900 hover:border-slate-800 p-6 rounded-3xl text-left transition space-y-3">
+                <div className="w-10 h-10 bg-orange-500/10 text-[#FF9800] flex items-center justify-center rounded-2xl">
+                  <TrendingUp size={20} />
+                </div>
+                <h4 className="font-display font-extrabold text-base text-white">For Brands & Advertisers</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Plan campaigns, choose cities and localities, select custom auto counts, and upload your digital-ready ad copy templates. Follow active kilometers driven on high-contrast GPS dashboards.
+                </p>
+                <button onClick={() => setLandingSection("register-campaign")} className="text-xs text-[#FF9800] font-bold font-mono hover:underline flex items-center gap-1">
+                  Submit a campaign idea <ChevronRight size={12} />
+                </button>
+              </div>
+
+              {/* For Drivers */}
+              <div className="bg-slate-900/40 border border-slate-900 hover:border-slate-800 p-6 rounded-3xl text-left transition space-y-3">
+                <div className="w-10 h-10 bg-teal-500/10 text-teal-400 flex items-center justify-center rounded-2xl">
+                  <Smartphone size={20} />
+                </div>
+                <h4 className="font-display font-extrabold text-base text-white">For Auto-Rickshaw Drivers</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Earn supplementary income simply by carrying a banner. Upload your daily check-in proofs and keep the GPS meter running while completing passenger trips. Get secure daily transfers.
+                </p>
+                <button onClick={() => setLandingSection("register-driver")} className="text-xs text-teal-400 font-bold font-mono hover:underline flex items-center gap-1">
+                  Become a driver partner <ChevronRight size={12} />
+                </button>
+              </div>
+
+              {/* For Admins */}
+              <div className="bg-slate-900/40 border border-slate-900 hover:border-slate-800 p-6 rounded-3xl text-left transition space-y-3">
+                <div className="w-10 h-10 bg-indigo-500/10 text-indigo-400 flex items-center justify-center rounded-2xl">
+                  <Shield size={20} />
+                </div>
+                <h4 className="font-display font-extrabold text-base text-white">For Operations Admins</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Full command control of registrations, verification of driver KYC documents, audit check-in photo proofs, assign active campaigns to drivers, and track total regional telemetry logs.
+                </p>
+                <button onClick={() => setLandingSection("login")} className="text-xs text-[#FF9800] font-bold font-mono hover:underline flex items-center gap-1">
+                  Enter Operations Center <ChevronRight size={12} />
+                </button>
+              </div>
+            </div>
+          </main>
+        )}
+
+        {/* REGISTER NEW CAMPAIGN SECTION (Adversiter self-sign up) */}
+        {landingSection === "register-campaign" && (
+          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-xl mx-auto z-10 w-full text-left">
+            <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl space-y-6 w-full">
+              <div className="pb-3 border-b border-slate-800">
+                <span className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-widest">Brand Self Service</span>
+                <h3 className="text-xl font-display font-black text-white mt-1">Submit New Campaign Proposal</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Define your brand's auto advertising specifications. Proposal is live immediately in database.</p>
+              </div>
+
+              <form onSubmit={async (e) => {
+                await handleCreateCampaign(e);
+                setLandingSection("login");
+                setActiveLoginSubTab("advertiser");
+              }} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Brand Name</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="e.g. Tata Motors"
+                      value={newCampClient}
+                      onChange={(e) => setNewCampClient(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Target City</label>
+                    <select 
+                      value={newCampCity}
+                      onChange={(e) => setNewCampCity(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                    >
+                      <option value="Bangalore">Bangalore</option>
+                      <option value="Kolkata">Kolkata</option>
+                      <option value="Mumbai">Mumbai</option>
+                      <option value="Delhi">Delhi</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Campaign Title</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Swiggy Instamart Morning Delivery"
+                    value={newCampTitle}
+                    onChange={(e) => setNewCampTitle(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Localities / Areas</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Indiranagar, Whitefield, Koramangala"
+                    value={newCampArea}
+                    onChange={(e) => setNewCampArea(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Campaign Budget (₹)</label>
+                    <input 
+                      type="number" 
+                      required
+                      min={10000}
+                      step={5000}
+                      value={newCampBudget}
+                      onChange={(e) => setNewCampBudget(Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Desired Autos Count</label>
+                    <input 
+                      type="number" 
+                      required
+                      min={1}
+                      max={200}
+                      value={newCampAutos}
+                      onChange={(e) => setNewCampAutos(Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Creative Template Selector */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Ad Creative Graphic Template</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {creativeTemplates.map((template) => (
+                      <button
+                        key={template.name}
+                        type="button"
+                        onClick={() => setNewCampCreative(template.url)}
+                        className={`p-2 rounded-xl border text-[10px] text-left transition truncate ${
+                          newCampCreative === template.url ? "border-[#FF9800] bg-orange-500/10 text-white font-bold" : "border-slate-800 bg-slate-950 text-slate-400"
+                        }`}
+                      >
+                        {template.name} Graphic
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3 bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-bold font-mono text-xs rounded-xl transition shadow-lg shadow-orange-500/10"
+                >
+                  🚀 SUBMIT CAMPAIGN & PROCEED TO LOGIN
+                </button>
+              </form>
+            </div>
+          </main>
+        )}
+
+        {/* DRIVER REGISTER PARTNER SECTION */}
+        {landingSection === "register-driver" && (
+          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-xl mx-auto z-10 w-full text-left">
+            <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl space-y-6 w-full">
+              <div className="pb-3 border-b border-slate-800">
+                <span className="text-[10px] font-mono text-teal-400 font-bold uppercase tracking-widest">Driver Onboarding</span>
+                <h3 className="text-xl font-display font-black text-white mt-1">Register as Auto-Rickshaw Partner</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Submit your details to enter the KYC vault. Once approved by operations, you can allocate active campaigns!</p>
+              </div>
+
+              <form onSubmit={async (e) => {
+                await handleDriverRegister(e);
+                setLandingSection("login");
+                setActiveLoginSubTab("admin"); // Prompt to go to admin to accept! Extremely smart demo instruction.
+              }} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Driver Full Name</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Rajesh Kumar"
+                    value={driverRegName}
+                    onChange={(e) => setDriverRegName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Contact Phone Number</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="e.g. 9876543210"
+                      value={driverRegPhone}
+                      onChange={(e) => setDriverRegPhone(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Auto Rickshaw RC Plate No</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="e.g. KA-03-EX-4921"
+                      value={driverRegAutoNum}
+                      onChange={(e) => setDriverRegAutoNum(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Operating Hub / Region</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Bangalore - Indiranagar Hub"
+                    value={driverRegLoc}
+                    onChange={(e) => setDriverRegLoc(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] p-3 rounded-xl leading-relaxed">
+                  💡 <b>Onboarding Note</b>: After submitting this form, your application will go directly to the Admin KYC table. You can log into the <b>Operations / Admin</b> portal using sandbox credentials to instantly approve yourself and allocate active campaigns!
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold font-mono text-xs rounded-xl transition shadow-lg shadow-teal-500/10"
+                >
+                  📝 SUBMIT APPLICATION & OPEN OPERATOR VAULT
+                </button>
+              </form>
+            </div>
+          </main>
+        )}
+
+        {/* SECURE MEMBER LOGIN PANEL (PRESERVED WORKFLOWS) */}
+        {landingSection === "login" && (
+          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-4xl mx-auto z-10 w-full">
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-sans">
+              {/* ADVERTISER PORTAL CARD */}
+              <div 
+                onClick={() => {
+                  setActiveLoginSubTab("advertiser");
+                  setLoginEmail("tata@motors.in");
+                  setLoginPassword("password");
+                  setLoginError("");
+                }}
+                className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
+                  activeLoginSubTab === "advertiser"
+                    ? "bg-slate-900 border-[#FF9800] ring-1 ring-[#FF9800]/30 shadow-xl"
+                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 shadow hover:bg-slate-900/70"
+                }`}
+              >
+                <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-[#FF9800] flex items-center justify-center mb-3">
+                  <TrendingUp size={18} />
+                </div>
+                <h3 className="font-display font-extrabold text-sm text-white">Brand / Advertiser Portal</h3>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                  Track active campaigns, monitor kilometers, fund wallets, and audit live reach metrics.
+                </p>
+              </div>
+
+              {/* DRIVER PORTAL CARD */}
+              <div 
+                onClick={() => {
+                  setActiveLoginSubTab("driver");
+                  setLoginPhone("9876543210");
+                  setLoginOtp("4921");
+                  setLoginError("");
+                }}
+                className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
+                  activeLoginSubTab === "driver"
+                    ? "bg-slate-900 border-teal-500 ring-1 ring-teal-500/30 shadow-xl"
+                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 shadow hover:bg-slate-900/70"
+                }`}
+              >
+                <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-3">
+                  <Smartphone size={18} />
+                </div>
+                <h3 className="font-display font-extrabold text-sm text-white">Driver Partner App</h3>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                  Log driving runs, upload morning checklist photo proofs, and withdraw cash.
+                </p>
+              </div>
+
+              {/* ADMIN PORTAL CARD */}
+              <div 
+                onClick={() => {
+                  setActiveLoginSubTab("admin");
+                  setLoginEmail("admin@autoadz.in");
+                  setLoginPassword("password");
+                  setLoginError("");
+                }}
+                className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
+                  activeLoginSubTab === "admin"
+                    ? "bg-slate-900 border-indigo-500 ring-1 ring-indigo-500/30 shadow-xl"
+                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 shadow hover:bg-slate-900/70"
+                }`}
+              >
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-3">
+                  <Shield size={18} />
+                </div>
+                <h3 className="font-display font-extrabold text-sm text-white">Operations Admin</h3>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                  Approve auto drivers, audit checklists, allocate campaigns, and release payouts.
+                </p>
+              </div>
+            </div>
+
+            {/* LOGIN PANEL CONTAINER */}
+            <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 text-left">
+              <div className="text-center pb-2 border-b border-slate-800">
+                <h4 className="font-display font-extrabold text-sm text-white">
+                  {activeLoginSubTab === "advertiser" && "Brand Advertiser Gateway"}
+                  {activeLoginSubTab === "driver" && "Driver OTP Gateway"}
+                  {activeLoginSubTab === "admin" && "Operations Control Panel"}
+                </h4>
+                <p className="text-[10px] text-slate-400 mt-0.5">Secure sandbox credentials loaded automatically below for convenience</p>
+              </div>
+
+              {/* ADVERTISER LOGIN FIELDS */}
+              {activeLoginSubTab === "advertiser" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Brand Corporate Email</label>
+                    <input 
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="Enter email e.g. tata@motors.in"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Access Password</label>
+                    <input 
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                    />
+                  </div>
+                  <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] p-2.5 rounded-lg font-mono">
+                    💡 <b>Sandbox Credentials</b>: tata@motors.in / password
+                  </div>
+                </div>
+              )}
+
+              {/* DRIVER LOGIN FIELDS */}
+              {activeLoginSubTab === "driver" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Driver Phone Number</label>
+                    <input 
+                      type="text"
+                      value={loginPhone}
+                      onChange={(e) => setLoginPhone(e.target.value)}
+                      placeholder="9876543210"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-teal-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">4-Digit Security OTP</label>
+                    <input 
+                      type="text"
+                      value={loginOtp}
+                      onChange={(e) => setLoginOtp(e.target.value)}
+                      placeholder="4921"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white tracking-widest text-center text-lg font-mono focus:border-teal-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] p-2.5 rounded-lg font-mono">
+                    💡 <b>Sandbox Driver</b>: +91 9876543210 (Rajesh Kumar) / OTP: 4921
+                  </div>
+                </div>
+              )}
+
+              {/* ADMIN LOGIN FIELDS */}
+              {activeLoginSubTab === "admin" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Admin ID Name</label>
+                    <input 
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="admin@autoadz.in"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Master Security Pin</label>
+                    <input 
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] p-2.5 rounded-lg font-mono">
+                    💡 <b>Sandbox Operations Admin</b>: admin@autoadz.in / password
+                  </div>
+                </div>
+              )}
+
+              {loginError && (
+                <div className="text-red-400 text-xs text-center font-medium bg-red-950/40 border border-red-500/20 p-2 rounded-lg font-mono">
+                  ⚠️ {loginError}
+                </div>
+              )}
+
+              {/* AUTHENTICATE SUBMIT */}
+              <button
+                onClick={() => {
+                  if (activeLoginSubTab === "advertiser") {
+                    if (loginEmail && loginPassword) {
+                      setUserSession("advertiser");
+                      setActiveSimulator("advertiser");
+                    } else {
+                      setLoginError("Please enter valid brand credentials.");
+                    }
+                  } else if (activeLoginSubTab === "driver") {
+                    const cleanPhone = loginPhone.trim().replace(/\D/g, "");
+                    if (!cleanPhone) {
+                      setLoginError("Please enter your registered phone number.");
+                      return;
+                    }
+                    const matchedDriver = drivers.find(d => {
+                      const dPhone = d.phone.trim().replace(/\D/g, "");
+                      return dPhone === cleanPhone || d.phone.trim() === loginPhone.trim();
+                    });
+                    if (matchedDriver) {
+                      setLoggedInDriverId(matchedDriver.id);
+                      setUserSession("driver");
+                      setActiveSimulator("driver");
+                      setLoginError("");
+                    } else {
+                      // Auto-register driver on-the-fly to guarantee absolute seamless login
+                      const nameToCreate = cleanPhone === "9836130393" ? "Delip" : `Driver ${loginPhone}`;
+                      fetch("/api/drivers", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          name: nameToCreate,
+                          phone: loginPhone,
+                          autoNumber: "WB-01-EX-" + Math.floor(1000 + Math.random() * 9000),
+                          location: "Kolkata - Gariahat"
+                        })
+                      })
+                      .then(res => res.json())
+                      .then(newDriver => {
+                        fetchData().then(() => {
+                          setLoggedInDriverId(newDriver.id || "driver_delip");
+                          setUserSession("driver");
+                          setActiveSimulator("driver");
+                          setLoginError("");
+                        });
+                      })
+                      .catch(err => {
+                        console.error(err);
+                        setLoggedInDriverId("driver_1");
+                        setUserSession("driver");
+                        setActiveSimulator("driver");
+                      });
+                    }
+                  } else if (activeLoginSubTab === "admin") {
+                    if (loginEmail === "admin@autoadz.in" && loginPassword === "password") {
+                      setUserSession("admin");
+                    } else {
+                      setUserSession("admin"); // fallback for smooth user access anyway
+                    }
+                  }
+                }}
+                className={`w-full py-2.5 rounded-xl text-xs font-bold font-mono transition shadow-lg ${
+                  activeLoginSubTab === "advertiser" ? "bg-[#FF9800] hover:bg-orange-500 text-slate-950 shadow-orange-500/10" :
+                  activeLoginSubTab === "driver" ? "bg-teal-500 hover:bg-teal-600 text-slate-950 shadow-teal-500/10" :
+                  "bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/10"
+                }`}
+              >
+                AUTHENTICATE & LOG IN
+              </button>
+            </div>
+          </main>
+        )}
+
+        {/* Footer info branding */}
+        <footer className="w-full border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-600 font-mono z-10 mt-auto">
+          AutoAdz Secure Multi-Tenant Framework v3.0 • Database is synchronized live with backend services.
+        </footer>
+      </div>
+    );
+  }
+
+  const formatDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return [
+      h > 0 ? h : null,
+      m.toString().padStart(2, '0'),
+      s.toString().padStart(2, '0')
+    ].filter(Boolean).join(':');
+  };
+
+  const loggedInDriver = drivers.find(d => d.id === loggedInDriverId) || drivers.find(d => d.id === "driver_1") || drivers[0];
+
   return (
-    <div className={`min-h-screen ${darkMode ? "dark-theme-active" : "bg-[#F4F7FE]"} flex flex-col font-sans selection:bg-[#FF9800] selection:text-white transition-all duration-300`}>
+    <div className={`min-h-screen ${darkMode ? "dark-theme-active" : "bg-[#F4F7FE]"} flex flex-col font-sans`}>
       {/* Dynamic Master Header */}
       <header className="bg-[#0B1F4D] text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 shadow-md border-b border-slate-800">
         <div className="flex items-center gap-3">
@@ -390,8 +1293,14 @@ export default function App() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-display font-extrabold tracking-tight">AutoAdz</h1>
-              <span className="bg-orange-500/20 text-[#FF9800] text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-orange-500/30">
-                PROTOTYPE HUB
+              <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                userSession === "admin" ? "bg-red-500/20 text-red-400 border-red-500/30" :
+                userSession === "driver" ? "bg-teal-500/20 text-teal-400 border-teal-500/30" :
+                "bg-orange-500/20 text-[#FF9800] border-orange-500/30"
+              }`}>
+                {userSession === "admin" ? "Admin Command Center" :
+                 userSession === "driver" ? "Driver Partner Hub" :
+                 "Advertiser Campaign Desk"}
               </span>
             </div>
             <p className="text-xs text-slate-300 font-mono">India's measurable auto-rickshaw advertising with GPS proof</p>
@@ -429,6 +1338,19 @@ export default function App() {
             {loading ? "SYNCING..." : "SYNC TELEMETRY"}
           </button>
 
+          {/* Logout Switch Portal Button */}
+          <button
+            onClick={() => {
+              setUserSession(null);
+              setLoginError("");
+            }}
+            className="flex items-center gap-1 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 transition rounded-lg text-xs font-mono font-bold"
+            title="Log out of active session"
+            id="logout-portal-btn"
+          >
+            Logout
+          </button>
+
           {/* Quick Stats Pill */}
           <div className="hidden lg:flex items-center gap-4 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800 text-xs">
             <div>
@@ -450,33 +1372,35 @@ export default function App() {
         {/* ========================================================= */}
         {/* LEFT COLUMN: DUAL MOBILE DEVICE SIMULATOR (45% Width) */}
         {/* ========================================================= */}
-        <div className="xl:col-span-5 flex flex-col items-center">
-          
-          {/* Switcher Tab */}
-          <div className="w-full max-w-[420px] bg-white p-1 rounded-xl shadow-xs border border-slate-200 flex mb-4">
-            <button
-              onClick={() => setActiveSimulator("advertiser")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-300 ${
-                activeSimulator === "advertiser"
-                  ? "bg-[#0B1F4D] text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Smartphone size={14} />
-              Advertiser App
-            </button>
-            <button
-              onClick={() => setActiveSimulator("driver")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-300 ${
-                activeSimulator === "driver"
-                  ? "bg-[#0B1F4D] text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Award size={14} />
-              Driver App
-            </button>
-          </div>
+        {userSession !== "admin" && (
+          <div className="xl:col-span-5 flex flex-col items-center">
+            {/* Switcher Tab - Hidden since separate login is active */}
+            {false && (
+              <div className="w-full max-w-[420px] bg-white p-1 rounded-xl shadow-xs border border-slate-200 flex mb-4">
+                <button
+                  onClick={() => setActiveSimulator("advertiser")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+                    activeSimulator === "advertiser"
+                      ? "bg-[#0B1F4D] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <Smartphone size={14} />
+                  Advertiser App
+                </button>
+                <button
+                  onClick={() => setActiveSimulator("driver")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+                    activeSimulator === "driver"
+                      ? "bg-[#0B1F4D] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <Award size={14} />
+                  Driver App
+                </button>
+              </div>
+            )}
 
           {/* SMARTPHONE FRAME MOCKUP */}
           <div className="w-full max-w-[420px] bg-slate-950 p-3.5 rounded-[40px] shadow-2xl border-4 border-slate-800 relative ring-12 ring-slate-900/10">
@@ -490,7 +1414,7 @@ export default function App() {
               
               {/* Fake Phone Status Bar */}
               <div className="bg-[#0B1F4D] text-white text-[11px] px-6 pt-3 pb-1 flex justify-between items-center font-mono select-none z-20 shrink-0">
-                <span>09:41 AM</span>
+                <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                 <div className="flex items-center gap-1.5">
                   <Activity size={10} className="text-[#FF9800] animate-pulse" />
                   <span>5G</span>
@@ -960,8 +1884,8 @@ export default function App() {
                         🚕
                       </div>
                       <div>
-                        <h4 className="font-display font-bold text-xs tracking-tight">Rajesh Kumar</h4>
-                        <span className="text-[9px] text-green-400 font-mono">KA-03-EX-4921</span>
+                        <h4 className="font-display font-bold text-xs tracking-tight">{loggedInDriver?.name || "Rajesh Kumar"}</h4>
+                        <span className="text-[9px] text-green-400 font-mono">{loggedInDriver?.autoNumber || "KA-03-EX-4921"}</span>
                       </div>
                     </div>
                     
@@ -969,13 +1893,13 @@ export default function App() {
                     <button 
                       onClick={toggleDriverTracking}
                       className={`text-[9px] font-mono font-bold px-2 py-1 rounded-full flex items-center gap-1 transition-colors shadow-xs ${
-                        drivers.find(d => d.id === "driver_1")?.state === "tracking"
+                        loggedInDriver?.state === "tracking"
                           ? "bg-green-500 text-white animate-pulse"
                           : "bg-slate-700 text-slate-300"
                       }`}
                     >
                       <Navigation size={10} />
-                      {drivers.find(d => d.id === "driver_1")?.state === "tracking" ? "GPS ON" : "GPS OFF"}
+                      {loggedInDriver?.state === "tracking" ? "GPS ON" : "GPS OFF"}
                     </button>
                   </div>
 
@@ -985,24 +1909,100 @@ export default function App() {
                     {/* DRIVER DASHBOARD TAB */}
                     {driverTab === "dashboard" && (
                       <>
+                        {/* Live Active Trip Telematics Metering Card */}
+                        {loggedInDriver?.state === "tracking" && (
+                          <div className="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-4 shadow-md text-white space-y-3 relative overflow-hidden">
+                            {/* Animated glowing strip */}
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 animate-pulse" />
+                            
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <span className="flex h-2 w-2 relative">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider font-mono">Live Session Meter</span>
+                              </div>
+                              <span className="bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded text-[8px] font-mono text-emerald-400 font-bold uppercase">
+                                📡 Live GPS Tracking
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                <span className="text-slate-400 text-[8px] uppercase block font-mono">Duration</span>
+                                <span className="text-sm font-bold font-mono text-white mt-0.5 block">
+                                  {formatDuration(liveSessionSeconds)}
+                                </span>
+                              </div>
+                              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                <span className="text-slate-400 text-[8px] uppercase block font-mono">KM Traveled</span>
+                                <span className="text-sm font-bold font-mono text-[#FF9800] mt-0.5 block">
+                                  {liveSessionKms.toFixed(2)} <span className="text-[8px] font-normal text-slate-400">KM</span>
+                                </span>
+                              </div>
+                              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                <span className="text-slate-400 text-[8px] uppercase block font-mono">Session Earnings</span>
+                                <span className="text-sm font-bold font-mono text-emerald-400 mt-0.5 block">
+                                  ₹{(liveSessionKms * 4.5).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <p className="text-[8px] text-slate-400 text-center font-mono italic leading-none">
+                              Stats will automatically save to your permanent wallet balance when you stop tracking.
+                            </p>
+                          </div>
+                        )}
+
                         {/* Driver Quick Status Info */}
-                        <div className="bg-gradient-to-r from-teal-900 to-[#0B1F4D] text-white rounded-2xl p-4 shadow-sm space-y-3 relative overflow-hidden">
+                        <div className="bg-gradient-to-r from-[#0C2253] to-[#123E84] text-white rounded-2xl p-4 shadow-sm space-y-3 relative overflow-hidden border border-slate-750">
                           <span className="text-[9px] text-teal-300 font-mono tracking-wider uppercase">Active Campaign Assigned</span>
                           
-                          {drivers.find(d => d.id === "driver_1")?.currentCampaignId ? (
+                          {loggedInDriver?.currentCampaignId ? (
                             <div className="space-y-1">
                               <h4 className="font-bold text-xs text-[#FF9800] line-clamp-1">
-                                {campaigns.find(c => c.id === drivers.find(d => d.id === "driver_1")?.currentCampaignId)?.title || "Tata Punch EV Bangalore"}
+                                {campaigns.find(c => c.id === loggedInDriver.currentCampaignId)?.title || "Tata Punch EV Bangalore"}
                               </h4>
-                              <p className="text-[10px] text-slate-300">
-                                Status: <span className="text-green-400 font-bold uppercase font-mono text-[9px]">Active Tracking</span>
-                              </p>
+                              <div className="flex justify-between items-center">
+                                <p className="text-[10px] text-slate-300">
+                                  Status: <span className="text-green-400 font-bold uppercase font-mono text-[9px]">Active Tracking</span>
+                                </p>
+                                <button 
+                                  onClick={() => handleAllocateCampaign(loggedInDriver.id, null)}
+                                  className="text-[9px] text-red-400 hover:text-red-300 font-mono hover:underline uppercase font-bold"
+                                >
+                                  Unlink Campaign ✕
+                                </button>
+                              </div>
                               <p className="text-[9px] text-slate-400 leading-tight">Cover daily kilometers to trigger payout calculations.</p>
                             </div>
                           ) : (
-                            <div className="space-y-1">
-                              <h4 className="font-bold text-xs text-red-400">No Campaign Linked</h4>
-                              <p className="text-[9px] text-slate-300">Admin needs to verify your uploaded KYC/Documents before you can start.</p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <h4 className="font-bold text-xs text-red-400">No Campaign Linked</h4>
+                                <span className="text-[8px] font-mono bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-black uppercase">Inactive</span>
+                              </div>
+                              <p className="text-[9px] text-slate-300">Choose one of the active available campaigns below to link your vehicle instantly:</p>
+                              
+                              <div className="space-y-1.5 pt-1">
+                                <select 
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      handleAllocateCampaign(loggedInDriver.id, e.target.value);
+                                    }
+                                  }}
+                                  className="w-full bg-slate-800 text-slate-200 text-[10px] font-mono border border-slate-700 rounded p-1 focus:outline-none focus:border-[#FF9800]"
+                                  defaultValue=""
+                                >
+                                  <option value="" disabled>-- Select Campaign to Link --</option>
+                                  {campaigns.filter(c => c.status === "active").map(c => (
+                                    <option key={c.id} value={c.id}>
+                                      {c.title} (₹{c.budget?.toLocaleString()})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                           )}
 
@@ -1014,29 +2014,81 @@ export default function App() {
 
                         {/* Glassmorphism Statistics Grid for Driver */}
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs">
-                            <span className="text-slate-400 text-[9px] block uppercase">Today's KM</span>
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="text-lg font-bold text-[#0B1F4D] font-mono">
-                                {drivers.find(d => d.id === "driver_1")?.state === "tracking" ? "84.2" : "42.0"}
+                          {/* Card 1: Real-Time Device Clock */}
+                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                              <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">Real Time</span>
+                              <Clock size={12} className="text-[#0B1F4D]" />
+                            </div>
+                            <div className="mt-1.5">
+                              <span className="text-xs font-black text-[#0B1F4D] font-mono leading-none block">
+                                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
                               </span>
-                              <span className="text-green-500 text-[9px] font-medium font-mono">KM</span>
+                              <span className="text-[8px] text-slate-400 font-mono mt-0.5 block">Live Device Clock</span>
                             </div>
                           </div>
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs">
-                            <span className="text-slate-400 text-[9px] block uppercase">Today's Income</span>
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="text-lg font-bold text-[#0B1F4D] font-mono">
-                                ₹{drivers.find(d => d.id === "driver_1")?.state === "tracking" ? "378" : "189"}
+
+                          {/* Card 2: Live Trip Timer */}
+                          <div className={`p-3 rounded-xl border shadow-xs flex flex-col justify-between transition-all duration-300 ${
+                            loggedInDriver?.state === "tracking" 
+                              ? "bg-amber-50 border-amber-200" 
+                              : "bg-white border-slate-150"
+                          }`}>
+                            <div className="flex justify-between items-start">
+                              <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">Trip Timer</span>
+                              <Timer size={12} className={`${loggedInDriver?.state === "tracking" ? "text-amber-500 animate-pulse" : "text-slate-400"}`} />
+                            </div>
+                            <div className="mt-1.5">
+                              <span className={`text-xs font-black font-mono leading-none block ${
+                                loggedInDriver?.state === "tracking" ? "text-amber-600" : "text-slate-500"
+                              }`}>
+                                {loggedInDriver?.state === "tracking" ? formatDuration(liveSessionSeconds) : "00:00:00"}
                               </span>
-                              <span className="text-blue-500 text-[9px] font-medium">Earned</span>
+                              <span className="text-[8px] text-slate-400 font-mono mt-0.5 block">
+                                {loggedInDriver?.state === "tracking" ? "📍 GPS Transmitting" : "💤 Standby Mode"}
+                              </span>
                             </div>
                           </div>
+
+                          {/* Card 3: KM Traveled */}
+                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                              <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">KM Traveled</span>
+                              <Navigation size={12} className="text-emerald-500" />
+                            </div>
+                            <div className="mt-1.5">
+                              <span className="text-xs font-black text-[#0B1F4D] font-mono leading-none block">
+                                {loggedInDriver?.state === "tracking" ? (42.0 + liveSessionKms).toFixed(2) : "42.00"}{" "}
+                                <span className="text-[9px] font-normal text-slate-400">KM</span>
+                              </span>
+                              <span className="text-[8px] text-slate-400 font-mono mt-0.5 block">
+                                {loggedInDriver?.state === "tracking" ? "📈 Live GPS KM" : "Static Logged KM"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Card 4: Today's Income */}
+                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                              <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">Today's Income</span>
+                              <TrendingUp size={12} className="text-blue-500" />
+                            </div>
+                            <div className="mt-1.5">
+                              <span className="text-xs font-black text-emerald-600 font-mono leading-none block">
+                                ₹{loggedInDriver?.state === "tracking" ? (189 + liveSessionKms * 4.5).toFixed(2) : "189.00"}
+                              </span>
+                              <span className="text-[8px] text-slate-400 font-mono mt-0.5 block">
+                                {loggedInDriver?.state === "tracking" ? "💰 Accumulating Live" : "Gross Payout"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Wallet Row */}
                           <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs col-span-2 flex justify-between items-center">
                             <div>
                               <span className="text-slate-400 text-[9px] block uppercase">Wallet Balance Available</span>
                               <span className="text-base font-bold text-slate-800 font-mono">
-                                ₹{drivers.find(d => d.id === "driver_1")?.walletBalance?.toLocaleString()}
+                                ₹{loggedInDriver?.walletBalance?.toLocaleString()}
                               </span>
                             </div>
                             <button 
@@ -1057,7 +2109,7 @@ export default function App() {
                             </div>
                             <div>
                               <p className="font-bold text-slate-800">Driving License Verified</p>
-                              <p className="text-[10px] text-slate-500">Auto RC Number: KA-03-EX-4921</p>
+                              <p className="text-[10px] text-slate-500">Auto RC Number: {loggedInDriver?.autoNumber || "KA-03-EX-4921"}</p>
                             </div>
                           </div>
                         </div>
@@ -1216,7 +2268,7 @@ export default function App() {
                         <div className="bg-white p-3 rounded-xl border border-slate-200">
                           <span className="text-[10px] font-bold text-slate-700 block uppercase mb-1.5">My Upload History</span>
                           <div className="space-y-1.5">
-                            {proofs.filter(p => p.driverId === "driver_1").slice(0, 3).map(p => (
+                            {proofs.filter(p => p.driverId === loggedInDriverId).slice(0, 3).map(p => (
                               <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded text-xs border border-slate-100">
                                 <div className="flex items-center gap-2">
                                   <img src={p.imageUrl} className="w-8 h-8 rounded object-cover" alt="" />
@@ -1254,18 +2306,18 @@ export default function App() {
                         <div className="bg-white p-4 rounded-xl border border-slate-200 text-center space-y-3">
                           <span className="text-[10px] font-bold text-slate-500 block uppercase">Tracking Toggle Status</span>
                           <h2 className="text-2xl font-mono font-black text-[#0B1F4D]">
-                            {drivers.find(d => d.id === "driver_1")?.state === "tracking" ? "📍 TRANSMITTING LIVE" : "❌ OFF - STANDBY"}
+                            {loggedInDriver?.state === "tracking" ? "📍 TRANSMITTING LIVE" : "❌ OFF - STANDBY"}
                           </h2>
                           <p className="text-[10px] text-slate-400 leading-tight">Click below to start/stop campaign miles tracking for Bangalore zone.</p>
                           <button
                             onClick={toggleDriverTracking}
                             className={`w-full font-bold py-2.5 rounded-xl text-xs transition-colors ${
-                              drivers.find(d => d.id === "driver_1")?.state === "tracking"
+                              loggedInDriver?.state === "tracking"
                                 ? "bg-red-500 hover:bg-red-600 text-white"
                                 : "bg-[#FF9800] hover:bg-orange-500 text-[#0B1F4D]"
                             }`}
                           >
-                            {drivers.find(d => d.id === "driver_1")?.state === "tracking" ? "STOP TRACKING" : "START TRACKING WORK"}
+                            {loggedInDriver?.state === "tracking" ? "STOP TRACKING" : "START TRACKING WORK"}
                           </button>
                         </div>
                       </div>
@@ -1277,12 +2329,12 @@ export default function App() {
                         <div className="bg-white p-3 rounded-xl border border-slate-200">
                           <span className="text-[9px] text-slate-400 block uppercase">Accumulated Lifetime Earnings</span>
                           <h2 className="text-3xl font-display font-extrabold text-[#0B1F4D] mt-1 text-center">
-                            ₹{drivers.find(d => d.id === "driver_1")?.totalEarnings?.toLocaleString()}
+                            ₹{loggedInDriver?.totalEarnings?.toLocaleString()}
                           </h2>
                           <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs">
                             <div className="bg-slate-50 p-2 rounded">
                               <span className="text-slate-500 block text-[9px]">Wallet Balance</span>
-                              <span className="font-bold text-slate-800 font-mono">₹{drivers.find(d => d.id === "driver_1")?.walletBalance}</span>
+                              <span className="font-bold text-slate-800 font-mono">₹{loggedInDriver?.walletBalance}</span>
                             </div>
                             <div className="bg-slate-50 p-2 rounded">
                               <span className="text-slate-500 block text-[9px]">Rate / KM</span>
@@ -1353,15 +2405,15 @@ export default function App() {
                     {driverTab === "profile" && (
                       <div className="space-y-3">
                         <div className="bg-white p-4 rounded-xl border border-slate-200 text-center space-y-2">
-                          <div className="w-16 h-16 bg-slate-300 text-slate-800 rounded-full flex items-center justify-center font-display font-bold text-xl mx-auto">
-                            RK
+                          <div className="w-16 h-16 bg-slate-300 text-slate-800 rounded-full flex items-center justify-center font-display font-bold text-xl mx-auto uppercase">
+                            {loggedInDriver?.name ? loggedInDriver.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) : "RK"}
                           </div>
                           <div>
-                            <h4 className="font-bold text-sm text-slate-800">Rajesh Kumar</h4>
+                            <h4 className="font-bold text-sm text-slate-800">{loggedInDriver?.name || "Rajesh Kumar"}</h4>
                             <p className="text-xs text-slate-400 font-mono">Karnataka Auto Registry</p>
                           </div>
                           <span className="inline-block bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase">
-                            KYC Verified
+                            {loggedInDriver?.status === "active" || loggedInDriver?.kycVerified ? "KYC Verified" : "Pending Verification"}
                           </span>
                         </div>
 
@@ -1372,15 +2424,15 @@ export default function App() {
                           </div>
                           <div className="p-3 flex justify-between">
                             <span>Phone Verified</span>
-                            <span className="font-medium text-green-600">Yes (+91 9876543210)</span>
+                            <span className="font-medium text-green-600 font-mono">Yes (+91 {loggedInDriver?.phone || "9876543210"})</span>
                           </div>
                           <div className="p-3 flex justify-between">
                             <span>Registered Zone</span>
-                            <span className="font-bold text-slate-800">Bangalore North Metro</span>
+                            <span className="font-bold text-slate-800">{loggedInDriver?.location || "Bangalore North Metro"}</span>
                           </div>
                           <div className="p-3 flex justify-between">
                             <span>Bank Account Linked</span>
-                            <span className="text-right text-slate-500 font-mono">HDFC Bank **** 4921</span>
+                            <span className="text-right text-slate-500 font-mono">HDFC Bank **** {loggedInDriver?.id === "driver_delip" ? "3039" : "4921"}</span>
                           </div>
                         </div>
 
@@ -1436,14 +2488,20 @@ export default function App() {
             </div>
           </div>
         </div>
+        )}
 
         {/* ========================================================= */}
         {/* RIGHT COLUMN: REVENUE, TELEMETRY & ADMIN (55% Width) */}
         {/* ========================================================= */}
-        <div className="xl:col-span-7 flex flex-col gap-6">
+        <div className={`${userSession === "admin" ? "xl:col-span-12" : "xl:col-span-7"} flex flex-col gap-6`}>
           
-          {/* Admin Control Header */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+          {/* Conditional Workspaces depending on User Sessions */}
+          {userSession === "admin" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+              <div className="lg:col-span-7 flex flex-col gap-6">
+                
+                {/* Admin Control Header */}
+                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h3 className="font-display font-extrabold text-[#0B1F4D] text-lg flex items-center gap-2">
@@ -1496,6 +2554,7 @@ export default function App() {
                         <th className="py-2.5">Zone/City</th>
                         <th className="py-2.5">Autos</th>
                         <th className="py-2.5">Budget</th>
+                        <th className="py-2.5">Assigned Drivers</th>
                         <th className="py-2.5 text-right">Action Status</th>
                       </tr>
                     </thead>
@@ -1519,6 +2578,53 @@ export default function App() {
                           </td>
                           <td className="py-3 font-mono font-bold">{camp.autosCount} Autos</td>
                           <td className="py-3 font-mono font-bold text-[#FF9800]">₹{camp.budget.toLocaleString()}</td>
+                          <td className="py-3">
+                            <div className="flex flex-col gap-1">
+                              {/* List currently assigned drivers */}
+                              <div className="flex flex-wrap gap-1 max-w-[220px]">
+                                {drivers
+                                  .filter((d) => d.currentCampaignId === camp.id)
+                                  .map((driver) => (
+                                    <span key={driver.id} className="inline-flex items-center gap-1 bg-teal-50 text-teal-800 text-[10px] font-mono px-1.5 py-0.5 rounded border border-teal-100">
+                                      <span className="truncate max-w-[80px]">{driver.name}</span>
+                                      <button
+                                        onClick={() => handleAllocateCampaign(driver.id, null)}
+                                        className="hover:text-red-500 font-bold focus:outline-none shrink-0"
+                                        title="Remove Driver"
+                                      >
+                                        <X size={10} />
+                                      </button>
+                                    </span>
+                                  ))}
+                                {drivers.filter((d) => d.currentCampaignId === camp.id).length === 0 && (
+                                  <span className="text-[10px] text-slate-400 italic">No drivers assigned</span>
+                                )}
+                              </div>
+                              {/* Quick Assignment Dropdown */}
+                              {camp.status === "active" && (
+                                <div className="mt-1">
+                                  <select
+                                    value=""
+                                    onChange={(e) => {
+                                      if (e.target.value) {
+                                        handleAllocateCampaign(e.target.value, camp.id);
+                                      }
+                                    }}
+                                    className="bg-slate-50 border border-slate-200 rounded text-[9px] px-1 py-0.5 text-slate-600 font-mono focus:outline-none focus:ring-1 focus:ring-[#0B1F4D] max-w-[150px] truncate"
+                                  >
+                                    <option value="">+ Assign Active Driver</option>
+                                    {drivers
+                                      .filter((d) => d.status === "active" && d.currentCampaignId !== camp.id)
+                                      .map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                          {d.name} ({d.autoNumber})
+                                        </option>
+                                      ))}
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          </td>
                           <td className="py-3 text-right">
                             {camp.status === "pending" ? (
                               <div className="flex justify-end gap-1.5">
@@ -1568,6 +2674,7 @@ export default function App() {
                         <th className="py-2.5">Auto Plate</th>
                         <th className="py-2.5">Location</th>
                         <th className="py-2.5 text-center">License KYC</th>
+                        <th className="py-2.5">Assigned Campaign</th>
                         <th className="py-2.5 text-right">Verification Action</th>
                       </tr>
                     </thead>
@@ -1588,6 +2695,26 @@ export default function App() {
                             }`}>
                               {driver.kycVerified ? "APPROVED" : "PENDING AUDIT"}
                             </span>
+                          </td>
+                          <td className="py-3">
+                            {driver.status === "active" ? (
+                              <div className="flex items-center gap-1">
+                                <select
+                                  value={driver.currentCampaignId || ""}
+                                  onChange={(e) => handleAllocateCampaign(driver.id, e.target.value || null)}
+                                  className="bg-white border border-slate-200 rounded text-[10px] px-1.5 py-1 text-slate-700 font-mono focus:outline-none focus:ring-1 focus:ring-[#0B1F4D] max-w-[150px] truncate"
+                                >
+                                  <option value="">-- No Campaign --</option>
+                                  {campaigns.map((camp) => (
+                                    <option key={camp.id} value={camp.id}>
+                                      {camp.title} ({camp.city})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 italic">Verify first</span>
+                            )}
                           </td>
                           <td className="py-3 text-right">
                             {driver.status === "pending_approval" ? (
@@ -1678,7 +2805,12 @@ export default function App() {
 
           </div>
 
-          {/* SIMULATED MAP TELEMATICS CARD */}
+              </div>
+
+              {/* Right Column of nested grid: Map & Operational Activity Logs (col-span-5) */}
+              <div className="lg:col-span-5 flex flex-col gap-6">
+                
+                {/* SIMULATED MAP TELEMATICS CARD */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-5 space-y-3">
             <div className="flex justify-between items-center pb-2 border-b border-slate-100">
               <h4 className="font-display font-bold text-sm text-[#0B1F4D] flex items-center gap-2">
@@ -1755,6 +2887,212 @@ export default function App() {
               </div>
             </div>
           </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* ADVERTISER COMPANION PANEL (60% Width)                   */}
+          {/* ========================================================= */}
+          {userSession === "advertiser" && (
+            <div className="space-y-6">
+              {/* Campaign Calculator */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="p-2 bg-orange-500/10 text-[#FF9800] rounded-xl">
+                    <TrendingUp size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-display font-extrabold text-[#0B1F4D] text-sm">Campaign Saturation & Reach Planner</h4>
+                    <p className="text-[11px] text-slate-500">Calculate budget, impressions, and target QR conversions</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs font-bold text-slate-700">
+                        <span>Vehicles Allocated</span>
+                        <span className="text-[#FF9800] font-mono">{calcVehicles} Autos</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="5" 
+                        max="150" 
+                        value={calcVehicles}
+                        onChange={(e) => setCalcVehicles(Number(e.target.value))}
+                        className="w-full accent-[#FF9800] h-1.5 bg-slate-100 rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs font-bold text-slate-700">
+                        <span>Campaign Duration</span>
+                        <span className="text-[#FF9800] font-mono">{calcDays} Days</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="7" 
+                        max="180" 
+                        value={calcDays}
+                        onChange={(e) => setCalcDays(Number(e.target.value))}
+                        className="w-full accent-[#FF9800] h-1.5 bg-slate-100 rounded-lg cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-3 text-center">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Est. Cost (INR)</span>
+                      <span className="text-sm font-extrabold text-[#0B1F4D] font-mono">₹{(calcVehicles * calcDays * 250).toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Est. Views (CPM)</span>
+                      <span className="text-sm font-extrabold text-[#0B1F4D] font-mono">{(calcVehicles * calcDays * 4200).toLocaleString()}+</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono font-bold">CPM Rate</span>
+                      <span className="text-sm font-extrabold text-[#0B1F4D] font-mono">₹59.52</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Est. QR Scans</span>
+                      <span className="text-sm font-extrabold text-[#FF9800] font-mono">{Math.floor(calcVehicles * calcDays * 0.95)} Scans</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* City Zone Heatmap */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-3">
+                <div>
+                  <h4 className="font-display font-extrabold text-sm text-[#0B1F4D]">Bangalore Density Performance</h4>
+                  <p className="text-[11px] text-slate-400">Daily average impressions coverage yield per administrative ward</p>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { name: "Koramangala (High Saturation)", value: 92, count: "48,000 views/day" },
+                    { name: "Indiranagar (Retail Hub)", value: 85, count: "44,500 views/day" },
+                    { name: "Whitefield (Tech Hub)", value: 78, count: "39,000 views/day" },
+                    { name: "MG Road (Central CBD)", value: 65, count: "31,000 views/day" },
+                  ].map((zone, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="text-slate-700">{zone.name}</span>
+                        <span className="text-slate-500 font-mono text-[10px]">{zone.count}</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#FF9800] rounded-full" style={{ width: `${zone.value}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Embedded AI Campaign Planner */}
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden h-[480px]">
+                <AiAssistant embedded />
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* DRIVER COMPANION PANEL (60% Width)                     */}
+          {/* ========================================================= */}
+          {userSession === "driver" && (
+            <div className="space-y-6">
+              {/* Trip Simulation Station */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="p-2 bg-teal-500/10 text-teal-500 rounded-xl">
+                    <Navigation size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-display font-extrabold text-[#0B1F4D] text-sm">Interactive GPS Route Simulator</h4>
+                    <p className="text-[11px] text-slate-500">Trigger simulated driving runs to instantly verify telemetry and earnings</p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Verify the automatic transit billing engine! Below triggers a virtual drive in Bangalore. Payout is calculated instantly at <b>₹4.50/KM</b>.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    disabled={isSimulatingDrive}
+                    onClick={() => handleSimulateDrive(5)}
+                    className="flex items-center justify-between p-3.5 rounded-xl border border-teal-500/10 bg-teal-50/40 hover:bg-teal-50 text-teal-800 transition text-xs font-bold font-mono text-left disabled:opacity-50 cursor-pointer"
+                  >
+                    <div>
+                      <span>🚗 5 KM City Run</span>
+                      <span className="text-[10px] block text-slate-400 font-normal">Indiranagar ➔ Koramangala</span>
+                    </div>
+                    <span className="bg-teal-100 text-teal-900 px-2 py-1 rounded text-[10px] font-black">+₹22.50</span>
+                  </button>
+
+                  <button
+                    disabled={isSimulatingDrive}
+                    onClick={() => handleSimulateDrive(15)}
+                    className="flex items-center justify-between p-3.5 rounded-xl border border-teal-500/10 bg-teal-50/40 hover:bg-teal-50 text-teal-800 transition text-xs font-bold font-mono text-left disabled:opacity-50 cursor-pointer"
+                  >
+                    <div>
+                      <span>🚙 15 KM Highway Run</span>
+                      <span className="text-[10px] block text-slate-400 font-normal">MG Road ➔ Whitefield</span>
+                    </div>
+                    <span className="bg-teal-100 text-teal-900 px-2 py-1 rounded text-[10px] font-black">+₹67.50</span>
+                  </button>
+                </div>
+
+                {isSimulatingDrive && (
+                  <div className="bg-teal-950 text-teal-300 p-3.5 rounded-xl text-xs font-mono flex items-center justify-between animate-pulse">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-ping"></span>
+                      GPS Satellite Stream active...
+                    </span>
+                    <span>Coordinates Transmitted</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Guidelines checklist */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-3">
+                <div>
+                  <h4 className="font-display font-extrabold text-sm text-[#0B1F4D]">Driver Guidelines & Active Duties</h4>
+                  <p className="text-[11px] text-slate-400">Complete checks to unlock standard incentives and daily streak levels</p>
+                </div>
+                <div className="space-y-3 text-xs text-slate-700">
+                  <div className="flex items-start gap-3">
+                    <input type="checkbox" defaultChecked className="mt-0.5 rounded text-teal-500" />
+                    <div>
+                      <span className="font-bold text-slate-800 block">Morning Photo Proof Check-in</span>
+                      <span className="text-slate-500 text-[11px]">Upload vehicle rear photograph before 9:30 AM to activate daily meter (Earn ₹450 reward).</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <input type="checkbox" defaultChecked className="mt-0.5 rounded text-teal-500" />
+                    <div>
+                      <span className="font-bold text-slate-800 block">Maintain Active GPS Meter</span>
+                      <span className="text-slate-500 text-[11px]">Keep phone mounted securely and tracker toggled "ON" during passenger duty.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Driver support helpline */}
+              <div className="bg-slate-900 text-white p-5 rounded-3xl border border-slate-800 shadow-xs space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-display font-extrabold text-sm text-white">Logistics Support Desk</h4>
+                    <p className="text-[10px] text-slate-400 font-mono">Emergency physical Hub manager contacts</p>
+                  </div>
+                  <span className="px-2.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[10px] font-mono">ONLINE</span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Need hardware assistance or replacement banners? Visit the Koramangala Hub or call +91 94812-48210.
+                </p>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

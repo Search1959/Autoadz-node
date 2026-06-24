@@ -26,8 +26,13 @@ if (process.env.GEMINI_API_KEY) {
   }
 }
 
-// In-Memory Database (mocking durable state)
-let campaigns = [
+import fs from "fs";
+
+// Path to persistent JSON database file
+const DB_FILE = path.join(process.cwd(), "db.json");
+
+// Default initial datasets (fallback seeds)
+const defaultCampaigns = [
   {
     id: "camp_1",
     title: "Tata Punch EV Launch Bangalore",
@@ -87,7 +92,7 @@ let campaigns = [
   },
 ];
 
-let drivers = [
+const defaultDrivers = [
   {
     id: "driver_1",
     name: "Rajesh Kumar",
@@ -127,9 +132,22 @@ let drivers = [
     currentCampaignId: null,
     status: "pending_approval",
   },
+  {
+    id: "driver_delip",
+    name: "Delip",
+    phone: "9836130393",
+    autoNumber: "WB-01-EX-1234",
+    location: "Kolkata - Gariahat",
+    state: "offline",
+    kycVerified: true,
+    totalEarnings: 0,
+    walletBalance: 0,
+    currentCampaignId: null,
+    status: "active",
+  },
 ];
 
-let proofs = [
+const defaultProofs = [
   {
     id: "proof_1",
     driverId: "driver_1",
@@ -168,7 +186,7 @@ let proofs = [
   },
 ];
 
-let walletTransactions = [
+const defaultWalletTransactions = [
   {
     id: "tx_1",
     userId: "advertiser_main",
@@ -207,7 +225,7 @@ let walletTransactions = [
   },
 ];
 
-let notifications = [
+const defaultNotifications = [
   {
     id: "notif_1",
     title: "Campaign Approved",
@@ -233,6 +251,79 @@ let notifications = [
     type: "driver",
   },
 ];
+
+// Active databases
+let campaigns = [];
+let drivers = [];
+let proofs = [];
+let walletTransactions = [];
+let notifications = [];
+
+// Helper to save all collections to db.json
+function saveDatabase() {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify({
+      campaigns,
+      drivers,
+      proofs,
+      walletTransactions,
+      notifications
+    }, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to save JSON database to disk:", err);
+  }
+}
+
+// Load databases on startup
+function initDatabase() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
+      campaigns = data.campaigns || [];
+      drivers = data.drivers || [];
+      proofs = data.proofs || [];
+      walletTransactions = data.walletTransactions || [];
+      notifications = data.notifications || [];
+      console.log(`Database loaded successfully from ${DB_FILE}`);
+      
+      // Ensure "delip" exists even in loaded databases
+      if (!drivers.some(d => d.phone === "9836130393" || d.id === "driver_delip")) {
+        drivers.push({
+          id: "driver_delip",
+          name: "Delip",
+          phone: "9836130393",
+          autoNumber: "WB-01-EX-1234",
+          location: "Kolkata - Gariahat",
+          state: "offline",
+          kycVerified: true,
+          totalEarnings: 0,
+          walletBalance: 0,
+          currentCampaignId: null,
+          status: "active",
+        });
+        saveDatabase();
+      }
+    } else {
+      console.log(`No database file found. Seeding new database at ${DB_FILE}`);
+      campaigns = [...defaultCampaigns];
+      drivers = [...defaultDrivers];
+      proofs = [...defaultProofs];
+      walletTransactions = [...defaultWalletTransactions];
+      notifications = [...defaultNotifications];
+      saveDatabase();
+    }
+  } catch (err) {
+    console.error("Failed to initialize database, using memory fallbacks:", err);
+    campaigns = [...defaultCampaigns];
+    drivers = [...defaultDrivers];
+    proofs = [...defaultProofs];
+    walletTransactions = [...defaultWalletTransactions];
+    notifications = [...defaultNotifications];
+  }
+}
+
+// Perform synchronous initial load
+initDatabase();
 
 // Helper to update statistics in background simulation
 setInterval(() => {
@@ -262,6 +353,8 @@ setInterval(() => {
     }
     return driver;
   });
+
+  saveDatabase();
 }, 10000); // simulation tick every 10s
 
 // EXPRESS MIDDLEWARES
@@ -317,25 +410,31 @@ app.post("/api/campaigns", (req, res) => {
     type: "campaign",
   });
 
+  saveDatabase();
+
   res.status(201).json(newCampaign);
 });
 
 app.put("/api/campaigns/:id", (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, kmsCovered, qrScans } = req.body;
   const index = campaigns.findIndex((c) => c.id === id);
   if (index !== -1) {
-    campaigns[index].status = status;
+    if (status !== undefined) campaigns[index].status = status;
+    if (kmsCovered !== undefined) campaigns[index].kmsCovered = Number(kmsCovered);
+    if (qrScans !== undefined) campaigns[index].qrScans = Number(qrScans);
     
     // Add notification
     notifications.unshift({
       id: `notif_${Date.now()}`,
       title: `Campaign Status Updated`,
-      message: `Your campaign '${campaigns[index].title}' has been marked as ${status}.`,
+      message: `Your campaign '${campaigns[index].title}' has been marked as ${status || campaigns[index].status}.`,
       timestamp: new Date().toLocaleString(),
       unread: true,
       type: "campaign",
     });
+
+    saveDatabase();
 
     res.json(campaigns[index]);
   } else {
@@ -374,18 +473,24 @@ app.post("/api/drivers", (req, res) => {
     type: "driver",
   });
 
+  saveDatabase();
+
   res.status(201).json(newDriver);
 });
 
 app.put("/api/drivers/:id", (req, res) => {
   const { id } = req.params;
-  const { status, kycVerified, currentCampaignId, state } = req.body;
+  const { status, kycVerified, currentCampaignId, state, totalEarnings, walletBalance } = req.body;
   const index = drivers.findIndex((d) => d.id === id);
   if (index !== -1) {
     if (status !== undefined) drivers[index].status = status;
     if (kycVerified !== undefined) drivers[index].kycVerified = kycVerified;
     if (currentCampaignId !== undefined) drivers[index].currentCampaignId = currentCampaignId;
     if (state !== undefined) drivers[index].state = state;
+    if (totalEarnings !== undefined) drivers[index].totalEarnings = Number(totalEarnings);
+    if (walletBalance !== undefined) drivers[index].walletBalance = Number(walletBalance);
+
+    saveDatabase();
 
     res.json(drivers[index]);
   } else {
@@ -426,6 +531,8 @@ app.post("/api/proofs", (req, res) => {
     type: "driver",
   });
 
+  saveDatabase();
+
   res.status(201).json(newProof);
 });
 
@@ -454,6 +561,8 @@ app.put("/api/proofs/:id/status", (req, res) => {
         });
       }
     }
+
+    saveDatabase();
 
     res.json(proofs[index]);
   } else {
@@ -488,6 +597,8 @@ app.post("/api/wallet/transactions", (req, res) => {
     }
   }
 
+  saveDatabase();
+
   res.status(201).json(newTx);
 });
 
@@ -498,6 +609,7 @@ app.get("/api/notifications", (req, res) => {
 
 app.post("/api/notifications/read", (req, res) => {
   notifications = notifications.map((n) => ({ ...n, unread: false }));
+  saveDatabase();
   res.json({ success: true });
 });
 
