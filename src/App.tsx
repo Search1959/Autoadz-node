@@ -1909,81 +1909,109 @@ export default function App() {
                     {/* DRIVER DASHBOARD TAB */}
                     {driverTab === "dashboard" && (
                       <>
-                        {/* Live Active Trip Telematics Metering Card */}
-                        {loggedInDriver?.state === "tracking" && (
-                          <div className="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-4 shadow-md text-white space-y-3 relative overflow-hidden">
-                            {/* Animated glowing strip */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 animate-pulse" />
-                            
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
-                                <span className="flex h-2 w-2 relative">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider font-mono">Live Session Meter</span>
-                              </div>
-                              <span className="bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded text-[8px] font-mono text-emerald-400 font-bold uppercase">
-                                📡 Live GPS Tracking
+                        {/* Driver Quick Status & Interactive Live Tracking Hub */}
+                        <div className="bg-[#0B1F4D] text-white rounded-2xl p-4 shadow-sm space-y-3 relative overflow-hidden border border-slate-800">
+                          {/* Animated glowing neon laser line if tracking is active */}
+                          {loggedInDriver?.state === "tracking" && (
+                            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 animate-pulse" />
+                          )}
+                          
+                          <div className="flex justify-between items-center">
+                            <span className="text-[9px] text-teal-300 font-mono tracking-wider uppercase font-black">
+                              Active Campaign Link Center
+                            </span>
+                            {loggedInDriver?.state === "tracking" && (
+                              <span className="bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded text-[8px] font-mono text-emerald-400 font-bold uppercase animate-pulse">
+                                📡 Transmitting GPS Live
                               </span>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
-                                <span className="text-slate-400 text-[8px] uppercase block font-mono">Duration</span>
-                                <span className="text-sm font-bold font-mono text-white mt-0.5 block">
-                                  {formatDuration(liveSessionSeconds)}
-                                </span>
-                              </div>
-                              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
-                                <span className="text-slate-400 text-[8px] uppercase block font-mono">KM Traveled</span>
-                                <span className="text-sm font-bold font-mono text-[#FF9800] mt-0.5 block">
-                                  {liveSessionKms.toFixed(2)} <span className="text-[8px] font-normal text-slate-400">KM</span>
-                                </span>
-                              </div>
-                              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
-                                <span className="text-slate-400 text-[8px] uppercase block font-mono">Session Earnings</span>
-                                <span className="text-sm font-bold font-mono text-emerald-400 mt-0.5 block">
-                                  ₹{(liveSessionKms * 4.5).toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <p className="text-[8px] text-slate-400 text-center font-mono italic leading-none">
-                              Stats will automatically save to your permanent wallet balance when you stop tracking.
-                            </p>
+                            )}
                           </div>
-                        )}
-
-                        {/* Driver Quick Status Info */}
-                        <div className="bg-gradient-to-r from-[#0C2253] to-[#123E84] text-white rounded-2xl p-4 shadow-sm space-y-3 relative overflow-hidden border border-slate-750">
-                          <span className="text-[9px] text-teal-300 font-mono tracking-wider uppercase">Active Campaign Assigned</span>
                           
                           {loggedInDriver?.currentCampaignId ? (
-                            <div className="space-y-1">
-                              <h4 className="font-bold text-xs text-[#FF9800] line-clamp-1">
-                                {campaigns.find(c => c.id === loggedInDriver.currentCampaignId)?.title || "Tata Punch EV Bangalore"}
-                              </h4>
-                              <div className="flex justify-between items-center">
-                                <p className="text-[10px] text-slate-300">
-                                  Status: <span className="text-green-400 font-bold uppercase font-mono text-[9px]">Active Tracking</span>
-                                </p>
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-start gap-2">
+                                <div>
+                                  <h4 className="font-bold text-sm text-[#FF9800] line-clamp-1">
+                                    {campaigns.find(c => c.id === loggedInDriver.currentCampaignId)?.title || "Tata Punch EV Bangalore"}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-300">
+                                    Linked vehicle: <span className="text-emerald-400 font-mono font-bold text-[10px]">{loggedInDriver?.autoNumber || "WB-01-EX-1234"}</span>
+                                  </p>
+                                </div>
                                 <button 
                                   onClick={() => handleAllocateCampaign(loggedInDriver.id, null)}
-                                  className="text-[9px] text-red-400 hover:text-red-300 font-mono hover:underline uppercase font-bold"
+                                  className="text-[9px] bg-red-950 text-red-400 hover:text-red-300 border border-red-500/30 px-2 py-1 rounded-md font-mono transition-colors uppercase font-bold shrink-0"
                                 >
                                   Unlink Campaign ✕
                                 </button>
                               </div>
-                              <p className="text-[9px] text-slate-400 leading-tight">Cover daily kilometers to trigger payout calculations.</p>
+
+                              {/* Live Odometer Meter HUD & Inline Action Switch */}
+                              <div className="bg-slate-900/80 border border-white/10 rounded-xl p-3 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="flex h-2 w-2 relative">
+                                      {loggedInDriver?.state === "tracking" ? (
+                                        <>
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                        </>
+                                      ) : (
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
+                                      )}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-200 uppercase font-mono tracking-wider">
+                                      {loggedInDriver?.state === "tracking" ? "ACTIVE GPS TRACKING RUN" : "GPS READY - STANDBY"}
+                                    </span>
+                                  </div>
+                                  
+                                  {loggedInDriver?.state === "tracking" && (
+                                    <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded animate-pulse">
+                                      Speed: ~18-25 m/s
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 border-y border-white/5 py-2 text-center">
+                                  <div>
+                                    <span className="text-slate-400 text-[8px] uppercase block font-mono">Trip Time</span>
+                                    <span className="text-xs font-bold font-mono text-white block mt-0.5">
+                                      {loggedInDriver?.state === "tracking" ? formatDuration(liveSessionSeconds) : "00:00"}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-400 text-[8px] uppercase block font-mono">Trip Distance</span>
+                                    <span className="text-xs font-bold font-mono text-[#FF9800] block mt-0.5">
+                                      {loggedInDriver?.state === "tracking" ? liveSessionKms.toFixed(3) : "0.000"} <span className="text-[8px] font-normal text-slate-400">KM</span>
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-400 text-[8px] uppercase block font-mono">Trip Pay</span>
+                                    <span className="text-xs font-bold font-mono text-emerald-400 block mt-0.5">
+                                      ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * 4.5).toFixed(2) : "0.00"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={toggleDriverTracking}
+                                  className={`w-full py-2 rounded-lg text-xs font-black uppercase tracking-widest font-sans transition-all duration-300 shadow-md ${
+                                    loggedInDriver?.state === "tracking"
+                                      ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                                      : "bg-[#FF9800] hover:bg-orange-500 text-[#0B1F4D]"
+                                  }`}
+                                >
+                                  {loggedInDriver?.state === "tracking" ? "■ STOP TRACKING & SAVE MILES" : "▶ START TRACKING WORK"}
+                                </button>
+                              </div>
                             </div>
                           ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-2 bg-slate-900/50 p-3 rounded-xl border border-white/5">
                               <div className="flex justify-between items-center">
-                                <h4 className="font-bold text-xs text-red-400">No Campaign Linked</h4>
+                                <h4 className="font-bold text-xs text-red-400">No Active Campaign Linked</h4>
                                 <span className="text-[8px] font-mono bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-black uppercase">Inactive</span>
                               </div>
-                              <p className="text-[9px] text-slate-300">Choose one of the active available campaigns below to link your vehicle instantly:</p>
+                              <p className="text-[9px] text-slate-300 leading-tight">Choose one of the currently active advertising campaigns below to link your auto-rickshaw instantly:</p>
                               
                               <div className="space-y-1.5 pt-1">
                                 <select 
@@ -1992,7 +2020,7 @@ export default function App() {
                                       handleAllocateCampaign(loggedInDriver.id, e.target.value);
                                     }
                                   }}
-                                  className="w-full bg-slate-800 text-slate-200 text-[10px] font-mono border border-slate-700 rounded p-1 focus:outline-none focus:border-[#FF9800]"
+                                  className="w-full bg-slate-800 text-slate-200 text-[10px] font-mono border border-slate-700 rounded p-1.5 focus:outline-none focus:border-[#FF9800]"
                                   defaultValue=""
                                 >
                                   <option value="" disabled>-- Select Campaign to Link --</option>
@@ -2007,7 +2035,7 @@ export default function App() {
                           )}
 
                           <div className="pt-2 border-t border-white/10 flex justify-between items-center text-[10px]">
-                            <span className="text-slate-300">Earnings rate: <b>₹4.50 per KM</b></span>
+                            <span className="text-slate-300">Earnings rate: <b className="text-emerald-400">₹4.50 per KM</b></span>
                             <span className="text-[#FF9800] font-mono">Target: 40 KM/day</span>
                           </div>
                         </div>
@@ -2031,12 +2059,12 @@ export default function App() {
                           {/* Card 2: Live Trip Timer */}
                           <div className={`p-3 rounded-xl border shadow-xs flex flex-col justify-between transition-all duration-300 ${
                             loggedInDriver?.state === "tracking" 
-                              ? "bg-amber-50 border-amber-200" 
+                              ? "bg-amber-50 border-amber-200 animate-pulse" 
                               : "bg-white border-slate-150"
                           }`}>
                             <div className="flex justify-between items-start">
                               <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">Trip Timer</span>
-                              <Timer size={12} className={`${loggedInDriver?.state === "tracking" ? "text-amber-500 animate-pulse" : "text-slate-400"}`} />
+                              <Timer size={12} className={`${loggedInDriver?.state === "tracking" ? "text-amber-500 animate-spin" : "text-slate-400"}`} style={{ animationDuration: '3s' }} />
                             </div>
                             <div className="mt-1.5">
                               <span className={`text-xs font-black font-mono leading-none block ${
@@ -2051,34 +2079,42 @@ export default function App() {
                           </div>
 
                           {/* Card 3: KM Traveled */}
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                          <div className={`p-3 rounded-xl border shadow-xs flex flex-col justify-between transition-all duration-300 ${
+                            loggedInDriver?.state === "tracking" 
+                              ? "bg-emerald-50 border-emerald-200" 
+                              : "bg-white border-slate-150"
+                          }`}>
                             <div className="flex justify-between items-start">
                               <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">KM Traveled</span>
-                              <Navigation size={12} className="text-emerald-500" />
+                              <Navigation size={12} className={loggedInDriver?.state === "tracking" ? "text-emerald-500 animate-bounce" : "text-slate-400"} />
                             </div>
                             <div className="mt-1.5">
-                              <span className="text-xs font-black text-[#0B1F4D] font-mono leading-none block">
-                                {loggedInDriver?.state === "tracking" ? (42.0 + liveSessionKms).toFixed(2) : "42.00"}{" "}
+                              <span className="text-sm font-black text-[#0B1F4D] font-mono leading-none block">
+                                {loggedInDriver?.state === "tracking" ? liveSessionKms.toFixed(3) : "0.000"}{" "}
                                 <span className="text-[9px] font-normal text-slate-400">KM</span>
                               </span>
-                              <span className="text-[8px] text-slate-400 font-mono mt-0.5 block">
-                                {loggedInDriver?.state === "tracking" ? "📈 Live GPS KM" : "Static Logged KM"}
+                              <span className="text-[8px] text-slate-500 font-mono mt-1 block">
+                                Daily total: <span className="font-bold">{(42.0 + (loggedInDriver?.state === "tracking" ? liveSessionKms : 0)).toFixed(2)} KM</span>
                               </span>
                             </div>
                           </div>
 
                           {/* Card 4: Today's Income */}
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                          <div className={`p-3 rounded-xl border shadow-xs flex flex-col justify-between transition-all duration-300 ${
+                            loggedInDriver?.state === "tracking" 
+                              ? "bg-blue-50 border-blue-200" 
+                              : "bg-white border-slate-150"
+                          }`}>
                             <div className="flex justify-between items-start">
                               <span className="text-slate-400 text-[9px] block uppercase font-extrabold tracking-wider">Today's Income</span>
-                              <TrendingUp size={12} className="text-blue-500" />
+                              <TrendingUp size={12} className={loggedInDriver?.state === "tracking" ? "text-blue-500 animate-pulse" : "text-slate-400"} />
                             </div>
                             <div className="mt-1.5">
-                              <span className="text-xs font-black text-emerald-600 font-mono leading-none block">
-                                ₹{loggedInDriver?.state === "tracking" ? (189 + liveSessionKms * 4.5).toFixed(2) : "189.00"}
+                              <span className="text-sm font-black text-emerald-600 font-mono leading-none block">
+                                ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * 4.5).toFixed(2) : "0.00"}
                               </span>
-                              <span className="text-[8px] text-slate-400 font-mono mt-0.5 block">
-                                {loggedInDriver?.state === "tracking" ? "💰 Accumulating Live" : "Gross Payout"}
+                              <span className="text-[8px] text-slate-500 font-mono mt-1 block">
+                                Daily total: <span className="font-bold">₹{(189.0 + (loggedInDriver?.state === "tracking" ? liveSessionKms * 4.5 : 0)).toFixed(2)}</span>
                               </span>
                             </div>
                           </div>
