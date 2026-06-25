@@ -483,10 +483,10 @@ export default function App() {
 
   // Auto-fill template creative URLs
   const creativeTemplates = [
-    { name: "Tata Punch EV", url: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=800" },
-    { name: "Swiggy Instamart", url: "https://images.unsplash.com/photo-1526367790999-015078648c7e?auto=format&fit=crop&q=80&w=800" },
-    { name: "Haldiram's Sweets", url: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=800" },
-    { name: "Zomato Gold", url: "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800" }
+    { name: "Edge Fashion", url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=800" },
+    { name: "Urban Trendsetters", url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=800" },
+    { name: "Vogue Essentials", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" },
+    { name: "Aura Styles", url: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&q=80&w=800" }
   ];
 
   // Fetch all state from API
@@ -1038,7 +1038,7 @@ export default function App() {
                   <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 space-y-2.5 font-mono">
                     <div className="flex justify-between text-[10px]">
                       <span className="text-slate-400">Current Campaign:</span>
-                      <span className="text-[#FF9800] font-bold">Tata Punch EV Launch</span>
+                      <span className="text-[#FF9800] font-bold">Edge Fashion Summer Launch</span>
                     </div>
                     <div className="flex justify-between text-[10px]">
                       <span className="text-slate-400">Active Fleet Coverage:</span>
@@ -1191,8 +1191,8 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Creative Template Selector */}
-                <div className="space-y-1">
+                 {/* Creative Template Selector */}
+                <div className="space-y-2.5">
                   <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Ad Creative Graphic Template</label>
                   <div className="grid grid-cols-2 gap-2">
                     {creativeTemplates.map((template) => (
@@ -1207,6 +1207,45 @@ export default function App() {
                         {template.name} Graphic
                       </button>
                     ))}
+                  </div>
+
+                  {/* Option to upload / add custom creative */}
+                  <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
+                    <span className="text-[9px] text-slate-400 uppercase font-mono block">Or add your custom creative:</span>
+                    <div className="flex gap-2">
+                      <label className="flex-1 cursor-pointer flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-lg p-2 bg-slate-900 hover:bg-slate-850 transition duration-200">
+                        <Upload size={12} className="text-[#FF9800] mb-0.5" />
+                        <span className="text-[9px] text-slate-300 font-bold">Upload Custom Banner</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const base64 = event.target?.result as string;
+                                setNewCampCreative(base64);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      
+                      <div className="w-[120px] flex flex-col justify-center">
+                        <input 
+                          type="text" 
+                          placeholder="Or paste image URL"
+                          className="w-full text-[9px] border border-slate-800 rounded p-1 bg-slate-900 text-white focus:outline-none"
+                          onChange={(e) => {
+                            setNewCampCreative(e.target.value);
+                          }}
+                          value={newCampCreative && !newCampCreative.startsWith("data:") ? newCampCreative : ""}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1889,10 +1928,10 @@ export default function App() {
                               <p className="text-[9px] text-slate-400">Includes auto driver payout, printing, mounting & QR setup.</p>
                             </div>
 
-                            {/* Creative upload */}
-                            <div>
+                             {/* Creative upload */}
+                            <div className="space-y-1.5">
                               <label className="text-[10px] text-slate-500 block font-medium">Select Brand Creative Template</label>
-                              <div className="grid grid-cols-2 gap-1.5 mt-1">
+                              <div className="grid grid-cols-2 gap-1.5">
                                 {creativeTemplates.map((template, idx) => (
                                   <button
                                     key={idx}
@@ -1906,6 +1945,45 @@ export default function App() {
                                     <span className="text-[9px] truncate text-slate-700 font-medium">{template.name}</span>
                                   </button>
                                 ))}
+                              </div>
+
+                              {/* Custom creative input inside advertiser campaign form */}
+                              <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 space-y-1.5">
+                                <span className="text-[8px] text-slate-500 uppercase font-mono block font-bold">Or Upload Custom Creative Art:</span>
+                                <div className="flex gap-2">
+                                  <label className="flex-1 cursor-pointer flex flex-col items-center justify-center border border-dashed border-slate-300 rounded-lg p-1.5 bg-white hover:bg-slate-100 transition duration-200">
+                                    <Upload size={12} className="text-[#FF9800] mb-0.5" />
+                                    <span className="text-[8px] text-slate-600 font-bold">Upload Custom Banner</span>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      className="hidden" 
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onload = (event) => {
+                                            const base64 = event.target?.result as string;
+                                            setNewCampCreative(base64);
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                  
+                                  <div className="w-[110px] flex flex-col justify-center">
+                                    <input 
+                                      type="text" 
+                                      placeholder="Or paste image URL"
+                                      className="w-full text-[8.5px] border border-slate-200 rounded p-1 bg-white focus:outline-none"
+                                      onChange={(e) => {
+                                        setNewCampCreative(e.target.value);
+                                      }}
+                                      value={newCampCreative && !newCampCreative.startsWith("data:") ? newCampCreative : ""}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
 
@@ -2280,7 +2358,7 @@ export default function App() {
                               <div className="flex justify-between items-start gap-2">
                                 <div>
                                   <h4 className="font-bold text-sm text-[#FF9800] line-clamp-1">
-                                    {campaigns.find(c => c.id === loggedInDriver.currentCampaignId)?.title || "Tata Punch EV Bangalore"}
+                                    {campaigns.find(c => c.id === loggedInDriver.currentCampaignId)?.title || "Edge Fashion Summer Launch Bangalore"}
                                   </h4>
                                   <p className="text-[10px] text-slate-300">
                                     Linked vehicle: <span className="text-emerald-400 font-mono font-bold text-[10px]">{loggedInDriver?.autoNumber || "WB-01-EX-1234"}</span>
