@@ -908,7 +908,7 @@ export default function App() {
             <div className="w-9 h-9 bg-[#FF9800] rounded-xl flex items-center justify-center font-display font-black text-lg text-white shadow-lg shadow-orange-500/15">
               A
             </div>
-            <span className="text-xl font-display font-black tracking-tight text-white">AutoAdz</span>
+            <span className="text-xl font-display font-black tracking-tight text-white">AutoAdz.in</span>
             <span className="text-[10px] font-mono bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded border border-orange-500/20">DATABASE-DRIVEN</span>
           </div>
 
@@ -1622,7 +1622,7 @@ export default function App() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-display font-extrabold tracking-tight">AutoAdz</h1>
+              <h1 className="text-2xl font-display font-extrabold tracking-tight">AutoAdz.in</h1>
               <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                 userSession === "admin" ? "bg-red-500/20 text-red-400 border-red-500/30" :
                 userSession === "driver" ? "bg-teal-500/20 text-teal-400 border-teal-500/30" :

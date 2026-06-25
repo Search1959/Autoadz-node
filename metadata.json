@@ -1,5 +1,5 @@
 {
-  "name": "AutoAdz - Smart Auto Advertising Platform",
+  "name": "AutoAdz.in - Smart Auto Advertising Platform",
   "description": "India's measurable auto-rickshaw advertising platform with GPS tracking, photo proof verification, and Gemini AI-powered campaign analytics.",
   "requestFramePermissions": ["camera", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
