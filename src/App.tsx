@@ -47,6 +47,225 @@ export default function App() {
   const [faqActiveTab, setFaqActiveTab] = useState<"All" | "Advertisers" | "Drivers" | "General">("All");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
+  // Unified Help Center & FAQ Modal
+  const renderHelpModal = () => {
+    if (!showHelpModal) return null;
+
+    const faqItems = [
+      {
+        category: "General",
+        question: "What is AutoAdz.in?",
+        answer: "AutoAdz.in is India's leading database-driven, GPS-tracked auto-rickshaw out-of-home (OOH) transit advertising platform. We turn thousands of high-mileage auto-rickshaws into moving smart billboards, allowing brands to broadcast their messages with full geographic tracking and verified visual campaign proof."
+      },
+      {
+        category: "Advertisers",
+        question: "How do we track our campaign performance in real-time?",
+        answer: "Unlike traditional static billboards, AutoAdz.in offers a dynamic advertiser dashboard with actual telemetry tracking. Every driver is linked to our real-time GPS tracking application. You can view live active drivers, route maps, total kilometers travelled, calculated local ad impressions, heatmaps of high-reach areas, and historic daily check-in logs with verified photos."
+      },
+      {
+        category: "Advertisers",
+        question: "Can I upload custom brand creatives?",
+        answer: "Yes! While launching a campaign, you can select from our professionally curated, high-conversion graphic templates (like Edge Fashion or Vogue Essentials) or easily upload your own custom banner artwork (via direct image file upload or by pasting a public image URL) to fit our premium auto hood dimension standards."
+      },
+      {
+        category: "Advertisers",
+        question: "What areas and cities can I target?",
+        answer: "We cover major metros including Bangalore, Mumbai, Delhi NCR, and Hyderabad. During campaign registration, you can specify your city and target high-density business/residential areas (e.g., Koramangala, Indiranagar, HSR Layout, or Whitefield in Bangalore) for hyper-local impact."
+      },
+      {
+        category: "Drivers",
+        question: "How do auto-rickshaw drivers register and earn?",
+        answer: "Drivers can register directly via the 'Become a Driver Partner' section by providing their phone number, auto rickshaw vehicle number, and preferred driving region. They log in to their driver partner portal, start live GPS sessions during hours of operation, and earn direct payouts calculated based on verified kilometers driven, daily campaign photo check-ins, and consistent uptime."
+      },
+      {
+        category: "Drivers",
+        question: "How is visual display verification managed?",
+        answer: "To keep campaigns fully transparent, drivers are required to submit live photos showing the correct brand graphic clearly mounted on the back or hood of their auto-rickshaw (e.g., Morning and Evening Installation check-ins). These uploads are cross-referenced with date-stamps and geofencing to protect brand integrity."
+      },
+      {
+        category: "General",
+        question: "What is the Campaign Simulator?",
+        answer: "The built-in sandbox simulator allows you to experience both sides of our ecosystem! You can toggle between being an 'Advertiser' (launching campaigns, visualizing telemetry maps, verifying driver proofs) and a 'Driver' (simulating active driving sessions, mock-generating GPS coordinates, and uploading daily installation check-in proof photos)."
+      }
+    ];
+
+    const filteredFaqs = faqItems.filter(item => {
+      const matchesTab = faqActiveTab === "All" || item.category === faqActiveTab;
+      const matchesSearch = item.question.toLowerCase().includes(faqSearchQuery.toLowerCase()) || 
+                            item.answer.toLowerCase().includes(faqSearchQuery.toLowerCase()) ||
+                            item.category.toLowerCase().includes(faqSearchQuery.toLowerCase());
+      return matchesTab && matchesSearch;
+    });
+
+    return (
+      <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
+          
+          {/* Decorative Radial Accents */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF9800]/5 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+          {/* Header */}
+          <div className="p-6 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-950/40">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500/10 text-[#FF9800] rounded-2xl flex items-center justify-center border border-orange-500/20">
+                <HelpCircle size={20} />
+              </div>
+              <div>
+                <h3 className="font-display font-extrabold text-white text-base">AutoAdz.in Help Center & FAQ</h3>
+                <p className="text-[11px] text-slate-400 font-sans">Everything you need to know about GPS-tracked Transit Out-of-Home (OOH) advertising</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                setShowHelpModal(false);
+                setFaqSearchQuery("");
+                setExpandedFaq(null);
+              }}
+              className="p-2 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl transition duration-200"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Search and Category Filter Section */}
+          <div className="p-6 pb-2 border-b border-slate-850 bg-slate-950/20 shrink-0 space-y-4">
+            {/* Live Filter Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3.5 top-3.5 text-slate-500" size={16} />
+              <input 
+                type="text"
+                placeholder="Search frequently asked questions (e.g., GPS, creatives, driver payout...)"
+                value={faqSearchQuery}
+                onChange={(e) => setFaqSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition font-medium"
+              />
+              {faqSearchQuery && (
+                <button 
+                  onClick={() => setFaqSearchQuery("")}
+                  className="absolute right-3.5 top-3 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Category Filter Tabs */}
+            <div className="flex gap-2 border-b border-slate-850 pb-2 overflow-x-auto scrollbar-none">
+              {(["All", "Advertisers", "Drivers", "General"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setFaqActiveTab(tab);
+                    setExpandedFaq(null);
+                  }}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap ${
+                    faqActiveTab === tab 
+                      ? "bg-[#FF9800] text-slate-950" 
+                      : "bg-slate-950/40 text-slate-400 border border-slate-800/60 hover:text-white hover:border-slate-700"
+                  }`}
+                >
+                  {tab === "All" ? "⭐ ALL QUESTIONS" : tab === "Advertisers" ? "💼 FOR ADVERTISERS" : tab === "Drivers" ? "🛺 FOR DRIVERS" : "🌐 GENERAL INFO"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scrollable Q&A Accordion List */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-950/10">
+            {filteredFaqs.length > 0 ? (
+              filteredFaqs.map((item, idx) => {
+                const originalIndex = faqItems.findIndex(f => f.question === item.question);
+                const isExpanded = expandedFaq === originalIndex;
+                return (
+                  <div 
+                    key={idx}
+                    className={`border rounded-2xl transition duration-200 overflow-hidden ${
+                      isExpanded 
+                        ? "border-[#FF9800]/50 bg-slate-850/60 shadow-lg shadow-orange-500/5" 
+                        : "border-slate-800/80 bg-slate-900 hover:bg-slate-850/30 hover:border-slate-700"
+                    }`}
+                  >
+                    {/* Accordion Trigger Head */}
+                    <button
+                      onClick={() => setExpandedFaq(isExpanded ? null : originalIndex)}
+                      className="w-full p-4 flex items-center justify-between text-left gap-4 font-sans"
+                    >
+                      <div className="space-y-1">
+                        <span className={`text-[8px] font-mono font-black uppercase px-2 py-0.5 rounded ${
+                          item.category === "Advertisers" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                          item.category === "Drivers" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
+                          "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                        }`}>
+                          {item.category}
+                        </span>
+                        <h4 className="font-bold text-xs text-white tracking-tight pt-1 font-sans">
+                          {item.question}
+                        </h4>
+                      </div>
+                      <span className={`text-slate-500 shrink-0 transform transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
+                        <ChevronRight size={16} className={isExpanded ? "text-[#FF9800]" : "text-slate-500"} />
+                      </span>
+                    </button>
+
+                    {/* Accordion Body Content */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-1 border-t border-slate-800/60 bg-slate-950/40 text-xs text-slate-300 leading-relaxed font-sans">
+                        {item.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 font-sans">
+                <div className="p-4 bg-slate-900 border border-slate-800 text-slate-500 rounded-2xl">
+                  <AlertCircle size={28} />
+                </div>
+                <div>
+                  <p className="text-xs text-white font-bold">No answers found</p>
+                  <p className="text-[10px] text-slate-400 max-w-xs mt-1">We couldn't find matching articles for "{faqSearchQuery}". Try using simpler search terms or select another category tab above.</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setFaqSearchQuery("");
+                    setFaqActiveTab("All");
+                  }}
+                  className="text-[10px] font-mono font-bold text-[#FF9800] bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition"
+                >
+                  RESET FILTERS
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Modal Footer */}
+          <div className="p-5 border-t border-slate-800 bg-slate-950/90 text-center shrink-0 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="text-left font-sans">
+              <p className="text-[9px] text-slate-500 uppercase font-mono font-bold">CUSTOMER SUPPORT LINE</p>
+              <p className="text-xs text-white font-bold flex items-center gap-1.5 font-sans">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                +91 99999-99999 <span className="text-slate-400 font-normal">| support@autoadz.in</span>
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowHelpModal(false);
+                setFaqSearchQuery("");
+                setExpandedFaq(null);
+                setLandingSection("register-campaign");
+              }}
+              className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 text-[10px] font-mono font-extrabold px-4 py-2 rounded-xl shadow-lg transition"
+            >
+              🚀 LAUNCH A CAMPAIGN NOW
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
   // Real-time clock for status bars and dynamic ride metering cards
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   useEffect(() => {
@@ -83,11 +302,8 @@ export default function App() {
     return saved ? parseInt(saved, 10) : 0;
   });
 
-  // Tracking Mode: "gps" (real hardware GPS) or "simulated" (testing route simulator)
-  const [trackingMode, setTrackingMode] = useState<"gps" | "simulated">(() => {
-    const saved = localStorage.getItem("autoadz_tracking_mode");
-    return (saved === "gps" || saved === "simulated") ? saved : "gps";
-  });
+  // Tracking Mode: Enforced to "gps" (real hardware GPS tracking) as requested
+  const [trackingMode, setTrackingMode] = useState<"gps" | "simulated">("gps");
 
   // GPS detailed states
   const [gpsStatus, setGpsStatus] = useState<"idle" | "searching" | "active" | "stationary" | "error">("idle");
@@ -200,6 +416,7 @@ export default function App() {
               const { latitude, longitude, speed } = position.coords;
               const timestamp = position.timestamp || Date.now();
               const newPos = { lat: latitude, lng: longitude, timestamp };
+              const accuracy = position.coords.accuracy || 0;
               
               setLastCoords({ lat: latitude, lng: longitude });
 
@@ -221,37 +438,42 @@ export default function App() {
                 const timeHours = (timestamp - lastCoordsRef.current.timestamp) / 3600000;
                 const calcSpeed = timeHours > 0 ? (distance / timeHours) : 0;
 
-                // Robust GPS Jitter and Stationary Drift Filters:
-                // 1. Distance threshold of 10 meters (0.010 km)
-                // 2. Calculated speed threshold of 4.5 km/h (minimum auto rickshaw cruising speed)
-                // 3. Hardware speed (m/s) if available is less than 1.2 m/s (~4.3 km/h)
-                const isHardwareStationary = speed !== null && speed !== undefined && speed < 1.2;
+                // High-fidelity slow-walk and transport-friendly GPS movement conditions:
+                // 1. Minimum distance from stable anchor of 4 meters (0.004 km) to filter micro GPS jump noise.
+                // 2. Minimum speed of 0.5 km/h to confirm it's physical human/vehicle movement and not idle drift.
+                // 3. Reasonable coordinate accuracy (under 40m) to reject wild cellular/IP jumps.
+                const isLegitimateMovement = distance >= 0.004 && calcSpeed >= 0.5 && (accuracy === 0 || accuracy < 40);
 
-                if (distance < 0.010 || calcSpeed < 4.5 || isHardwareStationary) {
-                  // Stationary / Drift / Noise filter
+                if (isLegitimateMovement) {
+                  if (calcSpeed > 140) {
+                    // Ignore sudden impossible GPS jumps (e.g. teleporting over 140km/h due to IP change)
+                    console.warn("GPS Jitter ignored. Speed was: ", calcSpeed);
+                  } else {
+                    // Actual legitimate movement!
+                    setGpsStatus("active");
+                    setGpsSpeed(speed !== null && speed !== undefined ? Math.round(speed * 3.6) : Math.round(calcSpeed));
+                    
+                    setLiveSessionKms(prevKms => {
+                      const nextKms = parseFloat((prevKms + distance).toFixed(4));
+                      localStorage.setItem("autoadz_live_session_kms", String(nextKms));
+                      return nextKms;
+                    });
+
+                    lastCoordsRef.current = newPos;
+                    localStorage.setItem("autoadz_last_coords", JSON.stringify(newPos));
+                  }
+                } else {
+                  // Device is stationary or changes are within GPS jitter margin.
+                  // CRITICAL: We do NOT update lastCoordsRef.current here!
+                  // This allows consecutive tiny physical steps (e.g. 2 meters) to accumulate relative to 
+                  // the same stable anchor until they cross the 4-meter threshold, preventing slow walks
+                  // from being continuously erased and lost.
                   setGpsSpeed(0);
                   setGpsStatus("stationary");
 
-                  // CRITICAL: Always update the reference anchor to the new coordinate even when stationary.
-                  // This prevents multiple small drift events from accumulating over time into a larger distance!
-                  lastCoordsRef.current = newPos;
-                  localStorage.setItem("autoadz_last_coords", JSON.stringify(newPos));
-                } else if (calcSpeed > 140) {
-                  // Ignore sudden GPS jumps (e.g. teleporting over 140km/h)
-                  console.warn("GPS Jitter ignored. Speed was: ", calcSpeed);
-                } else {
-                  // Actual legitimate movement!
-                  setGpsStatus("active");
-                  setGpsSpeed(speed !== null && speed !== undefined ? Math.round(speed * 3.6) : Math.round(calcSpeed));
-                  
-                  setLiveSessionKms(prevKms => {
-                    const nextKms = parseFloat((prevKms + distance).toFixed(4));
-                    localStorage.setItem("autoadz_live_session_kms", String(nextKms));
-                    return nextKms;
-                  });
-
-                  lastCoordsRef.current = newPos;
-                  localStorage.setItem("autoadz_last_coords", JSON.stringify(newPos));
+                  if (accuracy > 40) {
+                    setGpsStatus("searching"); // signal is too weak/inaccurate
+                  }
                 }
               }
             },
@@ -302,8 +524,8 @@ export default function App() {
                   const bgHours = (timestamp - savedCoords.timestamp) / 3600000;
                   const bgSpeed = bgHours > 0 ? (bgDistance / bgHours) : 0;
 
-                  // If they moved a reasonable distance at a reasonable speed (at least 20m and 4.5 km/h to filter drift)
-                  if (bgDistance > 0.02 && bgSpeed >= 4.5 && bgSpeed < 140) {
+                  // If they moved a reasonable distance at a reasonable speed (at least 5m and 0.5 km/h to support slow walks)
+                  if (bgDistance > 0.005 && bgSpeed >= 0.5 && bgSpeed < 140) {
                     setLiveSessionKms(prev => {
                       const next = parseFloat((prev + bgDistance).toFixed(4));
                       localStorage.setItem("autoadz_live_session_kms", String(next));
@@ -1037,7 +1259,7 @@ export default function App() {
 
                   <div className="rounded-2xl overflow-hidden relative border border-slate-800 mb-4 shadow-inner">
                     <img 
-                      src="https://images.unsplash.com/photo-1566008889980-f21509a25b3a?auto=format&fit=crop&q=80&w=800"
+                      src="https://images.unsplash.com/photo-1561361062-f2f20e90490f?auto=format&fit=crop&q=80&w=800"
                       alt="Auto Rickshaw Media" 
                       className="w-full h-44 object-cover brightness-95"
                     />
@@ -1607,6 +1829,8 @@ export default function App() {
         <footer className="w-full border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-600 font-mono z-10 mt-auto">
           AutoAdz Secure Multi-Tenant Framework v3.0 • Database is synchronized live with backend services.
         </footer>
+
+        {renderHelpModal()}
       </div>
     );
   }
@@ -2389,27 +2613,11 @@ export default function App() {
                                 <span className="text-[8px] uppercase font-mono tracking-wider text-slate-400 font-bold block">
                                   Telemetry Sensor Mode:
                                 </span>
-                                <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-lg border border-white/5">
-                                  <button
-                                    onClick={() => setTrackingMode("gps")}
-                                    className={`py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${
-                                      trackingMode === "gps"
-                                        ? "bg-[#FF9800] text-[#0B1F4D] shadow-sm"
-                                        : "text-slate-400 hover:text-white"
-                                    }`}
-                                  >
-                                    🛰️ Hardware GPS
-                                  </button>
-                                  <button
-                                    onClick={() => setTrackingMode("simulated")}
-                                    className={`py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${
-                                      trackingMode === "simulated"
-                                        ? "bg-[#FF9800] text-[#0B1F4D] shadow-sm"
-                                        : "text-slate-400 hover:text-white"
-                                    }`}
-                                  >
-                                    🧪 Demo Simulator
-                                  </button>
+                                <div className="py-2 px-3 bg-emerald-950/40 rounded-lg border border-emerald-500/20 text-center flex items-center justify-center gap-1.5 shadow-sm">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-wider">
+                                    🛰️ Live Device Hardware GPS (Enforced)
+                                  </span>
                                 </div>
                               </div>
 
@@ -2467,7 +2675,7 @@ export default function App() {
                                     </div>
                                     <p className="text-[8px] text-slate-400 leading-normal font-sans">
                                       {gpsStatus === "stationary" 
-                                        ? "⚠️ Device is stationary. GPS distance will only increment once physical movement is detected (>1.5 km/h)."
+                                        ? "⚠️ Device is stationary. GPS distance will only increment once physical movement is detected (>0.5 km/h)."
                                         : gpsStatus === "searching"
                                         ? "🛰️ Accessing your device's high-precision GPS sensors. Please authorize location access if prompted."
                                         : gpsStatus === "error"
@@ -3666,221 +3874,7 @@ export default function App() {
           {/* ========================================================= */}
           {/* HELP CENTER & FAQ MODAL OVERLAY (Q&A System)            */}
           {/* ========================================================= */}
-          {showHelpModal && (() => {
-            const faqItems = [
-              {
-                category: "General",
-                question: "What is AutoAdz.in?",
-                answer: "AutoAdz.in is India's leading database-driven, GPS-tracked auto-rickshaw out-of-home (OOH) transit advertising platform. We turn thousands of high-mileage auto-rickshaws into moving smart billboards, allowing brands to broadcast their messages with full geographic tracking and verified visual campaign proof."
-              },
-              {
-                category: "Advertisers",
-                question: "How do we track our campaign performance in real-time?",
-                answer: "Unlike traditional static billboards, AutoAdz.in offers a dynamic advertiser dashboard with actual telemetry tracking. Every driver is linked to our real-time GPS tracking application. You can view live active drivers, route maps, total kilometers travelled, calculated local ad impressions, heatmaps of high-reach areas, and historic daily check-in logs with verified photos."
-              },
-              {
-                category: "Advertisers",
-                question: "Can I upload custom brand creatives?",
-                answer: "Yes! While launching a campaign, you can select from our professionally curated, high-conversion graphic templates (like Edge Fashion or Vogue Essentials) or easily upload your own custom banner artwork (via direct image file upload or by pasting a public image URL) to fit our premium auto hood dimension standards."
-              },
-              {
-                category: "Advertisers",
-                question: "What areas and cities can I target?",
-                answer: "We cover major metros including Bangalore, Mumbai, Delhi NCR, and Hyderabad. During campaign registration, you can specify your city and target high-density business/residential areas (e.g., Koramangala, Indiranagar, HSR Layout, or Whitefield in Bangalore) for hyper-local impact."
-              },
-              {
-                category: "Drivers",
-                question: "How do auto-rickshaw drivers register and earn?",
-                answer: "Drivers can register directly via the 'Become a Driver Partner' section by providing their phone number, auto rickshaw vehicle number, and preferred driving region. They log in to their driver partner portal, start live GPS sessions during hours of operation, and earn direct payouts calculated based on verified kilometers driven, daily campaign photo check-ins, and consistent uptime."
-              },
-              {
-                category: "Drivers",
-                question: "How is visual display verification managed?",
-                answer: "To keep campaigns fully transparent, drivers are required to submit live photos showing the correct brand graphic clearly mounted on the back or hood of their auto-rickshaw (e.g., Morning and Evening Installation check-ins). These uploads are cross-referenced with date-stamps and geofencing to protect brand integrity."
-              },
-              {
-                category: "General",
-                question: "What is the Campaign Simulator?",
-                answer: "The built-in sandbox simulator allows you to experience both sides of our ecosystem! You can toggle between being an 'Advertiser' (launching campaigns, visualizing telemetry maps, verifying driver proofs) and a 'Driver' (simulating active driving sessions, mock-generating GPS coordinates, and uploading daily installation check-in proof photos)."
-              }
-            ];
-
-            const filteredFaqs = faqItems.filter(item => {
-              const matchesTab = faqActiveTab === "All" || item.category === faqActiveTab;
-              const matchesSearch = item.question.toLowerCase().includes(faqSearchQuery.toLowerCase()) || 
-                                    item.answer.toLowerCase().includes(faqSearchQuery.toLowerCase()) ||
-                                    item.category.toLowerCase().includes(faqSearchQuery.toLowerCase());
-              return matchesTab && matchesSearch;
-            });
-
-            return (
-              <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
-                  
-                  {/* Decorative Radial Accents */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF9800]/5 rounded-full blur-3xl pointer-events-none"></div>
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
-                  {/* Header */}
-                  <div className="p-6 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-950/40">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-500/10 text-[#FF9800] rounded-2xl flex items-center justify-center border border-orange-500/20">
-                        <HelpCircle size={20} />
-                      </div>
-                      <div>
-                        <h3 className="font-display font-extrabold text-white text-base">AutoAdz.in Help Center & FAQ</h3>
-                        <p className="text-[11px] text-slate-400 font-sans">Everything you need to know about GPS-tracked Transit Out-of-Home (OOH) advertising</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        setShowHelpModal(false);
-                        setFaqSearchQuery("");
-                        setExpandedFaq(null);
-                      }}
-                      className="p-2 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl transition duration-200"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-
-                  {/* Search and Category Filter Section */}
-                  <div className="p-6 pb-2 border-b border-slate-850 bg-slate-950/20 shrink-0 space-y-4">
-                    {/* Live Filter Search Input */}
-                    <div className="relative">
-                      <Search className="absolute left-3.5 top-3.5 text-slate-500" size={16} />
-                      <input 
-                        type="text"
-                        placeholder="Search frequently asked questions (e.g., GPS, creatives, driver payout...)"
-                        value={faqSearchQuery}
-                        onChange={(e) => setFaqSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition font-medium"
-                      />
-                      {faqSearchQuery && (
-                        <button 
-                          onClick={() => setFaqSearchQuery("")}
-                          className="absolute right-3.5 top-3 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Category Filter Tabs */}
-                    <div className="flex gap-2 border-b border-slate-850 pb-2 overflow-x-auto scrollbar-none">
-                      {(["All", "Advertisers", "Drivers", "General"] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          onClick={() => {
-                            setFaqActiveTab(tab);
-                            setExpandedFaq(null);
-                          }}
-                          className={`px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap ${
-                            faqActiveTab === tab 
-                              ? "bg-[#FF9800] text-slate-950" 
-                              : "bg-slate-950/40 text-slate-400 border border-slate-800/60 hover:text-white hover:border-slate-700"
-                          }`}
-                        >
-                          {tab === "All" ? "⭐ ALL QUESTIONS" : tab === "Advertisers" ? "💼 FOR ADVERTISERS" : tab === "Drivers" ? "🛺 FOR DRIVERS" : "🌐 GENERAL INFO"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Scrollable Q&A Accordion List */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-950/10">
-                    {filteredFaqs.length > 0 ? (
-                      filteredFaqs.map((item, idx) => {
-                        const originalIndex = faqItems.findIndex(f => f.question === item.question);
-                        const isExpanded = expandedFaq === originalIndex;
-                        return (
-                          <div 
-                            key={idx}
-                            className={`border rounded-2xl transition duration-200 overflow-hidden ${
-                              isExpanded 
-                                ? "border-[#FF9800]/50 bg-slate-850/60 shadow-lg shadow-orange-500/5" 
-                                : "border-slate-800/80 bg-slate-900 hover:bg-slate-850/30 hover:border-slate-700"
-                            }`}
-                          >
-                            {/* Accordion Trigger Head */}
-                            <button
-                              onClick={() => setExpandedFaq(isExpanded ? null : originalIndex)}
-                              className="w-full p-4 flex items-center justify-between text-left gap-4 font-sans"
-                            >
-                              <div className="space-y-1">
-                                <span className={`text-[8px] font-mono font-black uppercase px-2 py-0.5 rounded ${
-                                  item.category === "Advertisers" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                                  item.category === "Drivers" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
-                                  "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                                }`}>
-                                  {item.category}
-                                </span>
-                                <h4 className="font-bold text-xs text-white tracking-tight pt-1 font-sans">
-                                  {item.question}
-                                </h4>
-                              </div>
-                              <span className={`text-slate-500 shrink-0 transform transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
-                                <ChevronRight size={16} className={isExpanded ? "text-[#FF9800]" : "text-slate-500"} />
-                              </span>
-                            </button>
-
-                            {/* Accordion Body Content */}
-                            {isExpanded && (
-                              <div className="px-4 pb-4 pt-1 border-t border-slate-800/60 bg-slate-950/40 text-xs text-slate-300 leading-relaxed font-sans">
-                                {item.answer}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 font-sans">
-                        <div className="p-4 bg-slate-900 border border-slate-800 text-slate-500 rounded-2xl">
-                          <AlertCircle size={28} />
-                        </div>
-                        <div>
-                          <p className="text-xs text-white font-bold">No answers found</p>
-                          <p className="text-[10px] text-slate-400 max-w-xs mt-1">We couldn't find matching articles for "{faqSearchQuery}". Try using simpler search terms or select another category tab above.</p>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            setFaqSearchQuery("");
-                            setFaqActiveTab("All");
-                          }}
-                          className="text-[10px] font-mono font-bold text-[#FF9800] bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition"
-                        >
-                          RESET FILTERS
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Modal Footer */}
-                  <div className="p-5 border-t border-slate-800 bg-slate-950/90 text-center shrink-0 flex flex-col sm:flex-row justify-between items-center gap-3">
-                    <div className="text-left font-sans">
-                      <p className="text-[9px] text-slate-500 uppercase font-mono font-bold">CUSTOMER SUPPORT LINE</p>
-                      <p className="text-xs text-white font-bold flex items-center gap-1.5 font-sans">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        +91 99999-99999 <span className="text-slate-400 font-normal">| support@autoadz.in</span>
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowHelpModal(false);
-                        setFaqSearchQuery("");
-                        setExpandedFaq(null);
-                        setLandingSection("register-campaign");
-                      }}
-                      className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 text-[10px] font-mono font-extrabold px-4 py-2 rounded-xl shadow-lg transition"
-                    >
-                      🚀 LAUNCH A CAMPAIGN NOW
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-            );
-          })()}
+          {renderHelpModal()}
 
         </div>
       </div>
