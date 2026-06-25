@@ -341,10 +341,20 @@ export default function App() {
     if (!activeDriver) return;
 
     let timerInterval: NodeJS.Timeout | null = null;
+    const isActiveTracker = localStorage.getItem("autoadz_is_active_tracker") === "true";
 
     if (activeDriver.state === "tracking") {
       setGpsErrorMsg("");
       
+      if (!isActiveTracker) {
+        // Desktop/viewer passive mode: mirror server state
+        setLiveSessionKms(activeDriver.currentSessionKms || 0);
+        setLiveSessionSeconds(activeDriver.currentSessionSeconds || 0);
+        setGpsStatus("active");
+        return () => {};
+      }
+
+      // Active Tracker Device Logic
       if (!wasTrackingRef.current) {
         // We just started tracking or restored from a previous active session
         const savedStart = localStorage.getItem("autoadz_tracking_start_time");
@@ -386,12 +396,15 @@ export default function App() {
 
       // Start the live clock ticker (runs in both GPS and Sim modes to increment timer)
       timerInterval = setInterval(() => {
+        let currentSecs = 0;
         setLiveSessionSeconds(prev => {
           const next = prev + 1;
           localStorage.setItem("autoadz_live_session_seconds", String(next));
+          currentSecs = next;
           return next;
         });
 
+        let currentKms = 0;
         // If in simulated mode, also increment KMs artificially every second
         if (trackingMode === "simulated") {
           setGpsStatus("active");
@@ -401,8 +414,30 @@ export default function App() {
           setLiveSessionKms(prevKms => {
             const nextKms = parseFloat((prevKms + inc).toFixed(4));
             localStorage.setItem("autoadz_live_session_kms", String(nextKms));
+            currentKms = nextKms;
             return nextKms;
           });
+        } else {
+          const savedKmsStr = localStorage.getItem("autoadz_live_session_kms");
+          currentKms = savedKmsStr ? parseFloat(savedKmsStr) : liveSessionKms;
+        }
+
+        // Periodic sync of current session stats to server every 4 seconds
+        if (currentSecs % 4 === 0) {
+          (async () => {
+            try {
+              await fetch(`/api/drivers/${activeDriver.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  currentSessionKms: currentKms,
+                  currentSessionSeconds: currentSecs
+                })
+              });
+            } catch (e) {
+              console.error("Failed to sync live session stats to server", e);
+            }
+          })();
         }
       }, 1000);
 
@@ -464,10 +499,6 @@ export default function App() {
                   }
                 } else {
                   // Device is stationary or changes are within GPS jitter margin.
-                  // CRITICAL: We do NOT update lastCoordsRef.current here!
-                  // This allows consecutive tiny physical steps (e.g. 2 meters) to accumulate relative to 
-                  // the same stable anchor until they cross the 4-meter threshold, preventing slow walks
-                  // from being continuously erased and lost.
                   setGpsSpeed(0);
                   setGpsStatus("stationary");
 
@@ -499,10 +530,8 @@ export default function App() {
       }
 
       // Background Restore / App Re-focus Sync Handler
-      // When the driver minimizes the browser and returns later, we sync the background distance!
       const handleVisibilityChange = () => {
         if (document.visibilityState === "visible" && trackingMode === "gps") {
-          // Try to immediately get a fresh position and calculate background distance
           navigator.geolocation.getCurrentPosition(
             (pos) => {
               const { latitude, longitude } = pos.coords;
@@ -524,7 +553,6 @@ export default function App() {
                   const bgHours = (timestamp - savedCoords.timestamp) / 3600000;
                   const bgSpeed = bgHours > 0 ? (bgDistance / bgHours) : 0;
 
-                  // If they moved a reasonable distance at a reasonable speed (at least 5m and 0.5 km/h to support slow walks)
                   if (bgDistance > 0.005 && bgSpeed >= 0.5 && bgSpeed < 140) {
                     setLiveSessionKms(prev => {
                       const next = parseFloat((prev + bgDistance).toFixed(4));
@@ -532,13 +560,11 @@ export default function App() {
                       return next;
                     });
 
-                    // Update last coords
                     const newPosObj = { lat: latitude, lng: longitude, timestamp };
                     lastCoordsRef.current = newPosObj;
                     localStorage.setItem("autoadz_last_coords", JSON.stringify(newPosObj));
                     setLastCoords({ lat: latitude, lng: longitude });
 
-                    // Welcome back notification!
                     const finalEarnings = parseFloat((bgDistance * 4.5).toFixed(2));
                     notifications.unshift({
                       id: `notif_bg_${Date.now()}`,
@@ -549,14 +575,12 @@ export default function App() {
                       type: "payment"
                     });
                   } else {
-                    // Even if stationary, update the anchor point so background drift doesn't accumulate
                     const newPosObj = { lat: latitude, lng: longitude, timestamp };
                     lastCoordsRef.current = newPosObj;
                     localStorage.setItem("autoadz_last_coords", JSON.stringify(newPosObj));
                     setLastCoords({ lat: latitude, lng: longitude });
                   }
                   
-                  // Also sync elapsed timer
                   const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartStr, 10)) / 1000);
                   setLiveSessionSeconds(elapsedSeconds);
                   localStorage.setItem("autoadz_live_session_seconds", String(elapsedSeconds));
@@ -585,12 +609,11 @@ export default function App() {
       if (wasTrackingRef.current) {
         wasTrackingRef.current = false;
         
-        // Finalize stats from local storage or state
         const savedKmsStr = localStorage.getItem("autoadz_live_session_kms");
         const finalKms = savedKmsStr ? parseFloat(savedKmsStr) : liveSessionKms;
         const finalEarnings = parseFloat((finalKms * 4.5).toFixed(2));
 
-        // Clean up tracking local storage
+        localStorage.removeItem("autoadz_is_active_tracker");
         localStorage.removeItem("autoadz_tracking_start_time");
         localStorage.removeItem("autoadz_live_session_kms");
         localStorage.removeItem("autoadz_live_session_seconds");
@@ -614,7 +637,10 @@ export default function App() {
                 body: JSON.stringify({
                   totalEarnings: nextTotalEarnings,
                   walletBalance: nextWalletBalance,
-                  state: "online"
+                  state: "online",
+                  currentSessionKms: 0,
+                  currentSessionSeconds: 0,
+                  trackingStartTime: null
                 })
               });
 
@@ -656,6 +682,24 @@ export default function App() {
               fetchData();
             } catch (err) {
               console.error("Failed to auto-save live telemetry", err);
+            }
+          })();
+        } else {
+          (async () => {
+            try {
+              await fetch(`/api/drivers/${activeDriver.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  state: "online",
+                  currentSessionKms: 0,
+                  currentSessionSeconds: 0,
+                  trackingStartTime: null
+                })
+              });
+              fetchData();
+            } catch (err) {
+              console.error("Failed to clear tracking session state", err);
             }
           })();
         }
@@ -1027,15 +1071,45 @@ export default function App() {
     if (!mainDriver) return;
     const nextState = mainDriver.state === "tracking" ? "online" : "tracking";
 
-    try {
-      await fetch(`/api/drivers/${mainDriver.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: nextState })
-      });
-      fetchData();
-    } catch (err) {
-      console.error(err);
+    if (nextState === "tracking") {
+      localStorage.setItem("autoadz_is_active_tracker", "true");
+      localStorage.setItem("autoadz_tracking_start_time", String(Date.now()));
+      localStorage.setItem("autoadz_live_session_kms", "0");
+      localStorage.setItem("autoadz_live_session_seconds", "0");
+      localStorage.removeItem("autoadz_last_coords");
+      
+      setLiveSessionSeconds(0);
+      setLiveSessionKms(0);
+      setGpsStatus("searching");
+      setGpsSpeed(0);
+      wasTrackingRef.current = true;
+
+      try {
+        await fetch(`/api/drivers/${mainDriver.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            state: "tracking",
+            currentSessionKms: 0,
+            currentSessionSeconds: 0,
+            trackingStartTime: Date.now()
+          })
+        });
+        fetchData();
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      try {
+        await fetch(`/api/drivers/${mainDriver.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: "online" })
+        });
+        fetchData();
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 

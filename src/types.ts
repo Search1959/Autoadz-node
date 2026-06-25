@@ -35,6 +35,9 @@ export interface Driver {
   walletBalance: number;
   currentCampaignId: string | null;
   status: DriverStatus;
+  currentSessionKms?: number;
+  currentSessionSeconds?: number;
+  trackingStartTime?: number | null;
 }
 
 export type ProofType = "morning" | "evening" | "installation";

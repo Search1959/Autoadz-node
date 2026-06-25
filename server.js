@@ -296,7 +296,17 @@ app.post("/api/drivers", (req, res) => {
 
 app.put("/api/drivers/:id", (req, res) => {
   const { id } = req.params;
-  const { status, kycVerified, currentCampaignId, state, totalEarnings, walletBalance } = req.body;
+  const { 
+    status, 
+    kycVerified, 
+    currentCampaignId, 
+    state, 
+    totalEarnings, 
+    walletBalance,
+    currentSessionKms,
+    currentSessionSeconds,
+    trackingStartTime
+  } = req.body;
   const index = drivers.findIndex((d) => d.id === id);
   if (index !== -1) {
     if (status !== undefined) drivers[index].status = status;
@@ -305,6 +315,9 @@ app.put("/api/drivers/:id", (req, res) => {
     if (state !== undefined) drivers[index].state = state;
     if (totalEarnings !== undefined) drivers[index].totalEarnings = Number(totalEarnings);
     if (walletBalance !== undefined) drivers[index].walletBalance = Number(walletBalance);
+    if (currentSessionKms !== undefined) drivers[index].currentSessionKms = Number(currentSessionKms);
+    if (currentSessionSeconds !== undefined) drivers[index].currentSessionSeconds = Number(currentSessionSeconds);
+    if (trackingStartTime !== undefined) drivers[index].trackingStartTime = trackingStartTime;
 
     saveDatabase();
 
