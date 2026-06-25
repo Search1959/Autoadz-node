@@ -42,6 +42,10 @@ export default function App() {
   const [simulatedKmsToday, setSimulatedKmsToday] = useState<number>(42.0);
   const [simulatedKmsTotal, setSimulatedKmsTotal] = useState<number>(14250);
   const [isSimulatingDrive, setIsSimulatingDrive] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [faqSearchQuery, setFaqSearchQuery] = useState("");
+  const [faqActiveTab, setFaqActiveTab] = useState<"All" | "Advertisers" | "Drivers" | "General">("All");
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   // Real-time clock for status bars and dynamic ride metering cards
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -920,6 +924,14 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowHelpModal(true)}
+              className="flex items-center gap-1.5 text-xs font-bold font-mono px-3.5 py-2 rounded-xl text-[#FF9800] bg-orange-500/10 hover:bg-[#FF9800] hover:text-slate-950 border border-orange-500/20 transition duration-200"
+            >
+              <HelpCircle size={14} />
+              HELP & FAQ
+            </button>
+
             {landingSection !== "login" ? (
               <button 
                 onClick={() => setLandingSection("login")}
@@ -1025,8 +1037,8 @@ export default function App() {
 
                   <div className="rounded-2xl overflow-hidden relative border border-slate-800 mb-4 shadow-inner">
                     <img 
-                      src="https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=800"
-                      alt="Rickshaw Media" 
+                      src="https://images.unsplash.com/photo-1566008889980-f21509a25b3a?auto=format&fit=crop&q=80&w=800"
+                      alt="Auto Rickshaw Media" 
                       className="w-full h-44 object-cover brightness-95"
                     />
                     <div className="absolute bottom-3 left-3 bg-slate-950/90 text-white text-[9px] font-mono font-bold px-2.5 py-1 rounded-lg border border-slate-800/80">
@@ -3650,6 +3662,225 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* ========================================================= */}
+          {/* HELP CENTER & FAQ MODAL OVERLAY (Q&A System)            */}
+          {/* ========================================================= */}
+          {showHelpModal && (() => {
+            const faqItems = [
+              {
+                category: "General",
+                question: "What is AutoAdz.in?",
+                answer: "AutoAdz.in is India's leading database-driven, GPS-tracked auto-rickshaw out-of-home (OOH) transit advertising platform. We turn thousands of high-mileage auto-rickshaws into moving smart billboards, allowing brands to broadcast their messages with full geographic tracking and verified visual campaign proof."
+              },
+              {
+                category: "Advertisers",
+                question: "How do we track our campaign performance in real-time?",
+                answer: "Unlike traditional static billboards, AutoAdz.in offers a dynamic advertiser dashboard with actual telemetry tracking. Every driver is linked to our real-time GPS tracking application. You can view live active drivers, route maps, total kilometers travelled, calculated local ad impressions, heatmaps of high-reach areas, and historic daily check-in logs with verified photos."
+              },
+              {
+                category: "Advertisers",
+                question: "Can I upload custom brand creatives?",
+                answer: "Yes! While launching a campaign, you can select from our professionally curated, high-conversion graphic templates (like Edge Fashion or Vogue Essentials) or easily upload your own custom banner artwork (via direct image file upload or by pasting a public image URL) to fit our premium auto hood dimension standards."
+              },
+              {
+                category: "Advertisers",
+                question: "What areas and cities can I target?",
+                answer: "We cover major metros including Bangalore, Mumbai, Delhi NCR, and Hyderabad. During campaign registration, you can specify your city and target high-density business/residential areas (e.g., Koramangala, Indiranagar, HSR Layout, or Whitefield in Bangalore) for hyper-local impact."
+              },
+              {
+                category: "Drivers",
+                question: "How do auto-rickshaw drivers register and earn?",
+                answer: "Drivers can register directly via the 'Become a Driver Partner' section by providing their phone number, auto rickshaw vehicle number, and preferred driving region. They log in to their driver partner portal, start live GPS sessions during hours of operation, and earn direct payouts calculated based on verified kilometers driven, daily campaign photo check-ins, and consistent uptime."
+              },
+              {
+                category: "Drivers",
+                question: "How is visual display verification managed?",
+                answer: "To keep campaigns fully transparent, drivers are required to submit live photos showing the correct brand graphic clearly mounted on the back or hood of their auto-rickshaw (e.g., Morning and Evening Installation check-ins). These uploads are cross-referenced with date-stamps and geofencing to protect brand integrity."
+              },
+              {
+                category: "General",
+                question: "What is the Campaign Simulator?",
+                answer: "The built-in sandbox simulator allows you to experience both sides of our ecosystem! You can toggle between being an 'Advertiser' (launching campaigns, visualizing telemetry maps, verifying driver proofs) and a 'Driver' (simulating active driving sessions, mock-generating GPS coordinates, and uploading daily installation check-in proof photos)."
+              }
+            ];
+
+            const filteredFaqs = faqItems.filter(item => {
+              const matchesTab = faqActiveTab === "All" || item.category === faqActiveTab;
+              const matchesSearch = item.question.toLowerCase().includes(faqSearchQuery.toLowerCase()) || 
+                                    item.answer.toLowerCase().includes(faqSearchQuery.toLowerCase()) ||
+                                    item.category.toLowerCase().includes(faqSearchQuery.toLowerCase());
+              return matchesTab && matchesSearch;
+            });
+
+            return (
+              <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
+                  
+                  {/* Decorative Radial Accents */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF9800]/5 rounded-full blur-3xl pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                  {/* Header */}
+                  <div className="p-6 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-950/40">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-orange-500/10 text-[#FF9800] rounded-2xl flex items-center justify-center border border-orange-500/20">
+                        <HelpCircle size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-display font-extrabold text-white text-base">AutoAdz.in Help Center & FAQ</h3>
+                        <p className="text-[11px] text-slate-400 font-sans">Everything you need to know about GPS-tracked Transit Out-of-Home (OOH) advertising</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setShowHelpModal(false);
+                        setFaqSearchQuery("");
+                        setExpandedFaq(null);
+                      }}
+                      className="p-2 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl transition duration-200"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {/* Search and Category Filter Section */}
+                  <div className="p-6 pb-2 border-b border-slate-850 bg-slate-950/20 shrink-0 space-y-4">
+                    {/* Live Filter Search Input */}
+                    <div className="relative">
+                      <Search className="absolute left-3.5 top-3.5 text-slate-500" size={16} />
+                      <input 
+                        type="text"
+                        placeholder="Search frequently asked questions (e.g., GPS, creatives, driver payout...)"
+                        value={faqSearchQuery}
+                        onChange={(e) => setFaqSearchQuery(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition font-medium"
+                      />
+                      {faqSearchQuery && (
+                        <button 
+                          onClick={() => setFaqSearchQuery("")}
+                          className="absolute right-3.5 top-3 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Category Filter Tabs */}
+                    <div className="flex gap-2 border-b border-slate-850 pb-2 overflow-x-auto scrollbar-none">
+                      {(["All", "Advertisers", "Drivers", "General"] as const).map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => {
+                            setFaqActiveTab(tab);
+                            setExpandedFaq(null);
+                          }}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap ${
+                            faqActiveTab === tab 
+                              ? "bg-[#FF9800] text-slate-950" 
+                              : "bg-slate-950/40 text-slate-400 border border-slate-800/60 hover:text-white hover:border-slate-700"
+                          }`}
+                        >
+                          {tab === "All" ? "⭐ ALL QUESTIONS" : tab === "Advertisers" ? "💼 FOR ADVERTISERS" : tab === "Drivers" ? "🛺 FOR DRIVERS" : "🌐 GENERAL INFO"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Scrollable Q&A Accordion List */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-950/10">
+                    {filteredFaqs.length > 0 ? (
+                      filteredFaqs.map((item, idx) => {
+                        const originalIndex = faqItems.findIndex(f => f.question === item.question);
+                        const isExpanded = expandedFaq === originalIndex;
+                        return (
+                          <div 
+                            key={idx}
+                            className={`border rounded-2xl transition duration-200 overflow-hidden ${
+                              isExpanded 
+                                ? "border-[#FF9800]/50 bg-slate-850/60 shadow-lg shadow-orange-500/5" 
+                                : "border-slate-800/80 bg-slate-900 hover:bg-slate-850/30 hover:border-slate-700"
+                            }`}
+                          >
+                            {/* Accordion Trigger Head */}
+                            <button
+                              onClick={() => setExpandedFaq(isExpanded ? null : originalIndex)}
+                              className="w-full p-4 flex items-center justify-between text-left gap-4 font-sans"
+                            >
+                              <div className="space-y-1">
+                                <span className={`text-[8px] font-mono font-black uppercase px-2 py-0.5 rounded ${
+                                  item.category === "Advertisers" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                                  item.category === "Drivers" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
+                                  "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                }`}>
+                                  {item.category}
+                                </span>
+                                <h4 className="font-bold text-xs text-white tracking-tight pt-1 font-sans">
+                                  {item.question}
+                                </h4>
+                              </div>
+                              <span className={`text-slate-500 shrink-0 transform transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
+                                <ChevronRight size={16} className={isExpanded ? "text-[#FF9800]" : "text-slate-500"} />
+                              </span>
+                            </button>
+
+                            {/* Accordion Body Content */}
+                            {isExpanded && (
+                              <div className="px-4 pb-4 pt-1 border-t border-slate-800/60 bg-slate-950/40 text-xs text-slate-300 leading-relaxed font-sans">
+                                {item.answer}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 font-sans">
+                        <div className="p-4 bg-slate-900 border border-slate-800 text-slate-500 rounded-2xl">
+                          <AlertCircle size={28} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white font-bold">No answers found</p>
+                          <p className="text-[10px] text-slate-400 max-w-xs mt-1">We couldn't find matching articles for "{faqSearchQuery}". Try using simpler search terms or select another category tab above.</p>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setFaqSearchQuery("");
+                            setFaqActiveTab("All");
+                          }}
+                          className="text-[10px] font-mono font-bold text-[#FF9800] bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition"
+                        >
+                          RESET FILTERS
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-5 border-t border-slate-800 bg-slate-950/90 text-center shrink-0 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div className="text-left font-sans">
+                      <p className="text-[9px] text-slate-500 uppercase font-mono font-bold">CUSTOMER SUPPORT LINE</p>
+                      <p className="text-xs text-white font-bold flex items-center gap-1.5 font-sans">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        +91 99999-99999 <span className="text-slate-400 font-normal">| support@autoadz.in</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowHelpModal(false);
+                        setFaqSearchQuery("");
+                        setExpandedFaq(null);
+                        setLandingSection("register-campaign");
+                      }}
+                      className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 text-[10px] font-mono font-extrabold px-4 py-2 rounded-xl shadow-lg transition"
+                    >
+                      🚀 LAUNCH A CAMPAIGN NOW
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            );
+          })()}
 
         </div>
       </div>
