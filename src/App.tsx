@@ -14,7 +14,7 @@ import {
   Smartphone, Shield, Check, RotateCcw, Camera, HelpCircle, 
   TrendingUp, Award, Navigation, RefreshCw, Eye, ThumbsUp, 
   ThumbsDown, Sparkles, MessageSquare, Activity, ShieldAlert,
-  Sun, Moon
+  Sun, Moon, Upload
 } from "lucide-react";
 import AiAssistant from "./components/AiAssistant";
 
@@ -667,6 +667,26 @@ export default function App() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Advertiser upload custom ad creative
+  const handleUpdateCreative = async (campaignId: string, creativeUrl: string) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          creativeUrl,
+          creativeStatus: "pending",
+          creativeApproved: false
+        })
+      });
+      if (response.ok) {
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Error updating ad creative:", err);
     }
   };
 
@@ -1951,6 +1971,63 @@ export default function App() {
                                 </div>
                               </div>
 
+                              {/* Ad Creative & Upload Panel */}
+                              <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+                                <div className="flex justify-between items-center text-[9px]">
+                                  <span className="text-slate-500 uppercase font-mono font-bold">Ad Creative Art:</span>
+                                  <span className={`font-mono px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
+                                    camp.creativeStatus === "approved" ? "bg-emerald-100 text-emerald-800 font-black" :
+                                    camp.creativeStatus === "rejected" ? "bg-rose-100 text-rose-800 font-black" :
+                                    "bg-amber-100 text-amber-800 font-black"
+                                  }`}>
+                                    {camp.creativeStatus === "approved" ? "Approved ✅" :
+                                     camp.creativeStatus === "rejected" ? "Rejected ❌" : "Pending Approval ⏳"}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                  <label className="flex-1 cursor-pointer flex flex-col items-center justify-center border border-dashed border-slate-300 rounded-lg p-2 bg-white hover:bg-slate-100 transition duration-200">
+                                    <Upload size={14} className="text-[#FF9800] mb-0.5" />
+                                    <span className="text-[9px] text-slate-600 font-bold">Upload Custom Banner</span>
+                                    <span className="text-[8px] text-slate-400">Drag & drop or click</span>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      className="hidden" 
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onload = async (event) => {
+                                            const base64 = event.target?.result as string;
+                                            await handleUpdateCreative(camp.id, base64);
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                  
+                                  <div className="w-[120px] flex flex-col justify-between">
+                                    <input 
+                                      type="text" 
+                                      placeholder="Or paste image URL"
+                                      className="w-full text-[9px] border border-slate-200 rounded p-1 bg-white focus:outline-none"
+                                      onKeyDown={async (e) => {
+                                        if (e.key === "Enter") {
+                                          const url = (e.target as HTMLInputElement).value;
+                                          if (url) {
+                                            await handleUpdateCreative(camp.id, url);
+                                            (e.target as HTMLInputElement).value = "";
+                                          }
+                                        }
+                                      }}
+                                    />
+                                    <span className="text-[7.5px] text-slate-400 italic leading-none">Press Enter to save URL</span>
+                                  </div>
+                                </div>
+                              </div>
+
                               <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-[10px]">
                                 <span className="text-slate-500 font-mono">Budget: <b>₹{camp.budget.toLocaleString()}</b></span>
                                 <button 
@@ -2963,29 +3040,78 @@ export default function App() {
                             </div>
                           </td>
                           <td className="py-3 text-right">
-                            {camp.status === "pending" ? (
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleVerifyCampaign(camp.id, "active")}
-                                  className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-0.5"
-                                >
-                                  <Check size={10} /> Approve
-                                </button>
-                                <button
-                                  onClick={() => handleVerifyCampaign(camp.id, "completed")}
-                                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-1 rounded text-[10px] font-bold transition"
-                                >
-                                  Reject
-                                </button>
+                            <div className="flex flex-col items-end gap-2">
+                              {/* Campaign Status approval */}
+                              <div>
+                                {camp.status === "pending" ? (
+                                  <div className="flex justify-end gap-1.5">
+                                    <button
+                                      onClick={() => handleVerifyCampaign(camp.id, "active")}
+                                      className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-0.5"
+                                    >
+                                      <Check size={10} /> Approve Campaign
+                                    </button>
+                                    <button
+                                      onClick={() => handleVerifyCampaign(camp.id, "completed")}
+                                      className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-1 rounded text-[10px] font-bold transition"
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className={`text-[10px] font-mono font-bold uppercase px-2 py-1 rounded-full ${
+                                    camp.status === "active" ? "bg-green-100 text-green-700 border border-green-200" :
+                                    "bg-slate-100 text-slate-500 border border-slate-200"
+                                  }`}>
+                                    {camp.status}
+                                  </span>
+                                )}
                               </div>
-                            ) : (
-                              <span className={`text-[10px] font-mono font-bold uppercase px-2 py-1 rounded-full ${
-                                camp.status === "active" ? "bg-green-100 text-green-700 border border-green-200" :
-                                "bg-slate-100 text-slate-500 border border-slate-200"
-                              }`}>
-                                {camp.status}
-                              </span>
-                            )}
+
+                              {/* Ad Creative Approval Controls */}
+                              <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex flex-col items-end gap-1 mt-1 max-w-[180px]">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[8px] text-slate-400 font-mono uppercase">Art Status:</span>
+                                  <span className={`text-[8px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${
+                                    camp.creativeStatus === "approved" ? "bg-emerald-100 text-emerald-800" :
+                                    camp.creativeStatus === "rejected" ? "bg-rose-100 text-rose-800" :
+                                    "bg-amber-100 text-amber-800"
+                                  }`}>
+                                    {camp.creativeStatus || "pending"}
+                                  </span>
+                                </div>
+                                {camp.creativeStatus !== "approved" && (
+                                  <div className="flex gap-1 mt-1">
+                                    <button
+                                      onClick={async () => {
+                                        await fetch(`/api/campaigns/${camp.id}`, {
+                                          method: "PUT",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ creativeStatus: "approved", creativeApproved: true })
+                                        });
+                                        fetchData();
+                                      }}
+                                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-1.5 py-0.5 rounded text-[8px] font-bold transition"
+                                    >
+                                      Approve Art
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        await fetch(`/api/campaigns/${camp.id}`, {
+                                          method: "PUT",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ creativeStatus: "rejected", creativeApproved: false })
+                                        });
+                                        fetchData();
+                                      }}
+                                      className="bg-rose-600 hover:bg-rose-700 text-white px-1.5 py-0.5 rounded text-[8px] font-bold transition"
+                                    >
+                                      Reject Art
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       ))}

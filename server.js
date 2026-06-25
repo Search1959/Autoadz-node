@@ -155,18 +155,8 @@ setInterval(() => {
     return camp;
   });
 
-  // Simulate active tracking for online/tracking drivers
-  drivers = drivers.map((driver) => {
-    if (driver.state === "tracking" && driver.currentCampaignId) {
-      const addedEarning = Math.floor(Math.random() * 5) + 2;
-      return {
-        ...driver,
-        totalEarnings: driver.totalEarnings + addedEarning,
-        walletBalance: driver.walletBalance + addedEarning,
-      };
-    }
-    return driver;
-  });
+  // Simulate active tracking for online/tracking drivers - removed automatic wallet increase to ensure it only increases when GPS KM increases
+  // drivers = drivers.map((driver) => { ... })
 
   saveDatabase();
 }, 10000); // simulation tick every 10s
