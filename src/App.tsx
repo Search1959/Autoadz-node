@@ -217,18 +217,28 @@ export default function App() {
                 const timeHours = (timestamp - lastCoordsRef.current.timestamp) / 3600000;
                 const calcSpeed = timeHours > 0 ? (distance / timeHours) : 0;
 
-                // Threshold to filter GPS drift/jitter (less than 6 meters or speed < 1.5 km/h)
-                if (distance < 0.006 || calcSpeed < 1.5) {
-                  // Stationary / Noise filter
+                // Robust GPS Jitter and Stationary Drift Filters:
+                // 1. Distance threshold of 10 meters (0.010 km)
+                // 2. Calculated speed threshold of 4.5 km/h (minimum auto rickshaw cruising speed)
+                // 3. Hardware speed (m/s) if available is less than 1.2 m/s (~4.3 km/h)
+                const isHardwareStationary = speed !== null && speed !== undefined && speed < 1.2;
+
+                if (distance < 0.010 || calcSpeed < 4.5 || isHardwareStationary) {
+                  // Stationary / Drift / Noise filter
                   setGpsSpeed(0);
                   setGpsStatus("stationary");
+
+                  // CRITICAL: Always update the reference anchor to the new coordinate even when stationary.
+                  // This prevents multiple small drift events from accumulating over time into a larger distance!
+                  lastCoordsRef.current = newPos;
+                  localStorage.setItem("autoadz_last_coords", JSON.stringify(newPos));
                 } else if (calcSpeed > 140) {
                   // Ignore sudden GPS jumps (e.g. teleporting over 140km/h)
                   console.warn("GPS Jitter ignored. Speed was: ", calcSpeed);
                 } else {
                   // Actual legitimate movement!
                   setGpsStatus("active");
-                  setGpsSpeed(speed ? Math.round(speed * 3.6) : Math.round(calcSpeed));
+                  setGpsSpeed(speed !== null && speed !== undefined ? Math.round(speed * 3.6) : Math.round(calcSpeed));
                   
                   setLiveSessionKms(prevKms => {
                     const nextKms = parseFloat((prevKms + distance).toFixed(4));
@@ -288,8 +298,8 @@ export default function App() {
                   const bgHours = (timestamp - savedCoords.timestamp) / 3600000;
                   const bgSpeed = bgHours > 0 ? (bgDistance / bgHours) : 0;
 
-                  // If they moved a reasonable distance at a reasonable speed
-                  if (bgDistance > 0.01 && bgSpeed < 140) {
+                  // If they moved a reasonable distance at a reasonable speed (at least 20m and 4.5 km/h to filter drift)
+                  if (bgDistance > 0.02 && bgSpeed >= 4.5 && bgSpeed < 140) {
                     setLiveSessionKms(prev => {
                       const next = parseFloat((prev + bgDistance).toFixed(4));
                       localStorage.setItem("autoadz_live_session_kms", String(next));
@@ -312,6 +322,12 @@ export default function App() {
                       unread: true,
                       type: "payment"
                     });
+                  } else {
+                    // Even if stationary, update the anchor point so background drift doesn't accumulate
+                    const newPosObj = { lat: latitude, lng: longitude, timestamp };
+                    lastCoordsRef.current = newPosObj;
+                    localStorage.setItem("autoadz_last_coords", JSON.stringify(newPosObj));
+                    setLastCoords({ lat: latitude, lng: longitude });
                   }
                   
                   // Also sync elapsed timer
