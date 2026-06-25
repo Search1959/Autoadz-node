@@ -69,42 +69,297 @@ export default function App() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Live real-time driver tracking session states (defined after drivers state to avoid block-scoped error)
-  const [liveSessionKms, setLiveSessionKms] = useState<number>(0);
-  const [liveSessionSeconds, setLiveSessionSeconds] = useState<number>(0);
-  const wasTrackingRef = useRef(false);
+  // Live real-time driver tracking session states
+  const [liveSessionKms, setLiveSessionKms] = useState<number>(() => {
+    const saved = localStorage.getItem("autoadz_live_session_kms");
+    return saved ? parseFloat(saved) : 0;
+  });
+  const [liveSessionSeconds, setLiveSessionSeconds] = useState<number>(() => {
+    const saved = localStorage.getItem("autoadz_live_session_seconds");
+    return saved ? parseInt(saved, 10) : 0;
+  });
 
+  // Tracking Mode: "gps" (real hardware GPS) or "simulated" (testing route simulator)
+  const [trackingMode, setTrackingMode] = useState<"gps" | "simulated">(() => {
+    const saved = localStorage.getItem("autoadz_tracking_mode");
+    return (saved === "gps" || saved === "simulated") ? saved : "gps";
+  });
+
+  // GPS detailed states
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "searching" | "active" | "stationary" | "error">("idle");
+  const [gpsSpeed, setGpsSpeed] = useState<number>(0); // speed in km/h
+  const [gpsErrorMsg, setGpsErrorMsg] = useState<string>("");
+  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Refs for background persistent tracking
+  const wasTrackingRef = useRef(false);
+  const watchIdRef = useRef<number | null>(null);
+  const lastCoordsRef = useRef<{ lat: number; lng: number; timestamp: number } | null>(null);
+
+  // Helper to calculate distance between coordinates (Haversine formula)
+  const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    ;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  };
+
+  // Persist tracking mode choice
+  useEffect(() => {
+    localStorage.setItem("autoadz_tracking_mode", trackingMode);
+  }, [trackingMode]);
+
+  // Main Tracking and Sync Engine
   useEffect(() => {
     const activeDriver = drivers.find(d => d.id === loggedInDriverId);
     if (!activeDriver) return;
 
-    let timer: NodeJS.Timeout | null = null;
+    let timerInterval: NodeJS.Timeout | null = null;
 
     if (activeDriver.state === "tracking") {
+      setGpsErrorMsg("");
+      
       if (!wasTrackingRef.current) {
-        // Reset counters when transitioning from stopped -> tracking
-        setLiveSessionSeconds(0);
-        setLiveSessionKms(0);
+        // We just started tracking or restored from a previous active session
+        const savedStart = localStorage.getItem("autoadz_tracking_start_time");
+        if (!savedStart) {
+          // New session!
+          const now = Date.now();
+          localStorage.setItem("autoadz_tracking_start_time", String(now));
+          localStorage.setItem("autoadz_live_session_kms", "0");
+          localStorage.setItem("autoadz_live_session_seconds", "0");
+          localStorage.removeItem("autoadz_last_coords");
+          setLiveSessionSeconds(0);
+          setLiveSessionKms(0);
+          lastCoordsRef.current = null;
+          setLastCoords(null);
+        } else {
+          // Restore existing session after app refresh or wakeup
+          const savedKms = localStorage.getItem("autoadz_live_session_kms");
+          const savedSecs = localStorage.getItem("autoadz_live_session_seconds");
+          const savedCoords = localStorage.getItem("autoadz_last_coords");
+          
+          if (savedKms) setLiveSessionKms(parseFloat(savedKms));
+          if (savedSecs) {
+            const elapsedSinceStart = Math.floor((Date.now() - parseInt(savedStart, 10)) / 1000);
+            setLiveSessionSeconds(Math.max(parseInt(savedSecs, 10), elapsedSinceStart));
+          }
+          if (savedCoords) {
+            try {
+              const parsed = JSON.parse(savedCoords);
+              lastCoordsRef.current = parsed;
+              setLastCoords({ lat: parsed.lat, lng: parsed.lng });
+            } catch (e) {
+              lastCoordsRef.current = null;
+            }
+          }
+        }
         wasTrackingRef.current = true;
+        setGpsStatus("searching");
       }
 
-      // Start the live ticker interval
-      timer = setInterval(() => {
-        setLiveSessionSeconds(s => s + 1);
-        setLiveSessionKms(k => {
-          // Add a highly realistic increment: 0.015 - 0.025 KM per second (equivalent to ~54 - 90 KM/h)
-          const inc = 0.015 + Math.random() * 0.01;
-          return parseFloat((k + inc).toFixed(3));
+      // Start the live clock ticker (runs in both GPS and Sim modes to increment timer)
+      timerInterval = setInterval(() => {
+        setLiveSessionSeconds(prev => {
+          const next = prev + 1;
+          localStorage.setItem("autoadz_live_session_seconds", String(next));
+          return next;
         });
+
+        // If in simulated mode, also increment KMs artificially every second
+        if (trackingMode === "simulated") {
+          setGpsStatus("active");
+          // Random realistic speed of ~30-60 km/h: 0.008 to 0.016 km per second
+          const inc = 0.008 + Math.random() * 0.008;
+          setGpsSpeed(Math.round(inc * 3600)); // speed in km/h
+          setLiveSessionKms(prevKms => {
+            const nextKms = parseFloat((prevKms + inc).toFixed(4));
+            localStorage.setItem("autoadz_live_session_kms", String(nextKms));
+            return nextKms;
+          });
+        }
       }, 1000);
+
+      // If we are in GPS mode, listen to real hardware Geolocation
+      if (trackingMode === "gps") {
+        if ("geolocation" in navigator) {
+          setGpsStatus("searching");
+          
+          watchIdRef.current = navigator.geolocation.watchPosition(
+            (position) => {
+              const { latitude, longitude, speed } = position.coords;
+              const timestamp = position.timestamp || Date.now();
+              const newPos = { lat: latitude, lng: longitude, timestamp };
+              
+              setLastCoords({ lat: latitude, lng: longitude });
+
+              if (lastCoordsRef.current === null) {
+                // First coordinate acquired!
+                lastCoordsRef.current = newPos;
+                localStorage.setItem("autoadz_last_coords", JSON.stringify(newPos));
+                setGpsStatus("active");
+                setGpsSpeed(speed ? Math.round(speed * 3.6) : 0);
+              } else {
+                // Calculate distance from previous coordinate
+                const distance = getHaversineDistance(
+                  lastCoordsRef.current.lat,
+                  lastCoordsRef.current.lng,
+                  latitude,
+                  longitude
+                );
+
+                const timeHours = (timestamp - lastCoordsRef.current.timestamp) / 3600000;
+                const calcSpeed = timeHours > 0 ? (distance / timeHours) : 0;
+
+                // Threshold to filter GPS drift/jitter (less than 6 meters or speed < 1.5 km/h)
+                if (distance < 0.006 || calcSpeed < 1.5) {
+                  // Stationary / Noise filter
+                  setGpsSpeed(0);
+                  setGpsStatus("stationary");
+                } else if (calcSpeed > 140) {
+                  // Ignore sudden GPS jumps (e.g. teleporting over 140km/h)
+                  console.warn("GPS Jitter ignored. Speed was: ", calcSpeed);
+                } else {
+                  // Actual legitimate movement!
+                  setGpsStatus("active");
+                  setGpsSpeed(speed ? Math.round(speed * 3.6) : Math.round(calcSpeed));
+                  
+                  setLiveSessionKms(prevKms => {
+                    const nextKms = parseFloat((prevKms + distance).toFixed(4));
+                    localStorage.setItem("autoadz_live_session_kms", String(nextKms));
+                    return nextKms;
+                  });
+
+                  lastCoordsRef.current = newPos;
+                  localStorage.setItem("autoadz_last_coords", JSON.stringify(newPos));
+                }
+              }
+            },
+            (error) => {
+              console.error("GPS tracking error:", error);
+              setGpsStatus("error");
+              setGpsSpeed(0);
+              let msg = "Location permission denied.";
+              if (error.code === error.POSITION_UNAVAILABLE) msg = "GPS signal lost.";
+              if (error.code === error.TIMEOUT) msg = "GPS response timeout.";
+              setGpsErrorMsg(msg);
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 15000
+            }
+          );
+        } else {
+          setGpsStatus("error");
+          setGpsErrorMsg("HTML5 Geolocation not supported in this browser.");
+        }
+      }
+
+      // Background Restore / App Re-focus Sync Handler
+      // When the driver minimizes the browser and returns later, we sync the background distance!
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible" && trackingMode === "gps") {
+          // Try to immediately get a fresh position and calculate background distance
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const { latitude, longitude } = pos.coords;
+              const timestamp = pos.timestamp || Date.now();
+              
+              const savedCoordsStr = localStorage.getItem("autoadz_last_coords");
+              const savedStartStr = localStorage.getItem("autoadz_tracking_start_time");
+              
+              if (savedCoordsStr && savedStartStr) {
+                try {
+                  const savedCoords = JSON.parse(savedCoordsStr);
+                  const bgDistance = getHaversineDistance(
+                    savedCoords.lat,
+                    savedCoords.lng,
+                    latitude,
+                    longitude
+                  );
+
+                  const bgHours = (timestamp - savedCoords.timestamp) / 3600000;
+                  const bgSpeed = bgHours > 0 ? (bgDistance / bgHours) : 0;
+
+                  // If they moved a reasonable distance at a reasonable speed
+                  if (bgDistance > 0.01 && bgSpeed < 140) {
+                    setLiveSessionKms(prev => {
+                      const next = parseFloat((prev + bgDistance).toFixed(4));
+                      localStorage.setItem("autoadz_live_session_kms", String(next));
+                      return next;
+                    });
+
+                    // Update last coords
+                    const newPosObj = { lat: latitude, lng: longitude, timestamp };
+                    lastCoordsRef.current = newPosObj;
+                    localStorage.setItem("autoadz_last_coords", JSON.stringify(newPosObj));
+                    setLastCoords({ lat: latitude, lng: longitude });
+
+                    // Welcome back notification!
+                    const finalEarnings = parseFloat((bgDistance * 4.5).toFixed(2));
+                    notifications.unshift({
+                      id: `notif_bg_${Date.now()}`,
+                      title: "Background Miles Recorded! 🛰️",
+                      message: `Successfully tracked +${bgDistance.toFixed(2)} KM and earned ₹${finalEarnings} while working in the background!`,
+                      timestamp: new Date().toLocaleString(),
+                      unread: true,
+                      type: "payment"
+                    });
+                  }
+                  
+                  // Also sync elapsed timer
+                  const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartStr, 10)) / 1000);
+                  setLiveSessionSeconds(elapsedSeconds);
+                  localStorage.setItem("autoadz_live_session_seconds", String(elapsedSeconds));
+                } catch (e) {
+                  console.error("Failed to parsed stored coordinates", e);
+                }
+              }
+            },
+            (err) => console.warn("Background geolocation refresh failed:", err),
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+        }
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+      };
     } else {
-      // Just stopped tracking?
+      // Not tracking. Did we just stop tracking? Save stats to database!
       if (wasTrackingRef.current) {
         wasTrackingRef.current = false;
-        const finalKms = liveSessionKms;
+        
+        // Finalize stats from local storage or state
+        const savedKmsStr = localStorage.getItem("autoadz_live_session_kms");
+        const finalKms = savedKmsStr ? parseFloat(savedKmsStr) : liveSessionKms;
         const finalEarnings = parseFloat((finalKms * 4.5).toFixed(2));
 
-        if (finalKms > 0.02) {
+        // Clean up tracking local storage
+        localStorage.removeItem("autoadz_tracking_start_time");
+        localStorage.removeItem("autoadz_live_session_kms");
+        localStorage.removeItem("autoadz_live_session_seconds");
+        localStorage.removeItem("autoadz_last_coords");
+
+        lastCoordsRef.current = null;
+        setLastCoords(null);
+        setGpsStatus("idle");
+        setGpsSpeed(0);
+
+        if (finalKms > 0.01) {
           (async () => {
             try {
               const nextTotalEarnings = parseFloat(((activeDriver.totalEarnings || 0) + finalEarnings).toFixed(2));
@@ -166,9 +421,9 @@ export default function App() {
     }
 
     return () => {
-      if (timer) clearInterval(timer);
+      if (timerInterval) clearInterval(timerInterval);
     };
-  }, [drivers, loggedInDriverId, liveSessionKms]);
+  }, [drivers, loggedInDriverId, trackingMode]);
 
   // App UI Navigation States
   const [advertiserTab, setAdvertiserTab] = useState<"home" | "campaigns" | "tracking" | "ai" | "profile">("home");
@@ -1946,6 +2201,35 @@ export default function App() {
                                 </button>
                               </div>
 
+                              {/* Tracking Mode Mode Control */}
+                              <div className="space-y-1">
+                                <span className="text-[8px] uppercase font-mono tracking-wider text-slate-400 font-bold block">
+                                  Telemetry Sensor Mode:
+                                </span>
+                                <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-lg border border-white/5">
+                                  <button
+                                    onClick={() => setTrackingMode("gps")}
+                                    className={`py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${
+                                      trackingMode === "gps"
+                                        ? "bg-[#FF9800] text-[#0B1F4D] shadow-sm"
+                                        : "text-slate-400 hover:text-white"
+                                    }`}
+                                  >
+                                    🛰️ Hardware GPS
+                                  </button>
+                                  <button
+                                    onClick={() => setTrackingMode("simulated")}
+                                    className={`py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${
+                                      trackingMode === "simulated"
+                                        ? "bg-[#FF9800] text-[#0B1F4D] shadow-sm"
+                                        : "text-slate-400 hover:text-white"
+                                    }`}
+                                  >
+                                    🧪 Demo Simulator
+                                  </button>
+                                </div>
+                              </div>
+
                               {/* Live Odometer Meter HUD & Inline Action Switch */}
                               <div className="bg-slate-900/80 border border-white/10 rounded-xl p-3 space-y-2.5">
                                 <div className="flex items-center justify-between">
@@ -1953,24 +2237,67 @@ export default function App() {
                                     <span className="flex h-2 w-2 relative">
                                       {loggedInDriver?.state === "tracking" ? (
                                         <>
-                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                                            gpsStatus === "active" ? "bg-emerald-400" : gpsStatus === "stationary" ? "bg-blue-400" : "bg-amber-400"
+                                          }`}></span>
+                                          <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                                            gpsStatus === "active" ? "bg-emerald-500" : gpsStatus === "stationary" ? "bg-blue-500" : "bg-amber-500"
+                                          }`}></span>
                                         </>
                                       ) : (
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
                                       )}
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-200 uppercase font-mono tracking-wider">
-                                      {loggedInDriver?.state === "tracking" ? "ACTIVE GPS TRACKING RUN" : "GPS READY - STANDBY"}
+                                      {loggedInDriver?.state !== "tracking" 
+                                        ? "GPS READY - STANDBY" 
+                                        : trackingMode === "simulated"
+                                        ? "SIMULATOR ACTIVE"
+                                        : gpsStatus === "searching"
+                                        ? "Acquiring GPS Signal..."
+                                        : gpsStatus === "stationary"
+                                        ? "Stationary - Waiting for Movement"
+                                        : gpsStatus === "error"
+                                        ? "GPS Error / Denied"
+                                        : "ACTIVE GPS TRACKING RUN"}
                                     </span>
                                   </div>
                                   
                                   {loggedInDriver?.state === "tracking" && (
-                                    <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded animate-pulse">
-                                      Speed: ~18-25 m/s
+                                    <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-black ${
+                                      gpsSpeed > 0 ? "bg-emerald-950 text-emerald-400 animate-pulse" : "bg-slate-800 text-slate-400"
+                                    }`}>
+                                      Speed: {gpsSpeed} KM/H
                                     </span>
                                   )}
                                 </div>
+
+                                {loggedInDriver?.state === "tracking" && trackingMode === "gps" && (
+                                  <div className="text-[9px] bg-slate-950/60 p-2 rounded-lg border border-white/5 space-y-1">
+                                    <div className="flex justify-between items-center text-slate-300">
+                                      <span>Current Status:</span>
+                                      <span className={`font-bold uppercase ${
+                                        gpsStatus === "active" ? "text-emerald-400" : gpsStatus === "stationary" ? "text-blue-400" : "text-amber-400"
+                                      }`}>
+                                        {gpsStatus}
+                                      </span>
+                                    </div>
+                                    <p className="text-[8px] text-slate-400 leading-normal font-sans">
+                                      {gpsStatus === "stationary" 
+                                        ? "⚠️ Device is stationary. GPS distance will only increment once physical movement is detected (>1.5 km/h)."
+                                        : gpsStatus === "searching"
+                                        ? "🛰️ Accessing your device's high-precision GPS sensors. Please authorize location access if prompted."
+                                        : gpsStatus === "error"
+                                        ? `❌ Error: ${gpsErrorMsg}. Please check app location permissions.`
+                                        : "🟢 Physical movement detected! Automatically metering distance and calculating payout."}
+                                    </p>
+                                    {lastCoords && (
+                                      <p className="text-[7.5px] font-mono text-teal-400 text-right">
+                                        Lat: {lastCoords.lat.toFixed(5)}, Lng: {lastCoords.lng.toFixed(5)}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
 
                                 <div className="grid grid-cols-3 gap-2 border-y border-white/5 py-2 text-center">
                                   <div>
