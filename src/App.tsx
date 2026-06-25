@@ -24,7 +24,7 @@ export default function App() {
 
   // User Authentication and Portal isolation state
   const [userSession, setUserSession] = useState<"advertiser" | "driver" | "admin" | null>(null);
-  const [loggedInDriverId, setLoggedInDriverId] = useState<string>("driver_1");
+  const [loggedInDriverId, setLoggedInDriverId] = useState<string>("driver_delip");
   const [landingSection, setLandingSection] = useState<"hero" | "register-campaign" | "register-driver" | "login">("hero");
   const [campaignSuccessMsg, setCampaignSuccessMsg] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
@@ -584,7 +584,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           driverId: activeDriver.id,
-          campaignId: selectedCampaignForProof || activeDriver.currentCampaignId || "camp_1",
+          campaignId: selectedCampaignForProof || activeDriver.currentCampaignId || (campaigns[0]?.id || "camp_1"),
           type: selectedProofType,
           imageUrl: customProofImg || "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
           location: proofLocation
@@ -627,7 +627,7 @@ export default function App() {
         body: JSON.stringify({
           status: approve ? "active" : "rejected",
           kycVerified: approve,
-          currentCampaignId: approve ? "camp_1" : null // Assign to active Bangalore campaign for quick demo
+          currentCampaignId: approve ? (campaigns[0]?.id || null) : null // Assign to active campaign for quick demo
         })
       });
       if (response.ok) {
@@ -1491,7 +1491,7 @@ export default function App() {
                       })
                       .catch(err => {
                         console.error(err);
-                        setLoggedInDriverId("driver_1");
+                        setLoggedInDriverId("driver_delip");
                         setUserSession("driver");
                         setActiveSimulator("driver");
                       });
@@ -1535,7 +1535,7 @@ export default function App() {
     ].filter(Boolean).join(':');
   };
 
-  const loggedInDriver = drivers.find(d => d.id === loggedInDriverId) || drivers.find(d => d.id === "driver_1") || drivers[0];
+  const loggedInDriver = drivers.find(d => d.id === loggedInDriverId) || drivers.find(d => d.id === "driver_delip") || drivers[0];
 
   return (
     <div className={`min-h-screen ${darkMode ? "dark-theme-active" : "bg-[#F4F7FE]"} flex flex-col font-sans`}>
@@ -2454,12 +2454,6 @@ export default function App() {
                                 ₹{loggedInDriver?.walletBalance?.toLocaleString()}
                               </span>
                             </div>
-                            <button 
-                              onClick={() => setDriverTab("earnings")}
-                              className="text-xs text-[#FF9800] hover:underline font-bold"
-                            >
-                              Withdraw Bank &gt;
-                            </button>
                           </div>
                         </div>
 
@@ -2706,30 +2700,10 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Withdrawal Request Panel */}
-                        <form onSubmit={handleWithdrawal} className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
-                          <span className="text-[10px] font-bold text-slate-700 block uppercase">Withdraw to Registered Bank</span>
-                          <p className="text-[9px] text-slate-400">Instant payout via IMPS. Minimum withdrawal: ₹500.</p>
-                          <div className="flex gap-2">
-                            <input 
-                              type="number"
-                              required
-                              placeholder="Enter amount (e.g. 1000)"
-                              value={withdrawAmount}
-                              onChange={(e) => setWithdrawAmount(e.target.value)}
-                              className="flex-1 text-xs border border-slate-200 rounded p-1.5 focus:outline-none"
-                            />
-                            <button 
-                              type="submit"
-                              className="bg-[#0B1F4D] hover:bg-slate-800 text-white font-bold px-3 py-1 rounded text-xs transition"
-                            >
-                              WITHDRAW
-                            </button>
-                          </div>
-                          {walletSuccessMsg && (
-                            <p className="text-[10px] text-green-700 font-medium text-center">{walletSuccessMsg}</p>
-                          )}
-                        </form>
+                        {/* Earnings note */}
+                        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[10px] p-2.5 rounded-lg">
+                          💡 <b>Automatic Payout Mode Enabled</b>: Your verified GPS mileage earnings are automatically audited and deposited to your registered bank account weekly. Manual withdrawal is not required.
+                        </div>
 
                         {/* Support chat block */}
                         <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">

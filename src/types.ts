@@ -17,6 +17,8 @@ export interface Campaign {
   kmsCovered: number;
   qrScans: number;
   gpsRoute: Array<{ lat: number; lng: number }>;
+  creativeStatus?: "pending" | "approved" | "rejected";
+  creativeApproved?: boolean;
 }
 
 export type DriverStatus = "pending_approval" | "active" | "rejected";

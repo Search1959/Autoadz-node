@@ -32,106 +32,9 @@ import fs from "fs";
 const DB_FILE = path.join(process.cwd(), "db.json");
 
 // Default initial datasets (fallback seeds)
-const defaultCampaigns = [
-  {
-    id: "camp_1",
-    title: "Tata Punch EV Launch Bangalore",
-    client: "Tata Motors South",
-    city: "Bangalore",
-    area: "Indiranagar, Koramangala, Whitefield",
-    budget: 150000,
-    autosCount: 25,
-    creativeUrl: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=800",
-    status: "active",
-    startDate: "2026-06-15",
-    endDate: "2026-07-15",
-    kmsCovered: 14250,
-    qrScans: 842,
-    gpsRoute: [
-      { lat: 12.9716, lng: 77.5946 },
-      { lat: 12.9279, lng: 77.6271 },
-      { lat: 12.9698, lng: 77.7500 },
-      { lat: 12.9784, lng: 77.6408 },
-    ],
-  },
-  {
-    id: "camp_2",
-    title: "Haldiram's Durga Puja Special",
-    client: "Haldiram's East",
-    city: "Kolkata",
-    area: "North Kolkata, Salt Lake, Gariahat",
-    budget: 320000,
-    autosCount: 50,
-    creativeUrl: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=800",
-    status: "pending",
-    startDate: "2026-09-01",
-    endDate: "2026-10-15",
-    kmsCovered: 0,
-    qrScans: 0,
-    gpsRoute: [],
-  },
-  {
-    id: "camp_3",
-    title: "Swiggy Instamart Morning Delivery",
-    client: "Swiggy India",
-    city: "Mumbai",
-    area: "Andheri West, Bandra, Juhu",
-    budget: 95000,
-    autosCount: 15,
-    creativeUrl: "https://images.unsplash.com/photo-1526367790999-015078648c7e?auto=format&fit=crop&q=80&w=800",
-    status: "completed",
-    startDate: "2026-05-01",
-    endDate: "2026-05-31",
-    kmsCovered: 24150,
-    qrScans: 1452,
-    gpsRoute: [
-      { lat: 19.1136, lng: 72.8697 },
-      { lat: 19.0596, lng: 72.8295 },
-      { lat: 19.1044, lng: 72.8268 },
-    ],
-  },
-];
+const defaultCampaigns = [];
 
 const defaultDrivers = [
-  {
-    id: "driver_1",
-    name: "Rajesh Kumar",
-    phone: "9876543210",
-    autoNumber: "KA-03-EX-4921",
-    location: "Bangalore - Indiranagar",
-    state: "tracking",
-    kycVerified: true,
-    totalEarnings: 18450,
-    walletBalance: 3250,
-    currentCampaignId: "camp_1",
-    status: "active",
-  },
-  {
-    id: "driver_2",
-    name: "Subir Das",
-    phone: "9123456780",
-    autoNumber: "WB-04-BJ-9871",
-    location: "Kolkata - Salt Lake",
-    state: "online",
-    kycVerified: true,
-    totalEarnings: 12400,
-    walletBalance: 1500,
-    currentCampaignId: null,
-    status: "active",
-  },
-  {
-    id: "driver_3",
-    name: "Amit Shaw",
-    phone: "9988776655",
-    autoNumber: "WB-02-AG-5544",
-    location: "Kolkata - Shyambazar",
-    state: "offline",
-    kycVerified: false,
-    totalEarnings: 0,
-    walletBalance: 0,
-    currentCampaignId: null,
-    status: "pending_approval",
-  },
   {
     id: "driver_delip",
     name: "Delip",
@@ -147,110 +50,21 @@ const defaultDrivers = [
   },
 ];
 
-const defaultProofs = [
-  {
-    id: "proof_1",
-    driverId: "driver_1",
-    driverName: "Rajesh Kumar",
-    campaignId: "camp_1",
-    campaignTitle: "Tata Punch EV Launch Bangalore",
-    type: "installation",
-    imageUrl: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800",
-    timestamp: "2026-06-15 09:30 AM",
-    location: "Koramangala Auto Stand",
-    status: "approved",
-  },
-  {
-    id: "proof_2",
-    driverId: "driver_1",
-    driverName: "Rajesh Kumar",
-    campaignId: "camp_1",
-    campaignTitle: "Tata Punch EV Launch Bangalore",
-    type: "morning",
-    imageUrl: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
-    timestamp: "2026-06-24 07:15 AM",
-    location: "Indiranagar Metro Station",
-    status: "pending",
-  },
-  {
-    id: "proof_3",
-    driverId: "driver_2",
-    driverName: "Subir Das",
-    campaignId: "camp_2",
-    campaignTitle: "Haldiram's Durga Puja Special",
-    type: "installation",
-    imageUrl: "https://images.unsplash.com/photo-1494976388531-d1058094e2bd?auto=format&fit=crop&q=80&w=800",
-    timestamp: "2026-06-20 11:45 AM",
-    location: "Salt Lake Sector V",
-    status: "approved",
-  },
-];
+const defaultProofs = [];
 
 const defaultWalletTransactions = [
   {
-    id: "tx_1",
+    id: "tx_initial_advertiser",
     userId: "advertiser_main",
     type: "deposit",
     amount: 500000,
     status: "success",
-    description: "Added funds via Razorpay",
-    timestamp: "2026-06-01 10:00 AM",
-  },
-  {
-    id: "tx_2",
-    userId: "advertiser_main",
-    type: "payment",
-    amount: 150000,
-    status: "success",
-    description: "Paid for campaign: Tata Punch EV",
-    timestamp: "2026-06-14 04:30 PM",
-  },
-  {
-    id: "tx_3",
-    userId: "driver_1",
-    type: "earning",
-    amount: 500,
-    status: "success",
-    description: "Daily payout - 120km covered",
-    timestamp: "2026-06-23 09:00 PM",
-  },
-  {
-    id: "tx_4",
-    userId: "driver_1",
-    type: "withdrawal",
-    amount: 2000,
-    status: "success",
-    description: "Withdrew to bank account",
-    timestamp: "2026-06-22 11:00 AM",
+    description: "Initial Demo Deposited Balance",
+    timestamp: "2026-06-25 12:00 PM",
   },
 ];
 
-const defaultNotifications = [
-  {
-    id: "notif_1",
-    title: "Campaign Approved",
-    message: "Your 'Tata Punch EV Launch Bangalore' campaign is now active on 25 auto-rickshaws.",
-    timestamp: "2026-06-15 10:00 AM",
-    unread: false,
-    type: "campaign",
-  },
-  {
-    id: "notif_2",
-    title: "New Proof Uploaded",
-    message: "Driver Rajesh Kumar has uploaded a morning checklist photo for verification.",
-    timestamp: "2026-06-24 07:16 AM",
-    unread: true,
-    type: "driver",
-  },
-  {
-    id: "notif_3",
-    title: "New Driver Awaiting Verification",
-    message: "Driver Amit Shaw has submitted KYC and vehicle RC documents for approval.",
-    timestamp: "2026-06-24 05:00 AM",
-    unread: true,
-    type: "driver",
-  },
-];
+const defaultNotifications = [];
 
 // Active databases
 let campaigns = [];
@@ -378,6 +192,8 @@ app.post("/api/campaigns", (req, res) => {
     autosCount: Number(autosCount) || 10,
     creativeUrl: creativeUrl || "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800",
     status: "pending",
+    creativeStatus: "pending",
+    creativeApproved: false,
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     kmsCovered: 0,
@@ -404,7 +220,7 @@ app.post("/api/campaigns", (req, res) => {
   notifications.unshift({
     id: `notif_${Date.now()}`,
     title: "Campaign Created",
-    message: `Your campaign '${newCampaign.title}' is pending admin approval. ₹${newCampaign.budget.toLocaleString()} was reserved from your wallet.`,
+    message: `Your campaign '${newCampaign.title}' is pending admin approval. Ad creative status: Pending Approval.`,
     timestamp: new Date().toLocaleString(),
     unread: true,
     type: "campaign",
@@ -417,18 +233,28 @@ app.post("/api/campaigns", (req, res) => {
 
 app.put("/api/campaigns/:id", (req, res) => {
   const { id } = req.params;
-  const { status, kmsCovered, qrScans } = req.body;
+  const { status, kmsCovered, qrScans, creativeUrl, creativeStatus, creativeApproved } = req.body;
   const index = campaigns.findIndex((c) => c.id === id);
   if (index !== -1) {
     if (status !== undefined) campaigns[index].status = status;
     if (kmsCovered !== undefined) campaigns[index].kmsCovered = Number(kmsCovered);
     if (qrScans !== undefined) campaigns[index].qrScans = Number(qrScans);
+    if (creativeUrl !== undefined) campaigns[index].creativeUrl = creativeUrl;
+    if (creativeStatus !== undefined) campaigns[index].creativeStatus = creativeStatus;
+    if (creativeApproved !== undefined) campaigns[index].creativeApproved = creativeApproved;
     
     // Add notification
+    let msg = `Your campaign '${campaigns[index].title}' has been updated.`;
+    if (creativeStatus !== undefined) {
+      msg = `Ad Creative for '${campaigns[index].title}' has been ${creativeStatus}.`;
+    } else if (status !== undefined) {
+      msg = `Your campaign '${campaigns[index].title}' has been marked as ${status}.`;
+    }
+
     notifications.unshift({
       id: `notif_${Date.now()}`,
-      title: `Campaign Status Updated`,
-      message: `Your campaign '${campaigns[index].title}' has been marked as ${status || campaigns[index].status}.`,
+      title: `Campaign Updated`,
+      message: msg,
       timestamp: new Date().toLocaleString(),
       unread: true,
       type: "campaign",

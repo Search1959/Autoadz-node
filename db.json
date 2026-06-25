@@ -1,0 +1,31 @@
+{
+  "campaigns": [],
+  "drivers": [
+    {
+      "id": "driver_delip",
+      "name": "Delip",
+      "phone": "9836130393",
+      "autoNumber": "WB-01-EX-1234",
+      "location": "Kolkata - Gariahat",
+      "state": "offline",
+      "kycVerified": true,
+      "totalEarnings": 0,
+      "walletBalance": 0,
+      "currentCampaignId": null,
+      "status": "active"
+    }
+  ],
+  "proofs": [],
+  "walletTransactions": [
+    {
+      "id": "tx_initial_advertiser",
+      "userId": "advertiser_main",
+      "type": "deposit",
+      "amount": 500000,
+      "status": "success",
+      "description": "Initial Demo Deposited Balance",
+      "timestamp": "2026-06-25 12:00 PM"
+    }
+  ],
+  "notifications": []
+}
