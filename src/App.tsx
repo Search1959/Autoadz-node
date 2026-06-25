@@ -1259,9 +1259,10 @@ export default function App() {
 
                   <div className="rounded-2xl overflow-hidden relative border border-slate-800 mb-4 shadow-inner">
                     <img 
-                      src="https://images.unsplash.com/photo-1561361062-f2f20e90490f?auto=format&fit=crop&q=80&w=800"
+                      src="https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&q=80&w=800"
                       alt="Auto Rickshaw Media" 
                       className="w-full h-44 object-cover brightness-95"
+                      referrerPolicy="no-referrer"
                     />
                     <div className="absolute bottom-3 left-3 bg-slate-950/90 text-white text-[9px] font-mono font-bold px-2.5 py-1 rounded-lg border border-slate-800/80">
                       📍 BANNER creative template
@@ -2177,7 +2178,7 @@ export default function App() {
                                       newCampCreative === template.url ? "border-[#FF9800] bg-orange-50/50" : "border-slate-200"
                                     }`}
                                   >
-                                    <img src={template.url} className="w-6 h-6 rounded object-cover" alt="" />
+                                    <img src={template.url} className="w-6 h-6 rounded object-cover" alt="" referrerPolicy="no-referrer" />
                                     <span className="text-[9px] truncate text-slate-700 font-medium">{template.name}</span>
                                   </button>
                                 ))}
@@ -2265,7 +2266,7 @@ export default function App() {
                         {campaigns.map((camp) => (
                           <div key={camp.id} className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
                             <div className="relative h-20 bg-slate-900">
-                              <img src={camp.creativeUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                              <img src={camp.creativeUrl} className="w-full h-full object-cover opacity-80" alt="" referrerPolicy="no-referrer" />
                               <div className="absolute top-2 right-2">
                                 <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase font-mono ${
                                   camp.status === "active" ? "bg-green-500 text-white" :
@@ -2975,7 +2976,7 @@ export default function App() {
                                   customProofImg.includes("558981806") ? "border-[#FF9800]" : "border-slate-200"
                                 }`}
                               >
-                                <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800" className="w-8 h-8 rounded object-cover" alt="" />
+                                <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800" className="w-8 h-8 rounded object-cover" alt="" referrerPolicy="no-referrer" />
                                 <span className="text-[8px] text-slate-600 font-mono">Auto Side Banner</span>
                               </button>
                               <button
@@ -2985,7 +2986,7 @@ export default function App() {
                                   customProofImg.includes("568605117") ? "border-[#FF9800]" : "border-slate-200"
                                 }`}
                               >
-                                <img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800" className="w-8 h-8 rounded object-cover" alt="" />
+                                <img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800" className="w-8 h-8 rounded object-cover" alt="" referrerPolicy="no-referrer" />
                                 <span className="text-[8px] text-slate-600 font-mono">Auto Rear Hood</span>
                               </button>
                             </div>
@@ -3019,7 +3020,7 @@ export default function App() {
                             {proofs.filter(p => p.driverId === loggedInDriverId).slice(0, 3).map(p => (
                               <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded text-xs border border-slate-100">
                                 <div className="flex items-center gap-2">
-                                  <img src={p.imageUrl} className="w-8 h-8 rounded object-cover" alt="" />
+                                  <img src={p.imageUrl} className="w-8 h-8 rounded object-cover" alt="" referrerPolicy="no-referrer" />
                                   <div>
                                     <p className="font-bold text-slate-800 uppercase text-[9px]">{p.type}</p>
                                     <p className="text-[8px] text-slate-400 truncate w-32">{p.location}</p>
@@ -3291,7 +3292,7 @@ export default function App() {
                         <tr key={camp.id} className="hover:bg-slate-50/50 transition">
                           <td className="py-3">
                             <div className="flex items-center gap-2">
-                              <img src={camp.creativeUrl} className="w-8 h-8 rounded object-cover border border-slate-200 shrink-0" alt="" />
+                              <img src={camp.creativeUrl} className="w-8 h-8 rounded object-cover border border-slate-200 shrink-0" alt="" referrerPolicy="no-referrer" />
                               <div>
                                 <p className="font-bold text-slate-800">{camp.title}</p>
                                 <p className="text-[10px] text-slate-400">Client: {camp.client}</p>
@@ -3535,7 +3536,7 @@ export default function App() {
                   {proofs.map((p) => (
                     <div key={p.id} className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-3 flex flex-col justify-between">
                       <div className="flex gap-3">
-                        <img src={p.imageUrl} className="w-16 h-16 rounded-lg object-cover border border-slate-300 shrink-0" alt="" />
+                        <img src={p.imageUrl} className="w-16 h-16 rounded-lg object-cover border border-slate-300 shrink-0" alt="" referrerPolicy="no-referrer" />
                         <div className="space-y-1 min-w-0">
                           <span className="bg-orange-100 text-orange-800 text-[8px] font-bold font-mono px-1.5 py-0.5 rounded uppercase">
                             {p.type} Proof
@@ -3778,59 +3779,6 @@ export default function App() {
           {/* ========================================================= */}
           {userSession === "driver" && (
             <div className="space-y-6">
-              {/* Trip Simulation Station */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-                  <div className="p-2 bg-teal-500/10 text-teal-500 rounded-xl">
-                    <Navigation size={18} />
-                  </div>
-                  <div>
-                    <h4 className="font-display font-extrabold text-[#0B1F4D] text-sm">Interactive GPS Route Simulator</h4>
-                    <p className="text-[11px] text-slate-500">Trigger simulated driving runs to instantly verify telemetry and earnings</p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Verify the automatic transit billing engine! Below triggers a virtual drive in Bangalore. Payout is calculated instantly at <b>₹4.50/KM</b>.
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <button
-                    disabled={isSimulatingDrive}
-                    onClick={() => handleSimulateDrive(5)}
-                    className="flex items-center justify-between p-3.5 rounded-xl border border-teal-500/10 bg-teal-50/40 hover:bg-teal-50 text-teal-800 transition text-xs font-bold font-mono text-left disabled:opacity-50 cursor-pointer"
-                  >
-                    <div>
-                      <span>🚗 5 KM City Run</span>
-                      <span className="text-[10px] block text-slate-400 font-normal">Indiranagar ➔ Koramangala</span>
-                    </div>
-                    <span className="bg-teal-100 text-teal-900 px-2 py-1 rounded text-[10px] font-black">+₹22.50</span>
-                  </button>
-
-                  <button
-                    disabled={isSimulatingDrive}
-                    onClick={() => handleSimulateDrive(15)}
-                    className="flex items-center justify-between p-3.5 rounded-xl border border-teal-500/10 bg-teal-50/40 hover:bg-teal-50 text-teal-800 transition text-xs font-bold font-mono text-left disabled:opacity-50 cursor-pointer"
-                  >
-                    <div>
-                      <span>🚙 15 KM Highway Run</span>
-                      <span className="text-[10px] block text-slate-400 font-normal">MG Road ➔ Whitefield</span>
-                    </div>
-                    <span className="bg-teal-100 text-teal-900 px-2 py-1 rounded text-[10px] font-black">+₹67.50</span>
-                  </button>
-                </div>
-
-                {isSimulatingDrive && (
-                  <div className="bg-teal-950 text-teal-300 p-3.5 rounded-xl text-xs font-mono flex items-center justify-between animate-pulse">
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-ping"></span>
-                      GPS Satellite Stream active...
-                    </span>
-                    <span>Coordinates Transmitted</span>
-                  </div>
-                )}
-              </div>
-
               {/* Guidelines checklist */}
               <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-3">
                 <div>
