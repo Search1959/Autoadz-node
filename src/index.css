@@ -3,7 +3,7 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -11,6 +11,36 @@ body {
   background-color: #f8fafc;
   font-family: var(--font-sans);
   color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhancing general contrast and legibility */
+body:not(.dark-theme-active) {
+  color: #0f172a !important;
+}
+
+/* Increase slate text colors contrast for better light-mode reading */
+body:not(.dark-theme-active) .text-slate-400 {
+  color: #475569 !important; /* Muted text is now much darker slate */
+}
+body:not(.dark-theme-active) .text-slate-500 {
+  color: #334155 !important;
+}
+body:not(.dark-theme-active) .text-slate-600 {
+  color: #1e293b !important;
+}
+body:not(.dark-theme-active) .text-slate-700 {
+  color: #0f172a !important;
+}
+body:not(.dark-theme-active) .text-slate-800 {
+  color: #020617 !important;
+}
+body:not(.dark-theme-active) .text-slate-300 {
+  color: #64748b !important;
+}
+body:not(.dark-theme-active) .text-slate-400\/80 {
+  color: #475569 !important;
 }
 
 /* Glassmorphism utility classes */

@@ -4836,7 +4836,7 @@ export default function App() {
           {/* Conditional Workspaces depending on User Sessions */}
           {userSession === "admin" && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
-              <div className="lg:col-span-7 flex flex-col gap-6">
+              <div className="lg:col-span-12 flex flex-col gap-6">
                 
                 {/* Admin Control Header */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
@@ -4846,7 +4846,7 @@ export default function App() {
                         <Shield size={20} className="text-[#FF9800]" />
                         AutoAdz Master Admin Panel
                       </h3>
-                      <p className="text-xs text-slate-500 font-mono mt-1">Verify KYC, Audit image uploads, approve payments, view telemetry mapping.</p>
+                      <p className="text-xs text-slate-500 font-mono mt-1">Verify KYC, Audit image uploads, approve payments, and manage automated billing scheduler.</p>
                     </div>
 
                     {/* Admin Selector Navigation */}
@@ -6385,42 +6385,42 @@ export default function App() {
                     </div>
 
                     {/* Run Logs Table */}
-                    <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-3xs space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h5 className="font-bold text-slate-800 text-xs uppercase font-mono">
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-3xs space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h5 className="font-bold text-slate-900 text-sm uppercase">
                           📋 Scheduler Run History & Execution Logs
                         </h5>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-xs text-slate-700 font-semibold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
                           Last run: {schedulerLastRun}
                         </span>
                       </div>
 
-                      <div className="overflow-x-auto max-h-60 pr-1">
-                        <table className="w-full text-left text-xs text-slate-700">
+                      <div className="overflow-x-auto max-h-80 pr-1">
+                        <table className="w-full text-left text-xs text-slate-800">
                           <thead>
-                            <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase font-mono">
-                              <th className="py-2">Timestamp</th>
-                              <th className="py-2">Execution Status</th>
-                              <th className="py-2">Outcome / Summary Details</th>
+                            <tr className="border-b border-slate-200 text-xs text-slate-800 font-bold uppercase">
+                              <th className="py-3 px-1">Timestamp</th>
+                              <th className="py-3 px-1">Execution Status</th>
+                              <th className="py-3 px-1">Outcome / Summary Details</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-50 font-mono text-[11px]">
+                          <tbody className="divide-y divide-slate-100 font-sans text-xs">
                             {schedulerLogs.map((log, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50/50 transition">
-                                <td className="py-2 text-slate-400 whitespace-nowrap">{log.timestamp}</td>
-                                <td className="py-2">
-                                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                    log.status === "Success" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+                              <tr key={idx} className="hover:bg-slate-50 transition">
+                                <td className="py-3 px-1 text-slate-700 font-semibold whitespace-nowrap">{log.timestamp}</td>
+                                <td className="py-3 px-1">
+                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                    log.status === "Success" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-slate-200 text-slate-700 border border-slate-300"
                                   }`}>
                                     {log.status.toUpperCase()}
                                   </span>
                                 </td>
-                                <td className="py-2 text-slate-600 leading-normal">{log.message}</td>
+                                <td className="py-3 px-1 text-slate-900 font-medium leading-relaxed">{log.message}</td>
                               </tr>
                             ))}
                             {schedulerLogs.length === 0 && (
                               <tr>
-                                <td colSpan={3} className="py-8 text-center text-slate-400 italic">
+                                <td colSpan={3} className="py-12 text-center text-slate-500 font-medium italic">
                                   No scheduler run logs captured yet.
                                 </td>
                               </tr>
@@ -6462,88 +6462,7 @@ export default function App() {
 
               </div>
 
-              {/* Right Column of nested grid: Map & Operational Activity Logs (col-span-5) */}
-              <div className="lg:col-span-5 flex flex-col gap-6">
-                
-                {/* SIMULATED MAP TELEMATICS CARD */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-5 space-y-3">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-              <h4 className="font-display font-bold text-sm text-[#0B1F4D] flex items-center gap-2">
-                <MapPin size={16} className="text-[#FF9800] animate-bounce" />
-                Live campaign GPS tracking simulator
-              </h4>
-              <div className="bg-green-500/10 text-green-600 text-[10px] font-mono px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>
-                ACTIVE FEED
-              </div>
-            </div>
 
-            {/* Map Rendering Container */}
-            <div className="h-64 bg-slate-900 rounded-2xl relative overflow-hidden shadow-inner border border-slate-800">
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
-              
-              {/* Fake Bangalore Roads SVG grid overlay */}
-              <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 0 100 Q 150 150 300 100 T 600 200" fill="none" stroke="white" strokeWidth="2" strokeDasharray="5,5" />
-                <path d="M 100 0 Q 250 250 400 600" fill="none" stroke="white" strokeWidth="1.5" />
-                <path d="M 0 350 H 600" fill="none" stroke="white" strokeWidth="3" />
-                <circle cx="280" cy="180" r="120" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3,6" />
-              </svg>
-
-              {/* Live active drivers pin mapping */}
-              {drivers.map((driver, idx) => {
-                // Seed different locations for visual variance
-                const mapCoords = [
-                  { top: "35%", left: "40%" },
-                  { top: "60%", left: "70%" },
-                  { top: "25%", left: "80%" },
-                  { top: "75%", left: "20%" },
-                ];
-                const pos = mapCoords[idx % mapCoords.length];
-
-                return (
-                  <div 
-                    key={driver.id} 
-                    className="absolute"
-                    style={{ top: pos.top, left: pos.left }}
-                  >
-                    {/* Pulsing radar */}
-                    {driver.state === "tracking" && (
-                      <span className="absolute -inset-2.5 rounded-full bg-orange-500/30 animate-ping"></span>
-                    )}
-
-                    <div className="relative group cursor-pointer">
-                      <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-md transition-colors ${
-                        driver.state === "tracking" ? "bg-[#FF9800]" : driver.state === "online" ? "bg-blue-500" : "bg-slate-400"
-                      }`}></div>
-                      
-                      {/* Driver Tooltip Label */}
-                      <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-slate-950/95 text-white text-[9px] font-mono p-1 rounded whitespace-nowrap opacity-100 shadow-lg border border-slate-800">
-                        <p className="font-bold">{driver.name}</p>
-                        <p className="text-slate-400">No: {driver.autoNumber}</p>
-                        <p className={`font-semibold ${driver.state === "tracking" ? "text-green-400" : "text-slate-300"}`}>
-                          {driver.state === "tracking" ? "📍 TRACKING KM" : "STANDBY"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Map UI Control overlays */}
-              <div className="absolute bottom-3 left-3 bg-slate-950/90 text-white p-3 rounded-lg border border-slate-800 text-[10px] space-y-1 z-10 font-mono">
-                <p className="font-bold text-[#FF9800]">📡 SATELLITE TELEMETRY</p>
-                <p>Zone: Bangalore Central</p>
-                <p>Ping Rate: 0.8s (Adaptive)</p>
-                <div className="flex gap-2.5 pt-1 text-[9px]">
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-[#FF9800] rounded-full"></span> Tracking</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Standby</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-              </div>
             </div>
           )}
 
