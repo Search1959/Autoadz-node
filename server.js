@@ -178,14 +178,20 @@ initDatabase();
 
 // Helper to update statistics in background simulation
 setInterval(() => {
-  // Simulate incremental kilometers and QR scans on active campaigns
+  // Simulate incremental kilometers and QR scans on active campaigns at a highly realistic, steady rate
   campaigns = campaigns.map((camp) => {
     if (camp.status === "active") {
-      const addedKms = Math.floor(Math.random() * 3) + 1;
-      const addedScans = Math.random() > 0.7 ? 1 : 0;
+      // Realistic simulation: each active auto covers ~0.015 km per 10 seconds (~5.4 km/h overall fleet speed average)
+      const baseTickRate = 0.012 + Math.random() * 0.008; // 0.012 to 0.020 km/auto
+      const addedKms = parseFloat((baseTickRate * (camp.autosCount || 5)).toFixed(2));
+      
+      // QR scans happen occasionally, e.g. 1 scan per 15-20 km driven overall
+      const scanProbability = 0.04 * (camp.autosCount || 5);
+      const addedScans = Math.random() < scanProbability ? 1 : 0;
+
       return {
         ...camp,
-        kmsCovered: camp.kmsCovered + addedKms,
+        kmsCovered: parseFloat((camp.kmsCovered + addedKms).toFixed(2)),
         qrScans: camp.qrScans + addedScans,
       };
     }
