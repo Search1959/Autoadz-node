@@ -34,35 +34,11 @@ const DB_FILE = path.join(process.cwd(), "db.json");
 // Default initial datasets (fallback seeds)
 const defaultCampaigns = [];
 
-const defaultDrivers = [
-  {
-    id: "driver_delip",
-    name: "Delip",
-    phone: "9836130393",
-    autoNumber: "WB-01-EX-1234",
-    location: "Kolkata - Gariahat",
-    state: "offline",
-    kycVerified: true,
-    totalEarnings: 0,
-    walletBalance: 0,
-    currentCampaignId: null,
-    status: "active",
-  },
-];
+const defaultDrivers = [];
 
 const defaultProofs = [];
 
-const defaultWalletTransactions = [
-  {
-    id: "tx_initial_advertiser",
-    userId: "advertiser_main",
-    type: "deposit",
-    amount: 500000,
-    status: "success",
-    description: "Initial Demo Deposited Balance",
-    timestamp: "2026-06-25 12:00 PM",
-  },
-];
+const defaultWalletTransactions = [];
 
 const defaultNotifications = [];
 
@@ -95,68 +71,7 @@ const defaultCities = [
   { id: "city_mumbai", name: "Mumbai", zone: "West Hub", rate: 22, activeAutos: 180 }
 ];
 
-const defaultBills = [
-  {
-    id: "bill_driver_delip_1",
-    type: "driver_service_bill",
-    senderId: "driver_delip",
-    senderName: "Delip",
-    receiverId: "admin",
-    campaignId: "camp_active_1",
-    amount: 2850,
-    status: "pending",
-    kmsCovered: 190,
-    periodStart: "2026-06-19",
-    periodEnd: "2026-06-25",
-    timestamp: "2026-06-25 09:30 AM",
-    description: "Weekly Service Bill - 190 KM Advertising run @ ₹15/KM"
-  },
-  {
-    id: "bill_adv_invoice_1",
-    type: "advertiser_invoice",
-    senderId: "admin",
-    senderName: "AutoAdz Admin",
-    receiverId: "advertiser_main",
-    campaignId: "camp_active_1",
-    amount: 15000,
-    status: "pending",
-    kmsCovered: 750,
-    periodStart: "2026-06-19",
-    periodEnd: "2026-06-25",
-    timestamp: "2026-06-25 10:00 AM",
-    description: "Weekly Advertising Mileage Invoice for Campaign Progress (750 KM covered)"
-  },
-  {
-    id: "bill_adv_invoice_0",
-    type: "advertiser_invoice",
-    senderId: "admin",
-    senderName: "AutoAdz Admin",
-    receiverId: "advertiser_main",
-    campaignId: "camp_active_1",
-    amount: 20000,
-    status: "paid",
-    kmsCovered: 1000,
-    periodStart: "2026-06-12",
-    periodEnd: "2026-06-19",
-    timestamp: "2026-06-19 10:00 AM",
-    description: "Weekly Advertising Mileage Invoice - Paid via Advance Wallet Balance"
-  },
-  {
-    id: "bill_driver_delip_0",
-    type: "driver_service_bill",
-    senderId: "driver_delip",
-    senderName: "Delip",
-    receiverId: "admin",
-    campaignId: "camp_active_1",
-    amount: 1200,
-    status: "paid",
-    kmsCovered: 80,
-    periodStart: "2026-06-12",
-    periodEnd: "2026-06-19",
-    timestamp: "2026-06-19 05:30 PM",
-    description: "Weekly Service Bill - Paid to Bank Account"
-  }
-];
+const defaultBills = [];
 
 // Helper to save all collections to db.json
 function saveDatabase() {
@@ -202,26 +117,6 @@ function initDatabase() {
         ]
       };
       console.log(`Database loaded successfully from ${DB_FILE}`);
-      
-      // Ensure "delip" exists even in loaded databases
-      if (!drivers.some(d => d.phone === "9836130393" || d.id === "driver_delip")) {
-        drivers.push({
-          id: "driver_delip",
-          name: "Delip",
-          phone: "9836130393",
-          autoNumber: "WB-01-EX-1234",
-          location: "Kolkata - Gariahat",
-          state: "offline",
-          kycVerified: true,
-          totalEarnings: 0,
-          walletBalance: 0,
-          currentCampaignId: null,
-          status: "active",
-          dlNumber: "DL-01-202300048",
-          aadhaarNumber: "1234-5678-9012"
-        });
-        saveDatabase();
-      }
     } else {
       console.log(`No database file found. Seeding new database at ${DB_FILE}`);
       campaigns = [...defaultCampaigns];

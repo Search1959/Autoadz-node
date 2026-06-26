@@ -20,27 +20,48 @@ body:not(.dark-theme-active) {
   color: #0f172a !important;
 }
 
+/* Ensure minimum readable font size and bolder weight for tiny elements across total website */
+.text-\[8px\] {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+.text-\[9px\] {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+.text-\[10px\] {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.text-\[11px\] {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.text-xs {
+  font-size: 13px !important;
+}
+
 /* Increase slate text colors contrast for better light-mode reading */
 body:not(.dark-theme-active) .text-slate-400 {
-  color: #475569 !important; /* Muted text is now much darker slate */
+  color: #334155 !important; /* Muted text is now much darker slate */
 }
 body:not(.dark-theme-active) .text-slate-500 {
-  color: #334155 !important;
-}
-body:not(.dark-theme-active) .text-slate-600 {
   color: #1e293b !important;
 }
-body:not(.dark-theme-active) .text-slate-700 {
+body:not(.dark-theme-active) .text-slate-600 {
   color: #0f172a !important;
 }
-body:not(.dark-theme-active) .text-slate-800 {
+body:not(.dark-theme-active) .text-slate-700 {
   color: #020617 !important;
 }
+body:not(.dark-theme-active) .text-slate-800 {
+  color: #000000 !important;
+}
 body:not(.dark-theme-active) .text-slate-300 {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 body:not(.dark-theme-active) .text-slate-400\/80 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 /* Glassmorphism utility classes */

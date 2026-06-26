@@ -102,8 +102,8 @@ export default function App() {
   const [adminDriverFormStatus, setAdminDriverFormStatus] = useState<"pending_approval" | "active" | "rejected">("pending_approval");
 
   // Telematics Ride Simulator
-  const [simulatedKmsToday, setSimulatedKmsToday] = useState<number>(42.0);
-  const [simulatedKmsTotal, setSimulatedKmsTotal] = useState<number>(14250);
+  const [simulatedKmsToday, setSimulatedKmsToday] = useState<number>(0.0);
+  const [simulatedKmsTotal, setSimulatedKmsTotal] = useState<number>(0);
   const [isSimulatingDrive, setIsSimulatingDrive] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [faqSearchQuery, setFaqSearchQuery] = useState("");
@@ -2032,14 +2032,21 @@ export default function App() {
                   <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5 space-y-2.5 font-mono text-xs">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 font-bold">Active Campaign:</span>
-                      <span className="text-[#10B981] font-black">Dental Hub Hyperlocal Promo</span>
+                      <span className="text-[#10B981] font-black">
+                        {campaigns.length > 0 ? campaigns[0].title : "Launch Campaign First"}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 font-bold">Fleet Size Allocation:</span>
-                      <span className="text-indigo-600 font-black">45 Rickshaws Live</span>
+                      <span className="text-indigo-600 font-black">
+                        {campaigns.length > 0 ? `${campaigns[0].autosCount} Rickshaws Live` : "No Fleet Active"}
+                      </span>
                     </div>
                     <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full w-4/5 animate-pulse"></div>
+                      <div 
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                        style={{ width: campaigns.length > 0 ? "100%" : "20%" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -4212,7 +4219,7 @@ export default function App() {
                                 <span className="text-[9px] font-normal text-slate-400">KM</span>
                               </span>
                               <span className="text-[8px] text-slate-500 font-mono mt-1 block">
-                                Daily total: <span className="font-bold">{(42.0 + (loggedInDriver?.state === "tracking" ? liveSessionKms : 0)).toFixed(2)} KM</span>
+                                Session total: <span className="font-bold">{(loggedInDriver?.state === "tracking" ? liveSessionKms : 0).toFixed(2)} KM</span>
                               </span>
                             </div>
                           </div>
@@ -4232,7 +4239,7 @@ export default function App() {
                                 ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * 4.5).toFixed(2) : "0.00"}
                               </span>
                               <span className="text-[8px] text-slate-500 font-mono mt-1 block">
-                                Daily total: <span className="font-bold">₹{(189.0 + (loggedInDriver?.state === "tracking" ? liveSessionKms * 4.5 : 0)).toFixed(2)}</span>
+                                Session earnings: <span className="font-bold">₹{(loggedInDriver?.state === "tracking" ? liveSessionKms * 4.5 : 0).toFixed(2)}</span>
                               </span>
                             </div>
                           </div>
