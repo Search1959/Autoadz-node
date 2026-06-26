@@ -78,5 +78,21 @@ export interface NotificationItem {
   message: string;
   timestamp: string;
   unread: boolean;
-  type: "campaign" | "driver" | "payment" | "system";
+  type: "campaign" | "driver" | "payment" | "system" | "billing";
+}
+
+export interface Bill {
+  id: string;
+  type: "driver_service_bill" | "advertiser_invoice";
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  campaignId: string | null;
+  amount: number;
+  status: "pending" | "paid" | "rejected";
+  kmsCovered: number;
+  periodStart: string;
+  periodEnd: string;
+  timestamp: string;
+  description: string;
 }

@@ -67,19 +67,95 @@ const defaultWalletTransactions = [
 const defaultNotifications = [];
 
 // Active databases
-// Active databases
 let campaigns = [];
 let drivers = [];
 let proofs = [];
 let walletTransactions = [];
 let notifications = [];
 let cities = [];
+let bills = [];
+let schedulerSettings = {
+  enabled: true,
+  mileageThreshold: 10,
+  intervalMinutes: 5,
+  lastRunTimestamp: null,
+  logs: [
+    {
+      timestamp: new Date().toLocaleString(),
+      status: "Initialized",
+      message: "Automated billing scheduler registered with 10 KM threshold."
+    }
+  ]
+};
 
 const defaultCities = [
   { id: "city_kolkata", name: "Kolkata", zone: "East Hub", rate: 15, activeAutos: 150 },
   { id: "city_delhi", name: "Delhi NCR", zone: "North Hub", rate: 18, activeAutos: 220 },
   { id: "city_bangalore", name: "Bangalore", zone: "South Hub", rate: 20, activeAutos: 250 },
   { id: "city_mumbai", name: "Mumbai", zone: "West Hub", rate: 22, activeAutos: 180 }
+];
+
+const defaultBills = [
+  {
+    id: "bill_driver_delip_1",
+    type: "driver_service_bill",
+    senderId: "driver_delip",
+    senderName: "Delip",
+    receiverId: "admin",
+    campaignId: "camp_active_1",
+    amount: 2850,
+    status: "pending",
+    kmsCovered: 190,
+    periodStart: "2026-06-19",
+    periodEnd: "2026-06-25",
+    timestamp: "2026-06-25 09:30 AM",
+    description: "Weekly Service Bill - 190 KM Advertising run @ ₹15/KM"
+  },
+  {
+    id: "bill_adv_invoice_1",
+    type: "advertiser_invoice",
+    senderId: "admin",
+    senderName: "AutoAdz Admin",
+    receiverId: "advertiser_main",
+    campaignId: "camp_active_1",
+    amount: 15000,
+    status: "pending",
+    kmsCovered: 750,
+    periodStart: "2026-06-19",
+    periodEnd: "2026-06-25",
+    timestamp: "2026-06-25 10:00 AM",
+    description: "Weekly Advertising Mileage Invoice for Campaign Progress (750 KM covered)"
+  },
+  {
+    id: "bill_adv_invoice_0",
+    type: "advertiser_invoice",
+    senderId: "admin",
+    senderName: "AutoAdz Admin",
+    receiverId: "advertiser_main",
+    campaignId: "camp_active_1",
+    amount: 20000,
+    status: "paid",
+    kmsCovered: 1000,
+    periodStart: "2026-06-12",
+    periodEnd: "2026-06-19",
+    timestamp: "2026-06-19 10:00 AM",
+    description: "Weekly Advertising Mileage Invoice - Paid via Advance Wallet Balance"
+  },
+  {
+    id: "bill_driver_delip_0",
+    type: "driver_service_bill",
+    senderId: "driver_delip",
+    senderName: "Delip",
+    receiverId: "admin",
+    campaignId: "camp_active_1",
+    amount: 1200,
+    status: "paid",
+    kmsCovered: 80,
+    periodStart: "2026-06-12",
+    periodEnd: "2026-06-19",
+    timestamp: "2026-06-19 05:30 PM",
+    description: "Weekly Service Bill - Paid to Bank Account"
+  }
 ];
 
 // Helper to save all collections to db.json
@@ -91,7 +167,9 @@ function saveDatabase() {
       proofs,
       walletTransactions,
       notifications,
-      cities
+      cities,
+      bills,
+      schedulerSettings
     }, null, 2), "utf-8");
   } catch (err) {
     console.error("Failed to save JSON database to disk:", err);
@@ -109,6 +187,20 @@ function initDatabase() {
       walletTransactions = data.walletTransactions || [];
       notifications = data.notifications || [];
       cities = data.cities || [...defaultCities];
+      bills = data.bills || [...defaultBills];
+      schedulerSettings = data.schedulerSettings || {
+        enabled: true,
+        mileageThreshold: 10,
+        intervalMinutes: 5,
+        lastRunTimestamp: null,
+        logs: [
+          {
+            timestamp: new Date().toLocaleString(),
+            status: "Initialized",
+            message: "Automated billing scheduler registered with 10 KM threshold."
+          }
+        ]
+      };
       console.log(`Database loaded successfully from ${DB_FILE}`);
       
       // Ensure "delip" exists even in loaded databases
@@ -138,6 +230,20 @@ function initDatabase() {
       walletTransactions = [...defaultWalletTransactions];
       notifications = [...defaultNotifications];
       cities = [...defaultCities];
+      bills = [...defaultBills];
+      schedulerSettings = {
+        enabled: true,
+        mileageThreshold: 10,
+        intervalMinutes: 5,
+        lastRunTimestamp: null,
+        logs: [
+          {
+            timestamp: new Date().toLocaleString(),
+            status: "Initialized",
+            message: "Automated billing scheduler registered with 10 KM threshold."
+          }
+        ]
+      };
       saveDatabase();
     }
   } catch (err) {
@@ -148,6 +254,20 @@ function initDatabase() {
     walletTransactions = [...defaultWalletTransactions];
     notifications = [...defaultNotifications];
     cities = [...defaultCities];
+    bills = [...defaultBills];
+    schedulerSettings = {
+      enabled: true,
+      mileageThreshold: 10,
+      intervalMinutes: 5,
+      lastRunTimestamp: null,
+      logs: [
+        {
+          timestamp: new Date().toLocaleString(),
+          status: "Initialized",
+          message: "Automated billing scheduler registered with 10 KM threshold."
+        }
+      ]
+    };
   }
 }
 
@@ -515,6 +635,276 @@ app.post("/api/wallet/transactions", (req, res) => {
   saveDatabase();
 
   res.status(201).json(newTx);
+});
+
+// Bills / Invoices
+app.get("/api/bills", (req, res) => {
+  res.json(bills);
+});
+
+app.post("/api/bills", (req, res) => {
+  const { type, senderId, senderName, receiverId, campaignId, amount, kmsCovered, periodStart, periodEnd, description } = req.body;
+  const newBill = {
+    id: `bill_${Date.now()}`,
+    type: type || "driver_service_bill", // "driver_service_bill" | "advertiser_invoice"
+    senderId: senderId || "driver_delip",
+    senderName: senderName || "Delip",
+    receiverId: receiverId || "admin",
+    campaignId: campaignId || null,
+    amount: Number(amount) || 0,
+    status: "pending",
+    kmsCovered: Number(kmsCovered) || 0,
+    periodStart: periodStart || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    periodEnd: periodEnd || new Date().toISOString().split("T")[0],
+    timestamp: new Date().toLocaleString(),
+    description: description || "Weekly Service Bill",
+  };
+  bills.unshift(newBill);
+
+  // Add a notification
+  notifications.unshift({
+    id: `notif_${Date.now()}`,
+    title: type === "driver_service_bill" ? "Service Bill Raised" : "Campaign Invoice Issued",
+    message: type === "driver_service_bill" 
+      ? `Driver ${senderName} raised a weekly service bill for ₹${newBill.amount} (${kmsCovered} KM).`
+      : `Admin issued an advertising progress invoice of ₹${newBill.amount} to campaign advertiser.`,
+    timestamp: new Date().toLocaleString(),
+    unread: true,
+    type: "billing",
+  });
+
+  saveDatabase();
+  res.status(201).json(newBill);
+});
+
+app.put("/api/bills/:id", (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // "paid" | "rejected" | "pending"
+  const index = bills.findIndex((b) => b.id === id);
+  if (index !== -1) {
+    const oldStatus = bills[index].status;
+    bills[index].status = status;
+
+    // Trigger financial transaction updates when status changes to "paid"
+    if (status === "paid" && oldStatus !== "paid") {
+      const bill = bills[index];
+      
+      if (bill.type === "driver_service_bill") {
+        // Driver payout
+        const dIndex = drivers.findIndex((d) => d.id === bill.senderId);
+        if (dIndex !== -1) {
+          // Deduct from driver's wallet balance
+          drivers[dIndex].walletBalance = Math.max(0, drivers[dIndex].walletBalance - bill.amount);
+        }
+        
+        // Add corresponding transaction as "withdrawal" (or payout)
+        walletTransactions.unshift({
+          id: `tx_${Date.now()}`,
+          userId: bill.senderId,
+          type: "withdrawal",
+          amount: bill.amount,
+          status: "success",
+          description: `Payout processed for Weekly Service Bill: ${bill.id}`,
+          timestamp: new Date().toLocaleString(),
+        });
+        
+        notifications.unshift({
+          id: `notif_${Date.now()}`,
+          title: "Service Bill Paid",
+          message: `Your weekly service bill of ₹${bill.amount} has been paid and transferred to your bank account.`,
+          timestamp: new Date().toLocaleString(),
+          unread: true,
+          type: "billing",
+        });
+
+      } else if (bill.type === "advertiser_invoice") {
+        // Advertiser invoice payment
+        // Deduct from advertiser's pre-deposited budget / wallet
+        walletTransactions.unshift({
+          id: `tx_${Date.now()}`,
+          userId: "advertiser_main",
+          type: "payment",
+          amount: bill.amount,
+          status: "success",
+          description: `Payment for Admin Weekly Invoice: ${bill.id}`,
+          timestamp: new Date().toLocaleString(),
+        });
+
+        notifications.unshift({
+          id: `notif_${Date.now()}`,
+          title: "Invoice Paid",
+          message: `Weekly advertising invoice for ₹${bill.amount} has been successfully settled from your advance wallet balance.`,
+          timestamp: new Date().toLocaleString(),
+          unread: true,
+          type: "billing",
+        });
+      }
+    }
+
+    saveDatabase();
+    res.json(bills[index]);
+  } else {
+    res.status(404).json({ error: "Bill not found" });
+  }
+});
+
+// Automated Billing Scheduler Helper and API routes
+function runBillingScheduler(thresholdOverride) {
+  const threshold = thresholdOverride !== undefined ? Number(thresholdOverride) : schedulerSettings.mileageThreshold;
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  const generatedBills = [];
+  const skippedDrivers = [];
+  
+  drivers.forEach(driver => {
+    // Check if there is already a pending service bill for this driver to avoid double billing
+    const hasPendingBill = bills.some(b => b.senderId === driver.id && b.type === "driver_service_bill" && b.status === "pending");
+    if (hasPendingBill) {
+      skippedDrivers.push({ id: driver.id, name: driver.name, reason: "Pending bill exists" });
+      return;
+    }
+    
+    // Calculate total KMs in last 7 days
+    let weekKms = 0;
+    const driverTxs = walletTransactions.filter(t => t.userId === driver.id && t.type === "earning");
+    
+    driverTxs.forEach(tx => {
+      let txDate = new Date(tx.timestamp);
+      if (isNaN(txDate.getTime())) {
+        txDate = new Date();
+      }
+      
+      if (txDate >= sevenDaysAgo) {
+        const kmMatch = tx.description.match(/Completed\s+([\d\.]+)\s*KM/i);
+        if (kmMatch) {
+          weekKms += parseFloat(kmMatch[1]);
+        } else {
+          weekKms += tx.amount / 4.5;
+        }
+      }
+    });
+    
+    // Fallback: if no recent transaction matches but the driver has wallet balance, let's derive from wallet balance
+    if (weekKms === 0 && driver.walletBalance > 0) {
+      weekKms = driver.walletBalance / 4.5;
+    }
+    
+    weekKms = parseFloat(weekKms.toFixed(1));
+    
+    if (weekKms >= threshold) {
+      const billAmount = driver.walletBalance > 0 ? driver.walletBalance : parseFloat((weekKms * 4.5).toFixed(2));
+      
+      const newBill = {
+        id: `bill_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        type: "driver_service_bill",
+        senderId: driver.id,
+        senderName: driver.name,
+        receiverId: "admin",
+        campaignId: driver.currentCampaignId || "camp_active_1",
+        amount: billAmount,
+        status: "pending",
+        kmsCovered: weekKms,
+        periodStart: sevenDaysAgo.toISOString().split("T")[0],
+        periodEnd: now.toISOString().split("T")[0],
+        timestamp: now.toLocaleString(),
+        description: `Automated Weekly Service Bill - ${weekKms} KM verified mileage run (exceeded threshold of ${threshold} KM)`
+      };
+      
+      bills.unshift(newBill);
+      generatedBills.push({ id: driver.id, name: driver.name, kms: weekKms, amount: billAmount });
+      
+      notifications.unshift({
+        id: `notif_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        title: "Automated Weekly Bill Raised",
+        message: `Your weekly tracking of ${weekKms} KM exceeded the ${threshold} KM threshold. An automated service bill for ₹${billAmount} has been generated.`,
+        timestamp: now.toLocaleString(),
+        unread: true,
+        type: "billing"
+      });
+      
+      notifications.unshift({
+        id: `notif_admin_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        title: "⚡ Auto Bill Generated",
+        message: `Scheduler automatically generated a service bill of ₹${billAmount} for driver ${driver.name} (${weekKms} KM).`,
+        timestamp: now.toLocaleString(),
+        unread: true,
+        type: "billing"
+      });
+    } else {
+      skippedDrivers.push({ id: driver.id, name: driver.name, kms: weekKms, reason: `Under threshold of ${threshold} KM` });
+    }
+  });
+  
+  schedulerSettings.lastRunTimestamp = now.toLocaleString();
+  
+  let summaryMessage = "";
+  if (generatedBills.length > 0) {
+    summaryMessage = `Success! Automatically generated ${generatedBills.length} service bills: ` + 
+      generatedBills.map(gb => `${gb.name} (${gb.kms} KM, ₹${gb.amount})`).join(", ");
+  } else {
+    summaryMessage = `Scheduler ran. No drivers exceeded the threshold of ${threshold} KM. (Checked: ${drivers.length} drivers)`;
+  }
+  
+  schedulerSettings.logs.unshift({
+    timestamp: now.toLocaleString(),
+    status: generatedBills.length > 0 ? "Success" : "Idle",
+    message: summaryMessage
+  });
+  
+  if (schedulerSettings.logs.length > 30) {
+    schedulerSettings.logs = schedulerSettings.logs.slice(0, 30);
+  }
+  
+  saveDatabase();
+  return {
+    success: true,
+    generatedBills,
+    skippedDrivers,
+    summary: summaryMessage
+  };
+}
+
+// Background scheduler tick every 3 minutes
+setInterval(() => {
+  if (schedulerSettings.enabled) {
+    const lastRunStr = schedulerSettings.lastRunTimestamp;
+    let runRequired = false;
+    if (!lastRunStr) {
+      runRequired = true;
+    } else {
+      const lastRunDate = new Date(lastRunStr);
+      const diffMs = Date.now() - lastRunDate.getTime();
+      // Run every 3 minutes in background
+      if (diffMs > 3 * 60 * 1000) {
+        runRequired = true;
+      }
+    }
+    
+    if (runRequired) {
+      console.log("[Scheduler] Triggering automated weekly billing checks...");
+      runBillingScheduler();
+    }
+  }
+}, 60000);
+
+// API Routes for Scheduler
+app.get("/api/scheduler/settings", (req, res) => {
+  res.json(schedulerSettings);
+});
+
+app.post("/api/scheduler/settings", (req, res) => {
+  const { enabled, mileageThreshold } = req.body;
+  if (enabled !== undefined) schedulerSettings.enabled = !!enabled;
+  if (mileageThreshold !== undefined) schedulerSettings.mileageThreshold = Number(mileageThreshold);
+  saveDatabase();
+  res.json({ success: true, settings: schedulerSettings });
+});
+
+app.post("/api/scheduler/trigger", (req, res) => {
+  const { mileageThreshold } = req.body;
+  const result = runBillingScheduler(mileageThreshold);
+  res.json(result);
 });
 
 // Notifications
