@@ -55,6 +55,7 @@ let schedulerSettings = {
   mileageThreshold: 10,
   intervalMinutes: 5,
   lastRunTimestamp: null,
+  driverRatePerKm: 4.5,
   logs: [
     {
       timestamp: new Date().toLocaleString(),
@@ -108,6 +109,7 @@ function initDatabase() {
         mileageThreshold: 10,
         intervalMinutes: 5,
         lastRunTimestamp: null,
+        driverRatePerKm: 4.5,
         logs: [
           {
             timestamp: new Date().toLocaleString(),
@@ -116,6 +118,9 @@ function initDatabase() {
           }
         ]
       };
+      if (schedulerSettings.driverRatePerKm === undefined) {
+        schedulerSettings.driverRatePerKm = 4.5;
+      }
       console.log(`Database loaded successfully from ${DB_FILE}`);
     } else {
       console.log(`No database file found. Seeding new database at ${DB_FILE}`);
@@ -131,6 +136,7 @@ function initDatabase() {
         mileageThreshold: 10,
         intervalMinutes: 5,
         lastRunTimestamp: null,
+        driverRatePerKm: 4.5,
         logs: [
           {
             timestamp: new Date().toLocaleString(),
@@ -155,6 +161,7 @@ function initDatabase() {
       mileageThreshold: 10,
       intervalMinutes: 5,
       lastRunTimestamp: null,
+      driverRatePerKm: 4.5,
       logs: [
         {
           timestamp: new Date().toLocaleString(),
@@ -664,6 +671,8 @@ function runBillingScheduler(thresholdOverride) {
     let weekKms = 0;
     const driverTxs = walletTransactions.filter(t => t.userId === driver.id && t.type === "earning");
     
+    const currentRate = schedulerSettings.driverRatePerKm || 4.5;
+
     driverTxs.forEach(tx => {
       let txDate = new Date(tx.timestamp);
       if (isNaN(txDate.getTime())) {
@@ -675,20 +684,20 @@ function runBillingScheduler(thresholdOverride) {
         if (kmMatch) {
           weekKms += parseFloat(kmMatch[1]);
         } else {
-          weekKms += tx.amount / 4.5;
+          weekKms += tx.amount / currentRate;
         }
       }
     });
     
     // Fallback: if no recent transaction matches but the driver has wallet balance, let's derive from wallet balance
     if (weekKms === 0 && driver.walletBalance > 0) {
-      weekKms = driver.walletBalance / 4.5;
+      weekKms = driver.walletBalance / currentRate;
     }
     
     weekKms = parseFloat(weekKms.toFixed(1));
     
     if (weekKms >= threshold) {
-      const billAmount = driver.walletBalance > 0 ? driver.walletBalance : parseFloat((weekKms * 4.5).toFixed(2));
+      const billAmount = driver.walletBalance > 0 ? driver.walletBalance : parseFloat((weekKms * currentRate).toFixed(2));
       
       const newBill = {
         id: `bill_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
@@ -789,9 +798,10 @@ app.get("/api/scheduler/settings", (req, res) => {
 });
 
 app.post("/api/scheduler/settings", (req, res) => {
-  const { enabled, mileageThreshold } = req.body;
+  const { enabled, mileageThreshold, driverRatePerKm } = req.body;
   if (enabled !== undefined) schedulerSettings.enabled = !!enabled;
   if (mileageThreshold !== undefined) schedulerSettings.mileageThreshold = Number(mileageThreshold);
+  if (driverRatePerKm !== undefined) schedulerSettings.driverRatePerKm = Number(driverRatePerKm);
   saveDatabase();
   res.json({ success: true, settings: schedulerSettings });
 });

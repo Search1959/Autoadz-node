@@ -760,7 +760,7 @@ export default function App() {
                     localStorage.setItem("autoadz_last_coords", JSON.stringify(newPosObj));
                     setLastCoords({ lat: latitude, lng: longitude });
 
-                    const finalEarnings = parseFloat((bgDistance * 4.5).toFixed(2));
+                    const finalEarnings = parseFloat((bgDistance * driverRatePerKm).toFixed(2));
                     notifications.unshift({
                       id: `notif_bg_${Date.now()}`,
                       title: "Background Miles Recorded! 🛰️",
@@ -806,7 +806,7 @@ export default function App() {
         
         const savedKmsStr = localStorage.getItem("autoadz_live_session_kms");
         const finalKms = savedKmsStr ? parseFloat(savedKmsStr) : liveSessionKms;
-        const finalEarnings = parseFloat((finalKms * 4.5).toFixed(2));
+        const finalEarnings = parseFloat((finalKms * driverRatePerKm).toFixed(2));
 
         localStorage.removeItem("autoadz_is_active_tracker");
         localStorage.removeItem("autoadz_tracking_start_time");
@@ -946,6 +946,7 @@ export default function App() {
   // Scheduler States
   const [schedulerEnabled, setSchedulerEnabled] = useState(true);
   const [schedulerThreshold, setSchedulerThreshold] = useState(10);
+  const [driverRatePerKm, setDriverRatePerKm] = useState<number>(4.5);
   const [schedulerLogs, setSchedulerLogs] = useState<Array<{ timestamp: string; status: string; message: string }>>([]);
   const [schedulerLastRun, setSchedulerLastRun] = useState("");
   const [schedulerRunStatus, setSchedulerRunStatus] = useState("");
@@ -1127,6 +1128,7 @@ export default function App() {
           const schedulerData = await resScheduler.json();
           setSchedulerEnabled(schedulerData.enabled);
           setSchedulerThreshold(schedulerData.mileageThreshold);
+          setDriverRatePerKm(schedulerData.driverRatePerKm !== undefined ? schedulerData.driverRatePerKm : 4.5);
           setSchedulerLogs(schedulerData.logs || []);
           setSchedulerLastRun(schedulerData.lastRunTimestamp || "Never");
         }
@@ -1369,14 +1371,28 @@ export default function App() {
   };
 
   // Save Settings
-  const handleSaveSystemSettings = (e: React.FormEvent) => {
+  const handleSaveSystemSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem("sys_whatsapp_token", systemWhatsAppToken);
     localStorage.setItem("sys_whatsapp_phone_id", systemWhatsAppPhoneId);
     localStorage.setItem("sys_admin_whatsapp_phone", systemAdminWhatsAppPhone);
     localStorage.setItem("sys_sms_api_key", systemSmsApiKey);
     localStorage.setItem("sys_sms_sender_id", systemSmsSenderId);
-    setSystemSettingsSuccessMsg("SaaS Integration API gateway credentials successfully verified & saved!");
+
+    try {
+      await fetch("/api/scheduler/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          mileageThreshold: schedulerThreshold,
+          driverRatePerKm: driverRatePerKm 
+        })
+      });
+    } catch (err) {
+      console.error("Failed to sync rate settings to server", err);
+    }
+
+    setSystemSettingsSuccessMsg("SaaS Integration API gateway credentials & Driver Payout Rates successfully saved!");
     setTimeout(() => setSystemSettingsSuccessMsg(""), 5000);
   };
 
@@ -1760,7 +1776,7 @@ export default function App() {
     // Update logged-in driver's real wallet balance and earnings on server
     const driverRajesh = drivers.find(d => d.id === loggedInDriverId);
     if (driverRajesh) {
-      const addedEarnings = kmsToDrive * 4.5;
+      const addedEarnings = kmsToDrive * driverRatePerKm;
       const nextTotalEarnings = (driverRajesh.totalEarnings || 0) + addedEarnings;
       const nextWalletBalance = (driverRajesh.walletBalance || 0) + addedEarnings;
 
@@ -3034,30 +3050,30 @@ export default function App() {
           {/* Persistent Dark Mode Theme Toggle */}
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 hover:border-[#FF9800]/50 transition rounded-lg text-xs font-mono font-medium text-slate-300 border border-slate-700/60"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 hover:border-amber-400 transition rounded-lg text-xs font-mono font-bold text-slate-50 border border-white/20"
             title="Toggle Dark Mode"
             id="theme-toggle-btn"
           >
             {darkMode ? (
               <>
-                <Sun size={12} className="text-amber-400 animate-pulse" />
-                <span className="text-amber-400">LIGHT VIEW</span>
+                <Sun size={12} className="text-amber-400 animate-pulse animate-duration-1000" />
+                <span className="text-amber-400 font-bold">LIGHT VIEW</span>
               </>
             ) : (
               <>
-                <Moon size={12} className="text-[#FF9800]" />
-                <span>NIGHT MODE</span>
+                <Moon size={12} className="text-amber-400" />
+                <span className="text-slate-50 font-bold">NIGHT MODE</span>
               </>
             )}
           </button>
 
           <button 
             onClick={fetchData} 
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 transition rounded-lg text-xs font-mono font-medium text-slate-300 border border-slate-700/60"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 hover:border-amber-400 transition rounded-lg text-xs font-mono font-bold text-slate-50 border border-white/20"
             id="sync-telemetry-btn"
           >
-            <RefreshCw size={12} className={loading ? "animate-spin text-[#FF9800]" : "text-slate-400"} />
-            {loading ? "SYNCING..." : "SYNC TELEMETRY"}
+            <RefreshCw size={12} className={loading ? "animate-spin text-amber-400" : "text-amber-400"} />
+            <span className="text-slate-50 font-bold">{loading ? "SYNCING..." : "SYNC TELEMETRY"}</span>
           </button>
 
           {/* Logout Switch Portal Button */}
@@ -4099,21 +4115,21 @@ export default function App() {
 
                                 <div className="grid grid-cols-3 gap-2 border-y border-white/5 py-2 text-center">
                                   <div>
-                                    <span className="text-slate-400 text-[8px] uppercase block font-mono">Trip Time</span>
+                                    <span className="text-slate-200 text-[10px] font-bold uppercase block font-mono tracking-wider">Trip Time</span>
                                     <span className="text-xs font-bold font-mono text-white block mt-0.5">
                                       {loggedInDriver?.state === "tracking" ? formatDuration(liveSessionSeconds) : "00:00"}
                                     </span>
                                   </div>
                                   <div>
-                                    <span className="text-slate-400 text-[8px] uppercase block font-mono">Trip Distance</span>
+                                    <span className="text-slate-200 text-[10px] font-bold uppercase block font-mono tracking-wider">Trip Distance</span>
                                     <span className="text-xs font-bold font-mono text-[#FF9800] block mt-0.5">
-                                      {loggedInDriver?.state === "tracking" ? liveSessionKms.toFixed(3) : "0.000"} <span className="text-[8px] font-normal text-slate-400">KM</span>
+                                      {loggedInDriver?.state === "tracking" ? liveSessionKms.toFixed(3) : "0.000"} <span className="text-[9px] font-bold text-slate-300">KM</span>
                                     </span>
                                   </div>
                                   <div>
-                                    <span className="text-slate-400 text-[8px] uppercase block font-mono">Trip Pay</span>
+                                    <span className="text-slate-200 text-[10px] font-bold uppercase block font-mono tracking-wider">Trip Pay</span>
                                     <span className="text-xs font-bold font-mono text-emerald-400 block mt-0.5">
-                                      ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * 4.5).toFixed(2) : "0.00"}
+                                      ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * driverRatePerKm).toFixed(2) : "0.00"}
                                     </span>
                                   </div>
                                 </div>
@@ -4131,12 +4147,12 @@ export default function App() {
                               </div>
                             </div>
                           ) : (
-                            <div className="space-y-2 bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                            <div className="space-y-2 bg-slate-950/70 p-3 rounded-xl border border-white/15">
                               <div className="flex justify-between items-center">
                                 <h4 className="font-bold text-xs text-red-400">No Active Campaign Linked</h4>
-                                <span className="text-[8px] font-mono bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-black uppercase">Inactive</span>
+                                <span className="text-[8px] font-mono bg-red-900 text-red-100 px-1.5 py-0.5 rounded font-black uppercase">Inactive</span>
                               </div>
-                              <p className="text-[9px] text-slate-300 leading-tight">Choose one of the currently active advertising campaigns below to link your auto-rickshaw instantly:</p>
+                              <p className="text-[9px] text-white leading-tight font-medium">Choose one of the currently active advertising campaigns below to link your auto-rickshaw instantly:</p>
                               
                               <div className="space-y-1.5 pt-1">
                                 <select 
@@ -4145,12 +4161,12 @@ export default function App() {
                                       handleAllocateCampaign(loggedInDriver.id, e.target.value);
                                     }
                                   }}
-                                  className="w-full bg-slate-800 text-slate-200 text-[10px] font-mono border border-slate-700 rounded p-1.5 focus:outline-none focus:border-[#FF9800]"
+                                  className="w-full bg-slate-900 text-white text-[10px] font-mono border border-slate-600 rounded p-1.5 focus:outline-none focus:border-[#FF9800]"
                                   defaultValue=""
                                 >
-                                  <option value="" disabled>-- Select Campaign to Link --</option>
+                                  <option value="" disabled className="text-slate-400">-- Select Campaign to Link --</option>
                                   {campaigns.filter(c => c.status === "active").map(c => (
-                                    <option key={c.id} value={c.id}>
+                                    <option key={c.id} value={c.id} className="bg-slate-900 text-white">
                                       {c.title} (₹{c.budget?.toLocaleString()})
                                     </option>
                                   ))}
@@ -4159,9 +4175,9 @@ export default function App() {
                             </div>
                           )}
 
-                          <div className="pt-2 border-t border-white/10 flex justify-between items-center text-[10px]">
-                            <span className="text-slate-300">Earnings rate: <b className="text-emerald-400">₹4.50 per KM</b></span>
-                            <span className="text-[#FF9800] font-mono">Target: 40 KM/day</span>
+                          <div className="pt-2 border-t border-white/20 flex justify-between items-center text-[10px]">
+                            <span className="text-white font-semibold">Earnings rate: <b className="text-emerald-400 font-bold">₹{driverRatePerKm.toFixed(2)} per KM</b></span>
+                            <span className="text-amber-400 font-mono font-bold">Target: 40 KM/day</span>
                           </div>
                         </div>
 
@@ -4236,10 +4252,10 @@ export default function App() {
                             </div>
                             <div className="mt-1.5">
                               <span className="text-sm font-black text-emerald-600 font-mono leading-none block">
-                                ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * 4.5).toFixed(2) : "0.00"}
+                                ₹{loggedInDriver?.state === "tracking" ? (liveSessionKms * driverRatePerKm).toFixed(2) : "0.00"}
                               </span>
                               <span className="text-[8px] text-slate-500 font-mono mt-1 block">
-                                Session earnings: <span className="font-bold">₹{(loggedInDriver?.state === "tracking" ? liveSessionKms * 4.5 : 0).toFixed(2)}</span>
+                                Session earnings: <span className="font-bold">₹{(loggedInDriver?.state === "tracking" ? liveSessionKms * driverRatePerKm : 0).toFixed(2)}</span>
                               </span>
                             </div>
                           </div>
@@ -4493,7 +4509,7 @@ export default function App() {
                             </div>
                             <div className="bg-slate-50 p-2 rounded">
                               <span className="text-slate-500 block text-[9px]">Rate / KM</span>
-                              <span className="font-bold text-green-600 font-mono">₹4.50 INR</span>
+                              <span className="font-bold text-green-600 font-mono">₹{driverRatePerKm.toFixed(2)} INR</span>
                             </div>
                           </div>
                         </div>
@@ -4513,7 +4529,7 @@ export default function App() {
                           {loggedInDriver && loggedInDriver.walletBalance > 0 ? (
                             <button
                               onClick={async () => {
-                                const roundedKms = parseFloat((loggedInDriver.walletBalance / 4.5).toFixed(1));
+                                const roundedKms = parseFloat((loggedInDriver.walletBalance / driverRatePerKm).toFixed(1));
                                 try {
                                   const res = await fetch("/api/bills", {
                                     method: "POST",
@@ -4527,7 +4543,7 @@ export default function App() {
                                       kmsCovered: roundedKms,
                                       periodStart: new Date(Date.now() - 7*24*3600*1000).toISOString().split("T")[0],
                                       periodEnd: new Date().toISOString().split("T")[0],
-                                      description: `Weekly service billing for GPS verified mileage (${roundedKms} KMs completed at ₹4.5/KM)`
+                                      description: `Weekly service billing for GPS verified mileage (${roundedKms} KMs completed at ₹${driverRatePerKm.toFixed(2)}/KM)`
                                     })
                                   });
                                   if (res.ok) {
@@ -4542,7 +4558,7 @@ export default function App() {
                               }}
                               className="w-full py-1.5 bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold font-mono text-[9px] rounded-lg transition uppercase flex items-center justify-center gap-1 cursor-pointer"
                             >
-                              ⚡ Raise Bill for ₹{loggedInDriver.walletBalance} ({parseFloat((loggedInDriver.walletBalance / 4.5).toFixed(1))} KMs)
+                              ⚡ Raise Bill for ₹{loggedInDriver.walletBalance} ({parseFloat((loggedInDriver.walletBalance / driverRatePerKm).toFixed(1))} KMs)
                             </button>
                           ) : (
                             <div className="text-center text-[10px] text-slate-400 italic py-1">
@@ -5753,9 +5769,41 @@ export default function App() {
                     </p>
                   </div>
 
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                    <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1">
+                      🛺 Global Driver Reimbursement & Payout Rates
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Driver Payout Rate (₹ / KM)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          value={driverRatePerKm}
+                          onChange={(e) => setDriverRatePerKm(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Mileage Billing Threshold (KM)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={schedulerThreshold}
+                          onChange={(e) => setSchedulerThreshold(parseInt(e.target.value) || 0)}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-slate-400 italic font-mono leading-none">
+                      Determines the payment drivers receive per GPS-verified kilometer and the milestone needed to trigger automated billing.
+                    </p>
+                  </div>
+
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-[#10B981] hover:bg-emerald-600 text-white font-bold font-mono text-xs rounded-xl transition shadow-xs uppercase"
+                    className="w-full py-2.5 bg-[#10B981] hover:bg-emerald-600 text-white font-bold font-mono text-xs rounded-xl transition shadow-xs uppercase cursor-pointer text-center"
                   >
                     💾 Save & Verify Gateway Connections
                   </button>
@@ -6294,50 +6342,71 @@ export default function App() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {/* Configure Threshold */}
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
-                          <h6 className="font-mono font-bold text-xs text-[#0B1F4D] uppercase">
-                            🔧 Threshold Settings
-                          </h6>
-                          <p className="text-[11px] text-slate-400 leading-normal">
-                            Only drivers who exceed this mileage threshold during the billing cycle will have service bills generated automatically.
-                          </p>
+                        {/* Configure Threshold and Driver Rate */}
+                        <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-4">
+                          <div>
+                            <h6 className="font-mono font-bold text-xs text-[#0B1F4D] uppercase">
+                              🔧 Billing & Rate Settings
+                            </h6>
+                            <p className="text-[11px] text-slate-400 leading-normal">
+                              Configure the conditions and rates used for automated billing schedules and driver mileage payouts.
+                            </p>
+                          </div>
                           
-                          <div className="space-y-2">
-                            <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">
-                              Set Mileage Threshold (KM)
-                            </label>
-                            <div className="flex gap-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">
+                                Mileage Threshold (KM)
+                              </label>
                               <input
                                 type="number"
                                 min="1"
                                 placeholder="e.g. 10"
                                 value={schedulerThreshold}
                                 onChange={(e) => setSchedulerThreshold(parseInt(e.target.value) || 0)}
-                                className="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 w-28 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
                               />
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const res = await fetch("/api/scheduler/settings", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ mileageThreshold: schedulerThreshold })
-                                    });
-                                    if (res.ok) {
-                                      alert("✓ Scheduler mileage threshold successfully updated!");
-                                      fetchData();
-                                    }
-                                  } catch (e) {
-                                    console.error(e);
-                                  }
-                                }}
-                                className="px-3.5 py-1.5 bg-[#0B1F4D] hover:bg-[#163375] text-white text-[11px] font-bold rounded-lg transition font-mono uppercase cursor-pointer"
-                              >
-                                Save Threshold
-                              </button>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">
+                                Driver Payout Rate (₹/KM)
+                              </label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0.1"
+                                placeholder="e.g. 4.5"
+                                value={driverRatePerKm}
+                                onChange={(e) => setDriverRatePerKm(parseFloat(e.target.value) || 0)}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                              />
                             </div>
                           </div>
+
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch("/api/scheduler/settings", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ 
+                                    mileageThreshold: schedulerThreshold,
+                                    driverRatePerKm: driverRatePerKm 
+                                  })
+                                });
+                                if (res.ok) {
+                                  alert("✓ Billing and rate settings successfully saved!");
+                                  fetchData();
+                                }
+                              } catch (e) {
+                                console.error(e);
+                              }
+                            }}
+                            className="w-full py-2 bg-[#0B1F4D] hover:bg-[#163375] text-white text-[11px] font-bold rounded-lg transition font-mono uppercase cursor-pointer text-center"
+                          >
+                            Save Billing Settings
+                          </button>
                         </div>
 
                         {/* Trigger Manual Job */}

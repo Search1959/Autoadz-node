@@ -15,10 +15,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Enhancing general contrast and legibility */
-body:not(.dark-theme-active) {
-  color: #0f172a !important;
-}
+
 
 /* Ensure minimum readable font size and bolder weight for tiny elements across total website */
 .text-\[8px\] {
@@ -41,28 +38,42 @@ body:not(.dark-theme-active) {
   font-size: 13px !important;
 }
 
-/* Increase slate text colors contrast for better light-mode reading */
+/* Global Light/Dark Contextual Slate Readability Correction */
 body:not(.dark-theme-active) .text-slate-400 {
-  color: #334155 !important; /* Muted text is now much darker slate */
+  color: #4b5563 !important; /* Force darker, legible slate-gray in light mode */
 }
 body:not(.dark-theme-active) .text-slate-500 {
-  color: #1e293b !important;
-}
-body:not(.dark-theme-active) .text-slate-600 {
-  color: #0f172a !important;
-}
-body:not(.dark-theme-active) .text-slate-700 {
-  color: #020617 !important;
-}
-body:not(.dark-theme-active) .text-slate-800 {
-  color: #000000 !important;
+  color: #374151 !important; /* Force highly sharp dark-slate for subheadings */
 }
 body:not(.dark-theme-active) .text-slate-300 {
-  color: #475569 !important;
+  color: #4b5563 !important; /* High contrast body elements */
 }
-body:not(.dark-theme-active) .text-slate-400\/80 {
-  color: #334155 !important;
+
+/* Ensure light contrast elements inside dark backgrounds stay bright and clear */
+.bg-\[\#0B1F4D\] .text-slate-400,
+.bg-slate-900 .text-slate-400,
+.bg-slate-950 .text-slate-400,
+.glass-card-dark .text-slate-400,
+.dark-theme-active .text-slate-400,
+.bg-\[\#0B1F4D\] .text-slate-300,
+.bg-slate-900 .text-slate-300,
+.bg-slate-950 .text-slate-300,
+.glass-card-dark .text-slate-300,
+.dark-theme-active .text-slate-300,
+.bg-\[\#0B1F4D\] .text-slate-200,
+.bg-slate-900 .text-slate-200,
+.bg-slate-950 .text-slate-200,
+.glass-card-dark .text-slate-200,
+.dark-theme-active .text-slate-200,
+.bg-\[\#0B1F4D\] .text-slate-100,
+.bg-slate-900 .text-slate-100,
+.bg-slate-950 .text-slate-100,
+.glass-card-dark .text-slate-100,
+.dark-theme-active .text-slate-100 {
+  color: #f3f4f6 !important; /* Bright off-white-slate */
 }
+
+
 
 /* Glassmorphism utility classes */
 .glass-card {
