@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+// @ts-ignore
+import jsQR from "jsqr";
 import { 
   Campaign, 
   Driver, 
@@ -14,7 +16,7 @@ import {
   Smartphone, Shield, Check, RotateCcw, Camera, HelpCircle, 
   TrendingUp, Award, Navigation, RefreshCw, Eye, ThumbsUp, 
   ThumbsDown, Sparkles, MessageSquare, Activity, ShieldAlert,
-  Sun, Moon, Upload, Trash2, Layers
+  Sun, Moon, Upload, Trash2, Layers, QrCode
 } from "lucide-react";
 import AiAssistant from "./components/AiAssistant";
 
@@ -104,6 +106,135 @@ export default function App() {
   const [faqSearchQuery, setFaqSearchQuery] = useState("");
   const [faqActiveTab, setFaqActiveTab] = useState<"All" | "Advertisers" | "Drivers" | "General">("All");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  // QR Verification Modal Overlay
+  const renderQrModal = () => {
+    if (!isQrModalOpen || !selectedCampaignForQr) return null;
+
+    return (
+      <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div className="bg-white rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+            <div>
+              <span className="text-[8px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded uppercase font-mono">
+                QR Verification
+              </span>
+              <h4 className="font-bold text-xs text-[#0B1F4D] mt-1 line-clamp-1">
+                Verify: {selectedCampaignForQr.title}
+              </h4>
+            </div>
+            <button
+              onClick={() => setIsQrModalOpen(false)}
+              className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Verification Results Status */}
+          {qrVerificationStatus !== "idle" && (
+            <div className={`p-3 rounded-xl border text-xs space-y-2 ${
+              qrVerificationStatus === "success" 
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}>
+              <div className="flex items-center gap-2">
+                {qrVerificationStatus === "success" ? (
+                  <CheckCircle size={14} className="text-emerald-600 animate-bounce" />
+                ) : (
+                  <AlertCircle size={14} className="text-red-600 animate-pulse" />
+                )}
+                <span className="font-bold uppercase tracking-wide text-[10px]">
+                  {qrVerificationStatus === "success" ? "Verification Passed" : "Verification Failed"}
+                </span>
+              </div>
+              <p className="text-[10px] leading-relaxed">{qrFeedbackMessage}</p>
+              {qrVerificationStatus === "success" && (
+                <p className="text-[9px] text-emerald-600 font-mono italic">
+                  +1 verified scan successfully logged in analytics database.
+                </p>
+              )}
+              <button
+                onClick={() => {
+                  setQrScannedResult(null);
+                  setQrVerificationStatus("idle");
+                  setQrFeedbackMessage("");
+                  setQrSimulatedInput("");
+                }}
+                className={`w-full py-1 rounded text-[10px] font-bold uppercase transition ${
+                  qrVerificationStatus === "success"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-red-600 text-white hover:bg-red-700"
+                }`}
+              >
+                Scan Again
+              </button>
+            </div>
+          )}
+
+          {/* Live Camera Scanner Box */}
+          {qrVerificationStatus === "idle" && (
+            <div className="space-y-3">
+              <div className="relative aspect-square w-full max-w-[240px] mx-auto bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner">
+                {/* Live video feed */}
+                <video
+                  ref={qrVideoRef}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                />
+                
+                {/* Canvas used for frame capturing (hidden) */}
+                <canvas ref={qrCanvasRef} className="hidden" />
+
+                {/* Aesthetic Scanning Laser overlay */}
+                <div className="absolute inset-0 border-2 border-dashed border-emerald-500/40 rounded-2xl pointer-events-none">
+                  <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+                </div>
+
+                {/* Subtitle inside video overlay */}
+                <div className="absolute bottom-2 inset-x-0 text-center">
+                  <span className="bg-slate-950/85 text-white text-[8px] font-mono tracking-wider px-2 py-0.5 rounded uppercase">
+                    📡 Point at Sticker QR Code
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[9px] text-center text-slate-400">
+                Hold device steady. Scanning resolves instantly once QR code contains exact match <b>{selectedCampaignForQr.id}</b>.
+              </p>
+            </div>
+          )}
+
+          {/* Sandbox Scanner Input Simulator */}
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-150 space-y-2">
+            <span className="text-[9px] font-bold text-slate-500 block uppercase font-mono tracking-wider">
+              🛠️ Sandbox Scan Simulator
+            </span>
+            <p className="text-[9px] text-slate-400 leading-tight">
+              Using desktop or missing physical stickers? Enter the Campaign ID (<b>{selectedCampaignForQr.id}</b>) to mock scan verification.
+            </p>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                placeholder={`Try entering "${selectedCampaignForQr.id}"`}
+                value={qrSimulatedInput}
+                onChange={(e) => setQrSimulatedInput(e.target.value)}
+                className="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono focus:outline-none focus:border-[#0B1F4D]"
+              />
+              <button
+                onClick={handleSimulatedQrVerify}
+                className="bg-[#0B1F4D] text-white text-[10px] font-bold px-2.5 py-1 rounded transition-colors hover:bg-slate-800"
+              >
+                Mock Verify
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Unified Help Center & FAQ Modal
   const renderHelpModal = () => {
@@ -373,6 +504,8 @@ export default function App() {
   const wasTrackingRef = useRef(false);
   const watchIdRef = useRef<number | null>(null);
   const lastCoordsRef = useRef<{ lat: number; lng: number; timestamp: number } | null>(null);
+  const qrVideoRef = useRef<HTMLVideoElement | null>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Helper to calculate distance between coordinates (Haversine formula)
   const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -792,6 +925,7 @@ export default function App() {
   // Admin System integration placeholder credentials
   const [systemWhatsAppToken, setSystemWhatsAppToken] = useState(() => localStorage.getItem("sys_whatsapp_token") || "EAAG3yH8V9G0BAOBF90h3yPsd88...");
   const [systemWhatsAppPhoneId, setSystemWhatsAppPhoneId] = useState(() => localStorage.getItem("sys_whatsapp_phone_id") || "109825420194852");
+  const [systemAdminWhatsAppPhone, setSystemAdminWhatsAppPhone] = useState(() => localStorage.getItem("sys_admin_whatsapp_phone") || "9836130393");
   const [systemSmsApiKey, setSystemSmsApiKey] = useState(() => localStorage.getItem("sys_sms_api_key") || "api_key_84a92f029a1b8c73");
   const [systemSmsSenderId, setSystemSmsSenderId] = useState(() => localStorage.getItem("sys_sms_sender_id") || "AUTADZ");
   const [systemSettingsSuccessMsg, setSystemSettingsSuccessMsg] = useState("");
@@ -823,6 +957,14 @@ export default function App() {
   const [driverRegDLFile, setDriverRegDLFile] = useState("");
   const [driverRegAadhaarFile, setDriverRegAadhaarFile] = useState("");
   const [driverSuccessMsg, setDriverSuccessMsg] = useState("");
+
+  // Driver QR Verification Modal State
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [selectedCampaignForQr, setSelectedCampaignForQr] = useState<Campaign | null>(null);
+  const [qrScannedResult, setQrScannedResult] = useState<string | null>(null);
+  const [qrVerificationStatus, setQrVerificationStatus] = useState<"idle" | "success" | "error">("idle");
+  const [qrFeedbackMessage, setQrFeedbackMessage] = useState("");
+  const [qrSimulatedInput, setQrSimulatedInput] = useState("");
 
   // Wallet State
   const [addFundsAmount, setAddFundsAmount] = useState("");
@@ -902,6 +1044,11 @@ export default function App() {
       if (response.ok) {
         setShowCreateCampaign(false);
         setCampaignSuccessMsg(`Campaign "${newCampTitle || 'New Campaign'}" registered successfully with ${newCampAutos} autos! Track it via the Brand/Advertiser Portal.`);
+        
+        // Trigger WhatsApp notification to Admin immediately for approval
+        const adminMsg = `📢 *AutoAdz: New Campaign Registered!*\n\n*Campaign:* ${newCampTitle || 'New Campaign'}\n*Client:* ${newCampClient || "My Brand Ltd"}\n*City:* ${newCampCity}\n*Area:* ${newCampArea || "Koramangala & HSR"}\n*Budget:* ₹${Number(newCampBudget).toLocaleString()}\n*Autos Required:* ${newCampAutos}\n\nPlease review and approve this campaign in the Admin Panel immediately.`;
+        sendWhatsAppNotification(adminMsg);
+
         // Reset fields
         setNewCampTitle("");
         setNewCampClient("");
@@ -937,6 +1084,11 @@ export default function App() {
 
       if (response.ok) {
         setDriverSuccessMsg("Registration submitted successfully! Admin will verify KYC within 5 minutes.");
+        
+        // Trigger WhatsApp notification to Admin immediately for approval
+        const adminMsg = `🚨 *AutoAdz: New Driver Registered!*\n\n*Name:* ${driverRegName}\n*Phone:* ${driverRegPhone}\n*Vehicle Number:* ${driverRegAutoNum || "KA-03-AA-9999"}\n*Location:* ${driverRegLoc || "Bangalore South"}\n\nPlease review and approve this driver in the Admin Panel immediately.`;
+        sendWhatsAppNotification(adminMsg);
+
         setDriverRegName("");
         setDriverRegPhone("");
         setDriverRegAutoNum("");
@@ -1098,11 +1250,130 @@ export default function App() {
     e.preventDefault();
     localStorage.setItem("sys_whatsapp_token", systemWhatsAppToken);
     localStorage.setItem("sys_whatsapp_phone_id", systemWhatsAppPhoneId);
+    localStorage.setItem("sys_admin_whatsapp_phone", systemAdminWhatsAppPhone);
     localStorage.setItem("sys_sms_api_key", systemSmsApiKey);
     localStorage.setItem("sys_sms_sender_id", systemSmsSenderId);
     setSystemSettingsSuccessMsg("SaaS Integration API gateway credentials successfully verified & saved!");
     setTimeout(() => setSystemSettingsSuccessMsg(""), 5000);
   };
+
+  // WhatsApp notification helper
+  const sendWhatsAppNotification = async (message: string) => {
+    try {
+      const res = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          token: systemWhatsAppToken,
+          phoneId: systemWhatsAppPhoneId,
+          recipient: systemAdminWhatsAppPhone,
+          message
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.warn("WhatsApp notification failed:", data.error || data);
+      } else {
+        console.log("WhatsApp notification sent!", data);
+      }
+    } catch (err) {
+      console.error("Failed to send WhatsApp notification:", err);
+    }
+  };
+
+  // Handle QR code scanning detection
+  const handleQrCodeDetected = (scannedData: string) => {
+    if (!scannedData) return;
+    setQrScannedResult(scannedData);
+    if (selectedCampaignForQr) {
+      if (scannedData.trim() === selectedCampaignForQr.id.trim()) {
+        setQrVerificationStatus("success");
+        setQrFeedbackMessage(`✓ Perfect Match! Scanned code matches campaign ID: "${selectedCampaignForQr.id}".`);
+        
+        // Let's increment the qrScans in the database so that it's a real live update
+        fetch(`/api/campaigns/${selectedCampaignForQr.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ qrScans: (selectedCampaignForQr.qrScans || 0) + 1 })
+        }).then(() => {
+          fetchData(); // refresh app state
+        }).catch(err => console.error(err));
+        
+      } else {
+        setQrVerificationStatus("error");
+        setQrFeedbackMessage(`✗ Verification Failed! Scanned QR value: "${scannedData}" does not match Campaign ID: "${selectedCampaignForQr.id}".`);
+      }
+    }
+  };
+
+  // Triggered when manual/simulated QR input is verified
+  const handleSimulatedQrVerify = () => {
+    if (!qrSimulatedInput) {
+      alert("Please enter a simulated QR code value first.");
+      return;
+    }
+    handleQrCodeDetected(qrSimulatedInput);
+  };
+
+  // QR Code camera stream effect
+  useEffect(() => {
+    if (!isQrModalOpen) return;
+    
+    let animationFrameId: number;
+    let activeStream: MediaStream | null = null;
+    
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+        activeStream = stream;
+        if (qrVideoRef.current) {
+          qrVideoRef.current.srcObject = stream;
+          qrVideoRef.current.setAttribute("playsinline", "true");
+          qrVideoRef.current.play().catch(err => console.warn("Video play interrupted:", err));
+        }
+        
+        const tick = () => {
+          if (qrVideoRef.current && qrVideoRef.current.readyState === qrVideoRef.current.HAVE_ENOUGH_DATA) {
+            const canvas = qrCanvasRef.current || document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              canvas.width = qrVideoRef.current.videoWidth;
+              canvas.height = qrVideoRef.current.videoHeight;
+              ctx.drawImage(qrVideoRef.current, 0, 0, canvas.width, canvas.height);
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              
+              // Call jsQR to detect QR code from the frame
+              const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+              });
+              
+              if (code) {
+                handleQrCodeDetected(code.data);
+                return; // Stop scanning once a valid QR code is found
+              }
+            }
+          }
+          animationFrameId = requestAnimationFrame(tick);
+        };
+        animationFrameId = requestAnimationFrame(tick);
+      } catch (err) {
+        console.warn("Could not access physical camera stream (standard in iframe previews). Fallback to simulated code scanner is available.", err);
+      }
+    };
+    
+    startCamera();
+    
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isQrModalOpen, selectedCampaignForQr]);
 
   // Admin Add Driver
   const handleAdminAddDriver = async (e: React.FormEvent) => {
@@ -3989,6 +4260,131 @@ export default function App() {
                       </div>
                     )}
 
+                    {/* DRIVER CAMPAIGNS TAB */}
+                    {driverTab === "campaigns" && (
+                      <div id="driver-app-campaigns-tab" className="space-y-3 pb-4">
+                        <div className="bg-white p-3 rounded-xl border border-slate-200">
+                          <h5 className="font-bold text-xs text-[#0B1F4D] flex items-center gap-1.5">
+                            <QrCode size={14} className="text-[#FF9800]" /> Campaigns Hub
+                          </h5>
+                          <p className="text-[10px] text-slate-400 mt-1">Verify dynamic QR stickering, track ad metrics, and unlock physical mileage rewards.</p>
+                        </div>
+
+                        {/* Currently Linked Campaign block */}
+                        {loggedInDriver?.currentCampaignId ? (
+                          (() => {
+                            const activeCamp = campaigns.find(c => c.id === loggedInDriver.currentCampaignId);
+                            return (
+                              <div className="bg-gradient-to-br from-[#0B1F4D] to-slate-900 text-white p-4 rounded-xl border border-slate-800 space-y-3 shadow-md">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <span className="text-[8px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded uppercase font-mono tracking-wider">
+                                      MY ACTIVE LINK
+                                    </span>
+                                    <h4 className="font-bold text-xs text-[#FF9800] mt-1 line-clamp-1">{activeCamp?.title || "Edge Fashion Campaign"}</h4>
+                                    <p className="text-[9px] text-slate-300 font-mono mt-0.5">ID: {activeCamp?.id}</p>
+                                  </div>
+                                  <span className="text-right">
+                                    <span className="text-[8px] text-slate-400 font-mono block">QR SCANS</span>
+                                    <span className="text-xs font-black text-emerald-400 font-mono">{activeCamp?.qrScans || 0} Scans</span>
+                                  </span>
+                                </div>
+
+                                <div className="p-2 bg-slate-950/60 rounded-lg border border-white/5 space-y-1.5">
+                                  <p className="text-[9.5px] text-slate-200 leading-normal">
+                                    Verify your physical vehicle's sticker installation QR code to ensure tracking is synchronized correctly and metrics are counted.
+                                  </p>
+                                  <button
+                                    onClick={() => {
+                                      if (activeCamp) {
+                                        setSelectedCampaignForQr(activeCamp);
+                                        setQrScannedResult(null);
+                                        setQrVerificationStatus("idle");
+                                        setQrFeedbackMessage("");
+                                        setQrSimulatedInput("");
+                                        setIsQrModalOpen(true);
+                                      }
+                                    }}
+                                    className="w-full bg-[#FF9800] hover:bg-orange-500 text-[#0B1F4D] font-bold py-1.5 px-3 rounded-lg text-[10px] uppercase tracking-wide flex items-center justify-center gap-1.5 transition cursor-pointer"
+                                  >
+                                    <QrCode size={12} /> Verify QR Code
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3.5 text-center space-y-1">
+                            <AlertCircle size={18} className="mx-auto text-amber-500" />
+                            <h5 className="font-bold text-xs">No Active Campaign Linked</h5>
+                            <p className="text-[9px] leading-relaxed text-amber-700">Go to the Dashboard tab to select and link an active advertising campaign to your auto-rickshaw.</p>
+                          </div>
+                        )}
+
+                        {/* List of active platform campaigns driver can participate in */}
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase font-mono tracking-wider block">
+                            Explore Active Campaigns ({campaigns.filter(c => c.status === "active").length})
+                          </span>
+
+                          <div className="space-y-2.5">
+                            {campaigns.filter(c => c.status === "active").map((camp) => (
+                              <div key={camp.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs hover:shadow-xs transition space-y-2">
+                                <div className="flex justify-between items-start gap-1">
+                                  <div>
+                                    <h4 className="font-bold text-[11px] text-[#0B1F4D] line-clamp-1">{camp.title}</h4>
+                                    <p className="text-[8.5px] text-slate-400 font-mono">ID: {camp.id} • {camp.city}</p>
+                                  </div>
+                                  <span className="bg-emerald-50 text-emerald-700 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-100 uppercase">
+                                    ₹{camp.budget?.toLocaleString()} Budget
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-1.5 text-center text-[8.5px] font-mono py-1 bg-slate-50 rounded-lg">
+                                  <div>
+                                    <span className="text-slate-400 block uppercase text-[7.5px]">Autos</span>
+                                    <span className="font-bold text-slate-800">{camp.autosCount} / {camp.allocatedDrivers?.length || 0}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-400 block uppercase text-[7.5px]">Mileage</span>
+                                    <span className="font-bold text-[#FF9800]">{camp.kmsCovered} KM</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-400 block uppercase text-[7.5px]">QR Scans</span>
+                                    <span className="font-bold text-blue-600">{camp.qrScans || 0}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-1.5 pt-0.5">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedCampaignForQr(camp);
+                                      setQrScannedResult(null);
+                                      setQrVerificationStatus("idle");
+                                      setQrFeedbackMessage("");
+                                      setQrSimulatedInput("");
+                                      setIsQrModalOpen(true);
+                                    }}
+                                    className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#0B1F4D]/30 text-[#0B1F4D] text-[10px] font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1 transition shadow-3xs cursor-pointer"
+                                  >
+                                    <QrCode size={11} /> Verify QR
+                                  </button>
+                                  {loggedInDriver && loggedInDriver.currentCampaignId !== camp.id && (
+                                    <button
+                                      onClick={() => handleAllocateCampaign(loggedInDriver.id, camp.id)}
+                                      className="bg-[#0B1F4D] hover:bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition"
+                                    >
+                                      Link
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
 
                   {/* Driver Bottom Navigation */}
@@ -3999,6 +4395,14 @@ export default function App() {
                     >
                       <Smartphone size={16} />
                       <span className="text-[9px] font-bold uppercase tracking-wider">Dashboard</span>
+                    </button>
+                    <button 
+                      id="driver-app-campaigns-tab"
+                      onClick={() => setDriverTab("campaigns")}
+                      className={`flex flex-col items-center gap-1 ${driverTab === "campaigns" ? "text-[#0B1F4D]" : "text-slate-400"}`}
+                    >
+                      <QrCode size={16} />
+                      <span className="text-[9px] font-bold uppercase tracking-wider">Campaigns</span>
                     </button>
                     <button 
                       onClick={() => setDriverTab("proof")}
@@ -4049,8 +4453,8 @@ export default function App() {
                 
                 {/* Admin Control Header */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+              <div className="flex-1 min-w-0">
                 <h3 className="font-display font-extrabold text-[#0B1F4D] text-lg flex items-center gap-2">
                   <Shield size={20} className="text-[#FF9800]" />
                   AutoAdz Master Admin Panel
@@ -4114,7 +4518,8 @@ export default function App() {
                         <th className="py-2.5">Autos</th>
                         <th className="py-2.5">Budget</th>
                         <th className="py-2.5">Assigned Drivers</th>
-                        <th className="py-2.5 text-right">Action Status</th>
+                        <th className="py-2.5">Action Status</th>
+                        <th className="py-2.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -4184,12 +4589,12 @@ export default function App() {
                               )}
                             </div>
                           </td>
-                          <td className="py-3 text-right">
-                            <div className="flex flex-col items-end gap-2">
+                          <td className="py-3">
+                            <div className="flex flex-col gap-2">
                               {/* Campaign Status approval */}
                               <div>
                                 {camp.status === "pending" ? (
-                                  <div className="flex justify-end gap-1.5">
+                                  <div className="flex gap-1.5">
                                     <button
                                       onClick={() => handleVerifyCampaign(camp.id, "active")}
                                       className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-0.5"
@@ -4214,7 +4619,7 @@ export default function App() {
                               </div>
 
                               {/* Ad Creative Approval Controls */}
-                              <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex flex-col items-end gap-1 mt-1 max-w-[180px]">
+                              <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex flex-col items-start gap-1 mt-1 max-w-[180px]">
                                 <div className="flex items-center gap-1">
                                   <span className="text-[8px] text-slate-400 font-mono uppercase">Art Status:</span>
                                   <span className={`text-[8px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${
@@ -4256,25 +4661,24 @@ export default function App() {
                                   </div>
                                 )}
                               </div>
-
-                              {/* Admin Delete Campaign Button */}
-                              <div className="mt-2 flex justify-end">
-                                <button
-                                  onClick={async () => {
-                                    if (confirm(`Are you sure you want to delete the campaign "${camp.title}"?`)) {
-                                      const res = await fetch(`/api/campaigns/${camp.id}`, { method: "DELETE" });
-                                      if (res.ok) {
-                                        fetchData();
-                                      }
-                                    }
-                                  }}
-                                  className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-1 rounded border border-rose-200 transition text-[10px] font-mono flex items-center gap-1"
-                                  title="Delete Campaign"
-                                >
-                                  <Trash2 size={10} /> Delete Campaign
-                                </button>
-                              </div>
                             </div>
+                          </td>
+                          <td className="py-3 text-right">
+                            {/* Admin Delete Campaign Button */}
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Are you sure you want to permanently delete the campaign "${camp.title}"?`)) {
+                                  const res = await fetch(`/api/campaigns/${camp.id}`, { method: "DELETE" });
+                                  if (res.ok) {
+                                    fetchData();
+                                  }
+                                }
+                              }}
+                              className="text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-lg border border-rose-200 hover:border-rose-600 transition text-[10px] font-semibold inline-flex items-center gap-1 shadow-2xs hover:shadow-sm"
+                              title="Delete Campaign"
+                            >
+                              <Trash2 size={12} /> Delete Campaign
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -4318,7 +4722,8 @@ export default function App() {
                         <th className="py-2.5">Location</th>
                         <th className="py-2.5 text-center">License KYC</th>
                         <th className="py-2.5">Assigned Campaign</th>
-                        <th className="py-2.5 text-right">Verification & Actions</th>
+                        <th className="py-2.5 text-center">Verification Status</th>
+                        <th className="py-2.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -4359,57 +4764,57 @@ export default function App() {
                               <span className="text-[10px] text-slate-400 italic">Verify first</span>
                             )}
                           </td>
-                          <td className="py-3 text-right">
-                            <div className="flex flex-col items-end gap-1.5">
-                              {/* Verification status controls */}
-                              {driver.status === "pending_approval" ? (
-                                <div className="flex justify-end gap-1">
-                                  <button
-                                    onClick={() => handleVerifyDriver(driver.id, true)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-0.5 rounded text-[10px] font-semibold transition flex items-center gap-0.5"
-                                  >
-                                    <Check size={10} /> Accept
-                                  </button>
-                                  <button
-                                    onClick={() => handleVerifyDriver(driver.id, false)}
-                                    className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-0.5 rounded text-[10px] font-semibold transition"
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-[9px] font-mono font-bold uppercase text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-150">
-                                  {driver.status === "active" ? "ACTIVE CARRIER" : "REJECTED"}
-                                </span>
-                              )}
-
-                              {/* CRUD action buttons */}
-                              <div className="flex items-center gap-1 mt-0.5">
+                          <td className="py-3 text-center">
+                            {/* Verification status controls */}
+                            {driver.status === "pending_approval" ? (
+                              <div className="flex justify-center gap-1.5">
                                 <button
-                                  onClick={() => {
-                                    setAdminEditingDriver(driver);
-                                    setAdminDriverFormName(driver.name);
-                                    setAdminDriverFormPhone(driver.phone);
-                                    setAdminDriverFormAuto(driver.autoNumber);
-                                    setAdminDriverFormLoc(driver.location || "Bangalore");
-                                    setAdminDriverFormKyc(driver.kycVerified || false);
-                                    setAdminDriverFormStatus(driver.status || "pending_approval");
-                                  }}
-                                  className="text-slate-500 hover:text-[#0B1F4D] p-1 border border-slate-200 hover:border-[#0B1F4D]/40 rounded transition bg-white flex items-center justify-center"
-                                  title="Edit Driver Details"
-                                  id={`btn-edit-driver-${driver.id}`}
+                                  onClick={() => handleVerifyDriver(driver.id, true)}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-[10px] font-bold transition flex items-center gap-0.5"
                                 >
-                                  <Edit size={10} />
+                                  <Check size={10} /> Accept
                                 </button>
                                 <button
-                                  onClick={() => handleAdminDeleteDriver(driver.id)}
-                                  className="text-rose-500 hover:text-rose-700 p-1 border border-slate-200 hover:border-rose-300 rounded transition bg-white flex items-center justify-center"
-                                  title="Delete Driver"
-                                  id={`btn-delete-driver-${driver.id}`}
+                                  onClick={() => handleVerifyDriver(driver.id, false)}
+                                  className="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded text-[10px] font-bold transition"
                                 >
-                                  <Trash2 size={10} />
+                                  Decline
                                 </button>
                               </div>
+                            ) : (
+                              <span className="text-[9px] font-mono font-bold uppercase text-green-700 bg-green-50 px-2 py-1 rounded border border-green-200">
+                                {driver.status === "active" ? "ACTIVE CARRIER" : "REJECTED"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {/* Edit Driver details */}
+                              <button
+                                onClick={() => {
+                                  setAdminEditingDriver(driver);
+                                  setAdminDriverFormName(driver.name);
+                                  setAdminDriverFormPhone(driver.phone);
+                                  setAdminDriverFormAuto(driver.autoNumber);
+                                  setAdminDriverFormLoc(driver.location || "Bangalore");
+                                  setAdminDriverFormKyc(driver.kycVerified || false);
+                                  setAdminDriverFormStatus(driver.status || "pending_approval");
+                                }}
+                                className="text-slate-600 hover:text-[#0B1F4D] hover:bg-slate-50 px-2.5 py-1.5 border border-slate-200 hover:border-[#0B1F4D]/40 rounded-lg transition bg-white flex items-center gap-1 text-[10px] font-semibold"
+                                title="Edit Driver Details"
+                                id={`btn-edit-driver-${driver.id}`}
+                              >
+                                <Edit size={12} /> Edit
+                              </button>
+                              {/* Delete Driver */}
+                              <button
+                                onClick={() => handleAdminDeleteDriver(driver.id)}
+                                className="text-rose-600 hover:text-white hover:bg-rose-600 px-2.5 py-1.5 border border-rose-200 hover:border-rose-600 rounded-lg transition bg-white flex items-center gap-1 text-[10px] font-semibold animate-none"
+                                title="Delete Driver"
+                                id={`btn-delete-driver-${driver.id}`}
+                              >
+                                <Trash2 size={12} /> Delete
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -4841,7 +5246,7 @@ export default function App() {
                     <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1">
                       🟢 WhatsApp Business API Integration
                     </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">WhatsApp Cloud Access Token</label>
                         <input
@@ -4860,10 +5265,60 @@ export default function App() {
                           className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
                         />
                       </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Admin WhatsApp Phone Number</label>
+                        <input
+                          type="text"
+                          value={systemAdminWhatsAppPhone}
+                          onChange={(e) => setSystemAdminWhatsAppPhone(e.target.value)}
+                          placeholder="e.g. 9836130393"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
+                        />
+                      </div>
                     </div>
-                    <p className="text-[9px] text-slate-400 italic font-mono leading-none">
-                      Sends automated campaigns activation & driver payment receipt alerts via WhatsApp Cloud APIs.
-                    </p>
+                    
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-200">
+                      <p className="text-[9px] text-slate-400 italic font-mono leading-none">
+                        Sends automated WhatsApp notifications to the admin when a new driver registers or when a new campaign is created.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!systemAdminWhatsAppPhone) {
+                            alert("Please enter your Admin WhatsApp phone number first.");
+                            return;
+                          }
+                          const confirmTest = confirm(`Send a test WhatsApp notification to ${systemAdminWhatsAppPhone}?`);
+                          if (confirmTest) {
+                            try {
+                              const res = await fetch("/api/whatsapp/send", {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                  token: systemWhatsAppToken,
+                                  phoneId: systemWhatsAppPhoneId,
+                                  recipient: systemAdminWhatsAppPhone,
+                                  message: "🔔 *AutoAdz Integration Test!* Your WhatsApp API channel is now successfully connected to AutoAdz platform."
+                                })
+                              });
+                              const data = await res.json();
+                              if (res.ok) {
+                                alert(`✓ Test message successfully queued for transmission to ${systemAdminWhatsAppPhone}! Please check your WhatsApp.`);
+                              } else {
+                                alert(`✗ Failed: ${data.error || "Please check your credentials token or Phone ID."}`);
+                              }
+                            } catch (err: any) {
+                              alert(`Error sending test message: ${err.message}`);
+                            }
+                          }
+                        }}
+                        className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide transition uppercase flex items-center gap-1.5 shadow-2xs hover:shadow-sm cursor-pointer"
+                      >
+                        ⚡ Send Test Alert
+                      </button>
+                    </div>
                   </div>
 
                   <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
@@ -5147,6 +5602,7 @@ export default function App() {
           {/* HELP CENTER & FAQ MODAL OVERLAY (Q&A System)            */}
           {/* ========================================================= */}
           {renderHelpModal()}
+          {renderQrModal()}
 
         </div>
       </div>

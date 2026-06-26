@@ -749,6 +749,55 @@ Example: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]`;
   }
 });
 
+// Proxy route to send real WhatsApp notifications via WhatsApp Cloud API
+app.post("/api/whatsapp/send", async (req, res) => {
+  const { token, phoneId, recipient, message } = req.body;
+  if (!token || !phoneId || !recipient || !message) {
+    return res.status(400).json({ error: "Missing required fields for sending WhatsApp" });
+  }
+
+  // Format recipient number (add country code if needed)
+  let formattedRecipient = recipient.replace(/\D/g, "");
+  if (formattedRecipient.length === 10) {
+    formattedRecipient = `91${formattedRecipient}`; // Default to India country code
+  }
+
+  const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: formattedRecipient,
+        type: "text",
+        text: {
+          body: message
+        }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("WhatsApp API error response:", data);
+      return res.status(response.status).json({
+        success: false,
+        error: data.error || "WhatsApp API rejected the request",
+        details: data
+      });
+    }
+
+    return res.json({ success: true, response: data });
+  } catch (error) {
+    console.error("Error calling WhatsApp Cloud API:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // START EXPRESS SERVER WITH VITE INTEGRATION
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
