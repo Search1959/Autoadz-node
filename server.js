@@ -67,11 +67,20 @@ const defaultWalletTransactions = [
 const defaultNotifications = [];
 
 // Active databases
+// Active databases
 let campaigns = [];
 let drivers = [];
 let proofs = [];
 let walletTransactions = [];
 let notifications = [];
+let cities = [];
+
+const defaultCities = [
+  { id: "city_kolkata", name: "Kolkata", zone: "East Hub", rate: 15, activeAutos: 150 },
+  { id: "city_delhi", name: "Delhi NCR", zone: "North Hub", rate: 18, activeAutos: 220 },
+  { id: "city_bangalore", name: "Bangalore", zone: "South Hub", rate: 20, activeAutos: 250 },
+  { id: "city_mumbai", name: "Mumbai", zone: "West Hub", rate: 22, activeAutos: 180 }
+];
 
 // Helper to save all collections to db.json
 function saveDatabase() {
@@ -81,7 +90,8 @@ function saveDatabase() {
       drivers,
       proofs,
       walletTransactions,
-      notifications
+      notifications,
+      cities
     }, null, 2), "utf-8");
   } catch (err) {
     console.error("Failed to save JSON database to disk:", err);
@@ -98,6 +108,7 @@ function initDatabase() {
       proofs = data.proofs || [];
       walletTransactions = data.walletTransactions || [];
       notifications = data.notifications || [];
+      cities = data.cities || [...defaultCities];
       console.log(`Database loaded successfully from ${DB_FILE}`);
       
       // Ensure "delip" exists even in loaded databases
@@ -114,6 +125,8 @@ function initDatabase() {
           walletBalance: 0,
           currentCampaignId: null,
           status: "active",
+          dlNumber: "DL-01-202300048",
+          aadhaarNumber: "1234-5678-9012"
         });
         saveDatabase();
       }
@@ -124,6 +137,7 @@ function initDatabase() {
       proofs = [...defaultProofs];
       walletTransactions = [...defaultWalletTransactions];
       notifications = [...defaultNotifications];
+      cities = [...defaultCities];
       saveDatabase();
     }
   } catch (err) {
@@ -133,6 +147,7 @@ function initDatabase() {
     proofs = [...defaultProofs];
     walletTransactions = [...defaultWalletTransactions];
     notifications = [...defaultNotifications];
+    cities = [...defaultCities];
   }
 }
 
@@ -258,13 +273,42 @@ app.put("/api/campaigns/:id", (req, res) => {
   }
 });
 
+app.delete("/api/campaigns/:id", (req, res) => {
+  const { id } = req.params;
+  const index = campaigns.findIndex((c) => c.id === id);
+  if (index !== -1) {
+    const deletedCampaign = campaigns.splice(index, 1)[0];
+    
+    // De-allocate any drivers assigned to this campaign
+    drivers.forEach(d => {
+      if (d.currentCampaignId === id) {
+        d.currentCampaignId = null;
+      }
+    });
+
+    notifications.unshift({
+      id: `notif_${Date.now()}`,
+      title: "Campaign Removed",
+      message: `Campaign '${deletedCampaign.title}' has been deleted from the platform by Admin.`,
+      timestamp: new Date().toLocaleString(),
+      unread: true,
+      type: "admin",
+    });
+
+    saveDatabase();
+    res.json({ success: true, deleted: deletedCampaign });
+  } else {
+    res.status(404).json({ error: "Campaign not found" });
+  }
+});
+
 // Drivers
 app.get("/api/drivers", (req, res) => {
   res.json(drivers);
 });
 
 app.post("/api/drivers", (req, res) => {
-  const { name, phone, autoNumber, location } = req.body;
+  const { name, phone, autoNumber, location, dlNumber, aadhaarNumber, dlImage, aadhaarImage } = req.body;
   const newDriver = {
     id: `driver_${Date.now()}`,
     name: name || "Anonymous Driver",
@@ -277,6 +321,10 @@ app.post("/api/drivers", (req, res) => {
     walletBalance: 0,
     currentCampaignId: null,
     status: "pending_approval",
+    dlNumber: dlNumber || `DL-${Math.floor(Math.random() * 90 + 10)}-2023${Math.floor(Math.random() * 90000 + 10000)}`,
+    aadhaarNumber: aadhaarNumber || `${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
+    dlImage: dlImage || "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
+    aadhaarImage: aadhaarImage || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400",
   };
   drivers.push(newDriver);
 
@@ -297,6 +345,10 @@ app.post("/api/drivers", (req, res) => {
 app.put("/api/drivers/:id", (req, res) => {
   const { id } = req.params;
   const { 
+    name,
+    phone,
+    autoNumber,
+    location,
     status, 
     kycVerified, 
     currentCampaignId, 
@@ -305,10 +357,18 @@ app.put("/api/drivers/:id", (req, res) => {
     walletBalance,
     currentSessionKms,
     currentSessionSeconds,
-    trackingStartTime
+    trackingStartTime,
+    dlNumber,
+    aadhaarNumber,
+    dlImage,
+    aadhaarImage
   } = req.body;
   const index = drivers.findIndex((d) => d.id === id);
   if (index !== -1) {
+    if (name !== undefined) drivers[index].name = name;
+    if (phone !== undefined) drivers[index].phone = phone;
+    if (autoNumber !== undefined) drivers[index].autoNumber = autoNumber;
+    if (location !== undefined) drivers[index].location = location;
     if (status !== undefined) drivers[index].status = status;
     if (kycVerified !== undefined) drivers[index].kycVerified = kycVerified;
     if (currentCampaignId !== undefined) drivers[index].currentCampaignId = currentCampaignId;
@@ -318,10 +378,36 @@ app.put("/api/drivers/:id", (req, res) => {
     if (currentSessionKms !== undefined) drivers[index].currentSessionKms = Number(currentSessionKms);
     if (currentSessionSeconds !== undefined) drivers[index].currentSessionSeconds = Number(currentSessionSeconds);
     if (trackingStartTime !== undefined) drivers[index].trackingStartTime = trackingStartTime;
+    if (dlNumber !== undefined) drivers[index].dlNumber = dlNumber;
+    if (aadhaarNumber !== undefined) drivers[index].aadhaarNumber = aadhaarNumber;
+    if (dlImage !== undefined) drivers[index].dlImage = dlImage;
+    if (aadhaarImage !== undefined) drivers[index].aadhaarImage = aadhaarImage;
 
     saveDatabase();
 
     res.json(drivers[index]);
+  } else {
+    res.status(404).json({ error: "Driver not found" });
+  }
+});
+
+app.delete("/api/drivers/:id", (req, res) => {
+  const { id } = req.params;
+  const index = drivers.findIndex((d) => d.id === id);
+  if (index !== -1) {
+    const deletedDriver = drivers.splice(index, 1)[0];
+    
+    notifications.unshift({
+      id: `notif_${Date.now()}`,
+      title: "Driver Removed",
+      message: `Driver ${deletedDriver.name} has been removed from the platform by Admin.`,
+      timestamp: new Date().toLocaleString(),
+      unread: true,
+      type: "admin",
+    });
+
+    saveDatabase();
+    res.json({ success: true, deleted: deletedDriver });
   } else {
     res.status(404).json({ error: "Driver not found" });
   }
@@ -442,6 +528,37 @@ app.post("/api/notifications/read", (req, res) => {
   res.json({ success: true });
 });
 
+// Cities management API
+app.get("/api/cities", (req, res) => {
+  res.json(cities);
+});
+
+app.post("/api/cities", (req, res) => {
+  const { name, zone, rate, activeAutos } = req.body;
+  const newCity = {
+    id: `city_${Date.now()}`,
+    name: name || "New City",
+    zone: zone || "General Zone",
+    rate: Number(rate) || 15,
+    activeAutos: Number(activeAutos) || 50,
+  };
+  cities.push(newCity);
+  saveDatabase();
+  res.status(201).json(newCity);
+});
+
+app.delete("/api/cities/:id", (req, res) => {
+  const { id } = req.params;
+  const index = cities.findIndex((c) => c.id === id);
+  if (index !== -1) {
+    const deleted = cities.splice(index, 1)[0];
+    saveDatabase();
+    res.json({ success: true, deleted });
+  } else {
+    res.status(404).json({ error: "City not found" });
+  }
+});
+
 // AI Assistant
 app.post("/api/gemini/chat", async (req, res) => {
   const { messages } = req.body;
@@ -493,6 +610,142 @@ Do not use markdown blocks for entire replies, just structure nicely with normal
       error: "AI Generation Failed",
       reply: "My servers are feeling a bit congested right now. Here is a quick estimate: To cover North Kolkata properly, you would need roughly 35 autos running for 30 days to cover Salt Lake, Shyambazar, and Hatibagan, yielding approximately 37.8 Million impressions at a CPM of ₹5.5.",
     });
+  }
+});
+
+// AI Campaign Advisor API
+app.post("/api/gemini/advisor", async (req, res) => {
+  const { niche, city } = req.body;
+  const targetNiche = niche || "dental clinic";
+  const targetCity = city || "Kolkata";
+
+  if (!ai) {
+    // Generate realistic fallback response
+    const zones = targetCity.toLowerCase().includes("kolkata") 
+      ? "Gariahat Crossing, Salt Lake Sector V, Shyambazar Five-Point Crossing, Howrah Station approach road, and Tollywood Metro zone."
+      : targetCity.toLowerCase().includes("delhi")
+      ? "Connaught Place circles, South Extension Market, Karol Bagh commercial hub, Noida Sector 18, and Dwarka Sector 10 transit route."
+      : "Central Business District, high-traffic metro hubs, primary market lanes, and dense residential connector corridors.";
+      
+    const autosCount = targetNiche.toLowerCase().includes("dental") || targetNiche.toLowerCase().includes("clinic") ? 30 : 45;
+    const duration = 30;
+    const budget = autosCount * duration * 250; // ₹250 per auto per day approx
+    const impressions = autosCount * duration * 40000;
+
+    return res.json({
+      success: true,
+      niche: targetNiche,
+      city: targetCity,
+      advisorReport: {
+        niche: targetNiche,
+        city: targetCity,
+        recommendedAutos: autosCount,
+        recommendedDuration: `${duration} Days`,
+        recommendedBudget: budget,
+        estimatedImpressions: impressions.toLocaleString("en-IN"),
+        targetZones: zones,
+        marketingTip: `For a ${targetNiche} in ${targetCity}, place highly legible contrast layouts on the auto hood and a back panel QR Code. Auto drivers standing near prominent medical hubs and commercial markets will act as stationary referral banners during peak evening hours.`
+      }
+    });
+  }
+
+  try {
+    const prompt = `You are the AutoAdz AI Advisor. Generate a highly strategic hyperlocal transit campaign advisor report in JSON format.
+Niche: ${targetNiche}
+City: ${targetCity}
+
+You must return EXACTLY a JSON object with this exact schema (no markdown, no code block backticks):
+{
+  "niche": "string",
+  "city": "string",
+  "recommendedAutos": number,
+  "recommendedDuration": "string",
+  "recommendedBudget": number,
+  "estimatedImpressions": "string",
+  "targetZones": "string",
+  "marketingTip": "string"
+}`;
+
+    const result = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const replyText = result.text || "{}";
+    const reportData = JSON.parse(replyText.trim());
+    res.json({ success: true, advisorReport: reportData });
+  } catch (err) {
+    console.error("Gemini Advisor Error:", err);
+    res.status(500).json({ error: "AI Generation failed" });
+  }
+});
+
+// AI Ad Creative Generator API
+app.post("/api/gemini/generator", async (req, res) => {
+  const { niche, creativeType } = req.body;
+  const targetNiche = niche || "restaurant";
+  const type = creativeType || "headline"; // headline, tagline, qr
+
+  if (!ai) {
+    // Return gorgeous fallback options
+    let suggestions = [];
+    if (type === "headline") {
+      suggestions = [
+        `Craving some tasty bite? Stop driving, start eating at ${targetNiche}!`,
+        `Your neighborhood's favorite ${targetNiche} is just 2 KM away!`,
+        `Hungry? Scan this Auto's back to unlock 20% off at our food counter!`,
+        `Fresh, warm, and authentic. Welcome to the ultimate ${targetNiche} experience.`,
+        `Don't cook tonight! We are delivering hot meals to your doorstep.`
+      ];
+    } else if (type === "tagline") {
+      suggestions = [
+        `Taste the tradition, feel the love.`,
+        `Good food, great mood, quick auto rides.`,
+        `Savor every second, scan for every bite.`,
+        `Hyperefficient meals for hyperactive lives.`,
+        `Your pocket-friendly local flavor hub.`
+      ];
+    } else {
+      suggestions = [
+        `Scan this QR to download our digital menu card & book a table in 10 seconds!`,
+        `Scan to claim an instant free dessert with your first diner bill.`,
+        `A GPS-tracked Auto exclusive: Scan for a personalized route-based discount code!`,
+        `Scan to follow our Instagram reels page and win weekly free meals!`,
+        `QR-Activated: Scan to claim standard 15% discount on checkout.`
+      ];
+    }
+
+    return res.json({
+      success: true,
+      niche: targetNiche,
+      creativeType: type,
+      suggestions
+    });
+  }
+
+  try {
+    const prompt = `You are a professional copywriter for AutoAdz auto-rickshaw marketing.
+Generate exactly 5 short, extremely catchy and high-conversion campaign ${type} concepts for a ${targetNiche} business.
+Format your response as a simple JSON string array of 5 elements, with no additional commentary, markdowns or code block wrapping.
+Example: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]`;
+
+    const result = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const replyText = result.text || "[]";
+    const suggestions = JSON.parse(replyText.trim());
+    res.json({ success: true, niche: targetNiche, creativeType: type, suggestions });
+  } catch (err) {
+    console.error("Gemini Creative Gen Error:", err);
+    res.status(500).json({ error: "Creative Generation failed" });
   }
 });
 
