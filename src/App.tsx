@@ -1009,7 +1009,6 @@ export default function App() {
                 href="/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => { e.preventDefault(); setLegalModalTab("privacy"); setIsLegalModalOpen(true); }}
                 className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
               >
                 Privacy Policy
@@ -1019,7 +1018,6 @@ export default function App() {
                 href="/terms"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => { e.preventDefault(); setLegalModalTab("terms"); setIsLegalModalOpen(true); }}
                 className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
               >
                 Terms of Service
@@ -1029,7 +1027,6 @@ export default function App() {
                 href="/support"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => { e.preventDefault(); setLegalModalTab("support"); setIsLegalModalOpen(true); }}
                 className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
               >
                 App Support Page
@@ -1039,7 +1036,6 @@ export default function App() {
                 href="/deletion"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => { e.preventDefault(); setLegalModalTab("deletion"); setIsLegalModalOpen(true); }}
                 className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline transition cursor-pointer"
               >
                 Data Deletion request
