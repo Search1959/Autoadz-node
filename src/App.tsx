@@ -19,6 +19,7 @@ import {
   Sun, Moon, Upload, Trash2, Layers, QrCode
 } from "lucide-react";
 import AiAssistant from "./components/AiAssistant";
+import LegalModal from "./components/LegalModal";
 
 export default function App() {
   // Simulator state
@@ -970,6 +971,85 @@ export default function App() {
   const [addFundsAmount, setAddFundsAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [walletSuccessMsg, setWalletSuccessMsg] = useState("");
+
+  // Legal & Regulatory Modal State
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<"privacy" | "terms" | "support" | "deletion">("privacy");
+
+  const renderGlobalFooter = () => {
+    return (
+      <footer className="w-full border-t border-slate-200 bg-white dark:bg-slate-950 dark:border-slate-800 py-8 px-6 text-xs text-slate-500 font-mono z-10 shrink-0 mt-auto">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          
+          {/* Column 1: Operator Details */}
+          <div className="space-y-2">
+            <h5 className="font-display font-extrabold text-[#0B1F4D] dark:text-[#FF9800] text-xs tracking-wider uppercase">
+              OPERATED & DEVELOPED BY
+            </h5>
+            <p className="text-[11px] leading-relaxed dark:text-slate-400">
+              <b>M/S Deinrim Solutions (P) Ltd.</b><br />
+              Kolkata, West Bengal (WB), India<br />
+              Corporate Contact: <span className="font-bold text-slate-800 dark:text-white">+91 98361-30393</span>
+            </p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">
+              AutoAdz Secure Multi-Tenant Framework v3.1 • Dynamic telemetry data synced live with backend database nodes.
+            </p>
+          </div>
+
+          {/* Column 2: Regulatory & Developer Consoles Links */}
+          <div className="space-y-2">
+            <h5 className="font-display font-extrabold text-[#0B1F4D] dark:text-[#FF9800] text-xs tracking-wider uppercase">
+              REGULATORY COMPLIANCE
+            </h5>
+            <p className="text-[10.5px] leading-relaxed text-slate-400 dark:text-slate-500 font-sans">
+              Important public links required to verify and publish the <b>AutoAdz</b> platform on the Google Play Console and Apple App Store Developer Tools:
+            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] font-semibold">
+              <button
+                onClick={() => { setLegalModalTab("privacy"); setIsLegalModalOpen(true); }}
+                className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
+              >
+                Privacy Policy
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                onClick={() => { setLegalModalTab("terms"); setIsLegalModalOpen(true); }}
+                className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
+              >
+                Terms of Service
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                onClick={() => { setLegalModalTab("support"); setIsLegalModalOpen(true); }}
+                className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
+              >
+                App Support Page
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                onClick={() => { setLegalModalTab("deletion"); setIsLegalModalOpen(true); }}
+                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline transition cursor-pointer"
+              >
+                Data Deletion request
+              </button>
+            </div>
+          </div>
+
+          {/* Column 3: Platform Ecosystem */}
+          <div className="space-y-2">
+            <h5 className="font-display font-extrabold text-[#0B1F4D] dark:text-[#FF9800] text-xs tracking-wider uppercase">
+              PLATFORM VERIFICATIONS
+            </h5>
+            <p className="text-[11px] leading-relaxed dark:text-slate-400">
+              • Background location is monitored exclusively during metered drives to secure accurate driver payout logs.<br />
+              • Camera permissions are strictly utilized for physical advertisement audit proof uploads. All data is processed via secure 256-bit TLS encryption.
+            </p>
+          </div>
+          
+        </div>
+      </footer>
+    );
+  };
 
   // Driver Support Chat State
   const [driverMessages, setDriverMessages] = useState<Array<{sender: 'driver' | 'support', text: string, time: string}>>([
@@ -2803,9 +2883,7 @@ export default function App() {
         )}
 
         {/* Footer info branding */}
-        <footer className="w-full border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-600 font-mono z-10 mt-auto">
-          AutoAdz Secure Multi-Tenant Framework v3.0 • Database is synchronized live with backend services.
-        </footer>
+        {renderGlobalFooter()}
 
         {renderHelpModal()}
       </div>
@@ -4453,50 +4531,50 @@ export default function App() {
                 
                 {/* Admin Control Header */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display font-extrabold text-[#0B1F4D] text-lg flex items-center gap-2">
-                  <Shield size={20} className="text-[#FF9800]" />
-                  AutoAdz Master Admin Panel
-                </h3>
-                <p className="text-xs text-slate-500 font-mono">Verify KYC, Audit image uploads, approve payments, view telemetry mapping.</p>
-              </div>
+                  <div className="flex flex-col gap-4">
+                    <div className="w-full">
+                      <h3 className="font-display font-extrabold text-[#0B1F4D] text-lg flex items-center gap-2">
+                        <Shield size={20} className="text-[#FF9800]" />
+                        AutoAdz Master Admin Panel
+                      </h3>
+                      <p className="text-xs text-slate-500 font-mono mt-1">Verify KYC, Audit image uploads, approve payments, view telemetry mapping.</p>
+                    </div>
 
-              {/* Admin Selector Navigation */}
-              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0 text-xs font-semibold flex-wrap gap-1">
-                <button 
-                  onClick={() => setAdminTab("campaigns")}
-                  className={`px-3 py-1.5 rounded-md transition ${adminTab === "campaigns" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                >
-                  Campaigns ({campaigns.length})
-                </button>
-                <button 
-                  onClick={() => setAdminTab("drivers")}
-                  className={`px-3 py-1.5 rounded-md transition ${adminTab === "drivers" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                >
-                  Drivers KYC ({drivers.length})
-                </button>
-                <button 
-                  onClick={() => setAdminTab("proofs")}
-                  className={`px-3 py-1.5 rounded-md transition ${adminTab === "proofs" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                >
-                  Audit Proofs ({proofs.length})
-                </button>
-                <button 
-                  onClick={() => setAdminTab("cities")}
-                  className={`px-3 py-1.5 rounded-md transition ${adminTab === "cities" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                >
-                  Operating Cities ({cities.length})
-                </button>
-                <button 
-                  onClick={() => setAdminTab("settings")}
-                  className={`px-3 py-1.5 rounded-md transition ${adminTab === "settings" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                >
-                  ⚙️ Gateway Config
-                </button>
-              </div>
-            </div>
-          </div>
+                    {/* Admin Selector Navigation */}
+                    <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold flex-wrap gap-1 w-full justify-start">
+                      <button 
+                        onClick={() => setAdminTab("campaigns")}
+                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "campaigns" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        Campaigns ({campaigns.length})
+                      </button>
+                      <button 
+                        onClick={() => setAdminTab("drivers")}
+                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "drivers" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        Drivers KYC ({drivers.length})
+                      </button>
+                      <button 
+                        onClick={() => setAdminTab("proofs")}
+                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "proofs" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        Audit Proofs ({proofs.length})
+                      </button>
+                      <button 
+                        onClick={() => setAdminTab("cities")}
+                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "cities" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        Operating Cities ({cities.length})
+                      </button>
+                      <button 
+                        onClick={() => setAdminTab("settings")}
+                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "settings" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        ⚙️ Gateway Config
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
           {/* Dynamic Admin Viewports */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-5 flex-1 min-h-[420px] flex flex-col">
@@ -5307,7 +5385,10 @@ export default function App() {
                               if (res.ok) {
                                 alert(`✓ Test message successfully queued for transmission to ${systemAdminWhatsAppPhone}! Please check your WhatsApp.`);
                               } else {
-                                alert(`✗ Failed: ${data.error || "Please check your credentials token or Phone ID."}`);
+                                const errorMsg = typeof data.error === "object" && data.error !== null
+                                  ? (data.error.message || JSON.stringify(data.error))
+                                  : (data.error || "Please check your credentials token or Phone ID.");
+                                alert(`✗ Failed: ${errorMsg}`);
                               }
                             } catch (err: any) {
                               alert(`Error sending test message: ${err.message}`);
@@ -5606,6 +5687,13 @@ export default function App() {
 
         </div>
       </div>
+
+      {renderGlobalFooter()}
+      <LegalModal 
+        isOpen={isLegalModalOpen} 
+        onClose={() => setIsLegalModalOpen(false)} 
+        initialTab={legalModalTab} 
+      />
     </div>
   );
 }

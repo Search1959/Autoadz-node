@@ -784,9 +784,19 @@ app.post("/api/whatsapp/send", async (req, res) => {
     const data = await response.json();
     if (!response.ok) {
       console.error("WhatsApp API error response:", data);
+      let errorString = "WhatsApp API rejected the request";
+      if (data.error) {
+        if (typeof data.error === "string") {
+          errorString = data.error;
+        } else if (typeof data.error === "object" && data.error.message) {
+          errorString = `${data.error.message} (Code: ${data.error.code || 'unknown'})`;
+        } else {
+          errorString = JSON.stringify(data.error);
+        }
+      }
       return res.status(response.status).json({
         success: false,
-        error: data.error || "WhatsApp API rejected the request",
+        error: errorString,
         details: data
       });
     }
