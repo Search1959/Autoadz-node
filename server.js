@@ -176,33 +176,7 @@ function initDatabase() {
 // Perform synchronous initial load
 initDatabase();
 
-// Helper to update statistics in background simulation
-setInterval(() => {
-  // Simulate incremental kilometers and QR scans on active campaigns at a highly realistic, steady rate
-  campaigns = campaigns.map((camp) => {
-    if (camp.status === "active") {
-      // Realistic simulation: each active auto covers ~0.015 km per 10 seconds (~5.4 km/h overall fleet speed average)
-      const baseTickRate = 0.012 + Math.random() * 0.008; // 0.012 to 0.020 km/auto
-      const addedKms = parseFloat((baseTickRate * (camp.autosCount || 5)).toFixed(2));
-      
-      // QR scans happen occasionally, e.g. 1 scan per 15-20 km driven overall
-      const scanProbability = 0.04 * (camp.autosCount || 5);
-      const addedScans = Math.random() < scanProbability ? 1 : 0;
-
-      return {
-        ...camp,
-        kmsCovered: parseFloat((camp.kmsCovered + addedKms).toFixed(2)),
-        qrScans: camp.qrScans + addedScans,
-      };
-    }
-    return camp;
-  });
-
-  // Simulate active tracking for online/tracking drivers - removed automatic wallet increase to ensure it only increases when GPS KM increases
-  // drivers = drivers.map((driver) => { ... })
-
-  saveDatabase();
-}, 10000); // simulation tick every 10s
+// Background dynamic stats simulation disabled per user request to prevent automatic metrics changes without user/driver movement
 
 // EXPRESS MIDDLEWARES
 app.use(express.json({ limit: "10mb" }));
