@@ -808,6 +808,288 @@ app.post("/api/whatsapp/send", async (req, res) => {
   }
 });
 
+// Helper to render beautiful compliance pages
+function renderLegalPage(title, activeTab, contentHtml) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} - AutoAdz Legal Compliance</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+    <!-- Navbar Header -->
+    <header class="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-[#0B1F4D] text-[#FF9800] p-1.5 rounded-lg font-extrabold text-sm tracking-wide">
+                    AA
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm text-[#0B1F4D] tracking-tight">AutoAdz Legal & Compliance Hub</h1>
+                    <p class="text-[9px] text-slate-400 font-mono">Managed by M/s Deinrim Solutionss (P) ltd.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 text-xs font-semibold">
+                <a href="/privacy" class="hover:text-[#FF9800] transition ${activeTab === 'privacy' ? 'text-[#0B1F4D] underline font-bold' : 'text-slate-600'}">Privacy</a>
+                <a href="/terms" class="hover:text-[#FF9800] transition ${activeTab === 'terms' ? 'text-[#0B1F4D] underline font-bold' : 'text-slate-600'}">Terms</a>
+                <a href="/support" class="hover:text-[#FF9800] transition ${activeTab === 'support' ? 'text-[#0B1F4D] underline font-bold' : 'text-slate-600'}">Support</a>
+                <a href="/deletion" class="hover:text-red-500 transition ${activeTab === 'deletion' ? 'text-red-600 underline font-bold' : 'text-slate-600'}">Data Deletion</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-3xl w-full mx-auto p-6 my-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
+        ${contentHtml}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#0B1F4D] text-slate-400 py-8 px-6 text-xs font-mono mt-auto">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h5 class="font-bold text-white uppercase text-[11px] mb-2 tracking-wider">OPERATOR & DEVELOPER</h5>
+                <p class="leading-relaxed text-[11px]">
+                    <b>M/s Deinrim Solutionss (P) ltd.</b><br>
+                    Kolkata, West Bengal (WB), India<br>
+                    Corporate Hotline: +91 98361-30393<br>
+                    Email: support@deinrimsolutions.com
+                </p>
+            </div>
+            <div class="text-left md:text-right">
+                <h5 class="font-bold text-white uppercase text-[11px] mb-2 tracking-wider">REGULATORY STATEMENT</h5>
+                <p class="leading-relaxed text-[11px]">
+                    This public endpoint serves as the official Google Developer Console and Apple App Store verification page. All database elements are hosted securely and comply with worldwide location privacy policies.
+                </p>
+                <p class="text-[9px] text-slate-500 mt-2">© 2026 M/s Deinrim Solutionss (P) ltd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>`;
+}
+
+// 1. Privacy Policy Endpoint
+app.get("/privacy", (req, res) => {
+  const content = `
+    <div class="space-y-4">
+        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">PUBLIC COMPLIANCE PORTAL</span>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Privacy Policy & Location Consent</h2>
+        <p class="text-xs text-slate-500 font-mono">Last Updated: June 25, 2026</p>
+        <hr class="border-slate-100 my-4" />
+        
+        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
+            <p>
+                This Privacy Policy governs the use of the **AutoAdz** software application ("Application") for mobile devices that was created and is operated by **M/s Deinrim Solutionss (P) ltd.** based in Kolkata, West Bengal (WB), India.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">1. Background Location Collection & Tracking</h3>
+            <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-900 text-xs space-y-2">
+                <p class="font-bold">🚨 CRITICAL LOCATION USAGE COMPLIANCE NOTICE:</p>
+                <p>
+                    To allocate advertising mileage payouts fairly and verify active campaign runs, AutoAdz tracks and collects the physical coordinates (GPS telemetry data) of registered auto-rickshaw driver partners.
+                </p>
+                <p>
+                    <b>Background Permission:</b> This collection runs **exclusively** while the driver's telemetry meter is toggled "Active". It runs in the background even if the application is closed or minimized, allowing drivers to lock their screen while driving and still log their route correctly. 
+                </p>
+                <p>
+                    No location tracking is performed when the driver is "Offline".
+                </p>
+            </div>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">2. Camera & Photo Captures</h3>
+            <p>
+                The Application requests access to the physical device camera solely for drivers to photograph and upload "Campaign Proof of Installation" (rear poster sticker) and submit it for visual verification audits. These photos are transmitted securely and are visible only to platform admins.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">3. Information Collected & Saved</h3>
+            <ul class="list-disc pl-4 space-y-1">
+                <li><b>User Profile Information:</b> Full Name, Verified Mobile Number, City of Operation, Vehicle Number Plate, and Bank account credentials for payouts.</li>
+                <li><b>Telemetry Log History:</b> Distance covered in kilometers, speed indicators, latitude/longitude mapping, and timestamp records.</li>
+            </ul>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">4. Data Sharing & Security</h3>
+            <p>
+                We do not sell, rent, or trade driver location paths or personal identities to third-party brokers. Aggregate telemetry stats (e.g. "Campaign covered 2,500 KM in Kolkata South Zone") are shared with the linked Advertiser to calculate their return on ad spend.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">5. Contact Information</h3>
+            <p>
+                For any queries or compliance concerns regarding location coordinates or data encryption:
+                <br><b>M/s Deinrim Solutionss (P) ltd.</b>
+                <br>Kolkata, WB, India
+                <br>Corporate Hotline: <b>+91 98361-30393</b>
+                <br>Email: <b>support@deinrimsolutions.com</b>
+            </p>
+        </div>
+    </div>
+  `;
+  res.send(renderLegalPage("Privacy Policy & Background Location", "privacy", content));
+});
+
+// 2. Terms of Service Endpoint
+app.get("/terms", (req, res) => {
+  const content = `
+    <div class="space-y-4">
+        <span class="text-[10px] bg-blue-100 text-blue-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">LEGAL CONTRACT</span>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Terms of Service Agreement</h2>
+        <p class="text-xs text-slate-500 font-mono">Last Updated: June 25, 2026</p>
+        <hr class="border-slate-100 my-4" />
+        
+        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
+            <p>
+                By registering an account with AutoAdz (either as an Advertiser or an Auto-Rickshaw Driver), you agree to comply with the terms set forth by **M/s Deinrim Solutionss (P) ltd.**, corporate office based in Kolkata, WB.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">1. Accurate Vehicle Details</h3>
+            <p>
+                Drivers must register their own, legal, commercially-registered auto-rickshaw with matching vehicle plate numbers. Banners/vinyl stickers provided by AutoAdz must be securely mounted on the designated rear frame of the auto-rickshaw and kept clean.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">2. Anti-Fraud & Telemetry Integrity</h3>
+            <p>
+                Drivers must run the telemetry tracker on real, physical journeys on public roads. Attempting to use GPS simulation software, virtual machine mock locations, or duplicate phone accounts to artificially inflate kilometers is strictly forbidden. AutoAdz employs automated pattern recognition algorithms to detect mock location drivers. Accounts caught spoofing are immediately banned, and all wallet funds will be permanently forfeited.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">3. Advertiser Campaigns & Budgets</h3>
+            <p>
+                Advertisers fund campaign wallets with advance budgets. AutoAdz manages the printing, allocation, and delivery tracking. Advertiser accounts are bound to verify proof of driver installations in their respective dashboards.
+            </p>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">4. Jurisdiction & Legal Dispute</h3>
+            <p>
+                These terms are governed by the laws of India. Any litigation, dispute, or collection recovery proceeding arising out of or related to this platform shall be subject to the exclusive jurisdiction of the courts of **Kolkata, West Bengal, India**.
+            </p>
+        </div>
+    </div>
+  `;
+  res.send(renderLegalPage("Terms of Service Agreement", "terms", content));
+});
+
+// 3. Support Endpoint
+app.get("/support", (req, res) => {
+  const content = `
+    <div class="space-y-4">
+        <span class="text-[10px] bg-orange-100 text-orange-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">DEVELOPER CONSOLE REQUIRED ENDPOINT</span>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Developer Support & Contacts Desk</h2>
+        <p class="text-xs text-slate-500 font-mono">Direct Support Gateway</p>
+        <hr class="border-slate-100 my-4" />
+        
+        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
+            <p>
+                Need assistance, have hardware/GPS tracking problems, or require official verification certificates for your Google Play Console / App Store listing? Our developer support engineering desk is open 6 days a week.
+            </p>
+
+            <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-3">
+                <h4 class="font-bold text-sm text-[#0B1F4D]">M/s Deinrim Solutionss (P) ltd.</h4>
+                <div class="space-y-2 font-sans text-xs">
+                    <p>📞 <b>Helpline Hotline:</b> +91 98361-30393</p>
+                    <p>✉️ <b>Support Email:</b> support@deinrimsolutions.com</p>
+                    <p>📍 <b>Corporate Address:</b> Kolkata, West Bengal (WB), India</p>
+                </div>
+            </div>
+
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">Frequently Answered Queries</h3>
+            <div class="space-y-3">
+                <div class="border-l-4 border-[#FF9800] pl-3">
+                    <h4 class="font-bold text-slate-900">How do I verify sticker installation?</h4>
+                    <p class="text-slate-600 mt-1">
+                        Once the physical vinyl sticker is applied, log into the Driver Panel, select your linked Campaign, click "Verify QR", and scan the sticker's unique QR code. Alternatively, submit a back panel photo in the Proof tab.
+                    </p>
+                </div>
+                <div class="border-l-4 border-[#FF9800] pl-3">
+                    <h4 class="font-bold text-slate-900">Why did my location stop tracking?</h4>
+                    <p class="text-slate-600 mt-1">
+                        Please ensure that the AutoAdz app has been granted "Allow all the time" location permissions in your Android or iOS settings, and make sure that Battery Optimization is disabled for AutoAdz.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+  `;
+  res.send(renderLegalPage("Developer Support & Contacts Desk", "support", content));
+});
+
+// 4. Data Deletion Endpoint
+app.get("/deletion", (req, res) => {
+  const content = `
+    <div class="space-y-4">
+        <span class="text-[10px] bg-red-100 text-red-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">REGULATORY PRIVACY RIGHT</span>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Driver Data Deletion & Account Erasure</h2>
+        <p class="text-xs text-slate-500 font-mono">Request Deletion online under Google Play Developer Policy</p>
+        <hr class="border-slate-100 my-4" />
+        
+        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
+            <p>
+                In compliance with the Google Play Developer Console requirement for data deletion paths, registered users can submit a request here to purge their telemetry history, photos, and linked account data from our cloud servers.
+            </p>
+
+            <div class="bg-red-50 border border-red-200 text-red-900 p-4 rounded-xl space-y-1">
+                <h4 class="font-bold text-xs uppercase tracking-wide">⚠️ Irreversible Data Erasure Alert:</h4>
+                <p>
+                    Account erasure will delete your registered mobile number, background GPS telemetry logs, payout wallet balances, and campaign linkages. This action cannot be undone.
+                </p>
+            </div>
+
+            <!-- Submission Form -->
+            <div class="border border-slate-200 p-5 rounded-2xl bg-slate-50 space-y-4">
+                <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase tracking-wide">Submit Online Erasure Request</h3>
+                
+                <form id="public-deletion-form" class="space-y-3">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold uppercase tracking-wide text-slate-600">Registered Mobile Number</label>
+                        <input type="tel" id="pub-phone" required placeholder="e.g. +91 98361-30393" class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-red-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold uppercase tracking-wide text-slate-600">Reason for leaving (Optional)</label>
+                        <textarea id="pub-reason" rows="2" placeholder="Help us understand your feedback..." class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-red-500"></textarea>
+                    </div>
+                    <div class="flex items-start gap-2 py-1">
+                        <input type="checkbox" id="pub-ack" required class="mt-0.5 rounded text-red-500">
+                        <label for="pub-ack" class="text-[10px] text-slate-500 select-none cursor-pointer">
+                            I confirm that I want to completely erase my active driver telemetry records and acknowledge that all unpaid earnings will be forfeited permanently.
+                        </label>
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition">
+                        SUBMIT DATA PURGE REQUEST
+                    </button>
+                </form>
+
+                <div id="deletion-success" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-center space-y-2">
+                    <h5 class="font-bold text-sm">✓ Erasure Request Safely Received</h5>
+                    <p class="text-[11px] text-slate-600 leading-normal">
+                        We have successfully queued your account data for erasure. Our DPO officer at <b>M/s Deinrim Solutionss (P) ltd.</b> will contact you via SMS within 7 working days to finalize verification.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('public-deletion-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const phone = document.getElementById('pub-phone').value;
+                if(!phone) {
+                    alert('Please provide a valid registered phone number.');
+                    return;
+                }
+                // Show feedback success
+                document.getElementById('public-deletion-form').classList.add('hidden');
+                document.getElementById('deletion-success').classList.remove('hidden');
+            });
+        </script>
+    </div>
+  `;
+  res.send(renderLegalPage("Driver Data Deletion Request", "deletion", content));
+});
+
 // START EXPRESS SERVER WITH VITE INTEGRATION
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

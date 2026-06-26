@@ -108,7 +108,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
           <div className="pt-4 border-t border-slate-200/60 hidden md:block">
             <p className="text-[9px] text-slate-400 font-mono leading-relaxed">
               Operator Credit:<br />
-              <b>M/S Deinrim Solutions (P) Ltd.</b><br />
+              <b>M/s Deinrim Solutionss (P) ltd.</b><br />
               Kolkata, WB, India
             </p>
           </div>
@@ -140,7 +140,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
               <div className="space-y-3">
                 <p className="font-semibold text-slate-800">Effective Date: June 25, 2026</p>
                 <p>
-                  This Privacy Policy explains how **AutoAdz** ("the Application"), developed and operated by **M/S Deinrim Solutions (P) Ltd.** (Kolkata, West Bengal), collects, processes, and safeguards user information. We are fully committed to protecting the privacy of our advertisers and auto-rickshaw driver partners in compliance with the Google Developer Policy.
+                  This Privacy Policy explains how **AutoAdz** ("the Application"), developed and operated by **M/s Deinrim Solutionss (P) ltd.** (Kolkata, West Bengal), collects, processes, and safeguards user information. We are fully committed to protecting the privacy of our advertisers and auto-rickshaw driver partners in compliance with the Google Developer Policy.
                 </p>
 
                 <h5 className="font-extrabold text-slate-900 mt-3 text-[11px] uppercase tracking-wide">1. Important Location Data Policy (Drivers)</h5>
@@ -162,7 +162,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
 
                 <h5 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wide">4. Contacting Our Data Protection Officer</h5>
                 <p>
-                  For queries regarding data security, encryption, or user rights, contact the parent operator **M/S Deinrim Solutions (P) Ltd.** at Kolkata, WB. Phone: **9836130393** or email **support@deinrimsolutions.com**.
+                  For queries regarding data security, encryption, or user rights, contact the parent operator **M/s Deinrim Solutionss (P) ltd.** at Kolkata, WB. Phone: **9836130393** or email **support@deinrimsolutions.com**.
                 </p>
               </div>
             )}
@@ -172,7 +172,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
               <div className="space-y-3">
                 <p className="font-semibold text-slate-800">Last Updated: June 25, 2026</p>
                 <p>
-                  Welcome to AutoAdz. By installing, registering, or accessing our platform services, you agree to be bound by these standard Terms of Service operated by **M/S Deinrim Solutions (P) Ltd.**, Kolkata.
+                  Welcome to AutoAdz. By installing, registering, or accessing our platform services, you agree to be bound by these standard Terms of Service operated by **M/s Deinrim Solutionss (P) ltd.**, Kolkata.
                 </p>
 
                 <h5 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wide">1. Driver Partner Obligations</h5>
@@ -214,7 +214,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
                       <MapPin size={14} className="text-[#FF9800] shrink-0 mt-0.5" />
                       <span className="font-mono text-[10.5px]">
                         Corporate Address:<br />
-                        M/S Deinrim Solutions (P) Ltd.<br />
+                        M/s Deinrim Solutionss (P) ltd.<br />
                         Kolkata, West Bengal (WB), India
                       </span>
                     </div>
@@ -298,7 +298,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
                     <CheckCircle size={24} className="text-emerald-500 mx-auto animate-bounce" />
                     <h5 className="font-bold text-xs">Erasure Request Received Successfully</h5>
                     <p className="text-[10.5px] leading-relaxed text-slate-600">
-                      Our Data Protection Officer at **M/S Deinrim Solutions (P) Ltd.** has safely received your request for registered mobile number <b>{deletePhone}</b>. We will purge your location history log, verification photos, and payout records within 7 regulatory business days. A confirmation SMS will be sent.
+                      Our Data Protection Officer at **M/s Deinrim Solutionss (P) ltd.** has safely received your request for registered mobile number <b>{deletePhone}</b>. We will purge your location history log, verification photos, and payout records within 7 regulatory business days. A confirmation SMS will be sent.
                     </p>
                     <button
                       onClick={() => setDeleteSubmitted(false)}
@@ -315,7 +315,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = "privacy" }: 
 
           {/* Footer inside Modal */}
           <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center text-[9px] text-slate-400 font-mono shrink-0">
-            AutoAdz Regulatory Compliance Portal • Regulated by Deinrim Solutions
+            AutoAdz Regulatory Compliance Portal • Regulated by M/s Deinrim Solutionss (P) ltd.
           </div>
         </div>
 

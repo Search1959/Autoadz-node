@@ -987,7 +987,7 @@ export default function App() {
               OPERATED & DEVELOPED BY
             </h5>
             <p className="text-[11px] leading-relaxed dark:text-slate-400">
-              <b>M/S Deinrim Solutions (P) Ltd.</b><br />
+              <b>M/s Deinrim Solutionss (P) ltd.</b><br />
               Kolkata, West Bengal (WB), India<br />
               Corporate Contact: <span className="font-bold text-slate-800 dark:text-white">+91 98361-30393</span>
             </p>
@@ -1005,33 +1005,45 @@ export default function App() {
               Important public links required to verify and publish the <b>AutoAdz</b> platform on the Google Play Console and Apple App Store Developer Tools:
             </p>
             <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] font-semibold">
-              <button
-                onClick={() => { setLegalModalTab("privacy"); setIsLegalModalOpen(true); }}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); setLegalModalTab("privacy"); setIsLegalModalOpen(true); }}
                 className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
               >
                 Privacy Policy
-              </button>
+              </a>
               <span className="text-slate-300">|</span>
-              <button
-                onClick={() => { setLegalModalTab("terms"); setIsLegalModalOpen(true); }}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); setLegalModalTab("terms"); setIsLegalModalOpen(true); }}
                 className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
               >
                 Terms of Service
-              </button>
+              </a>
               <span className="text-slate-300">|</span>
-              <button
-                onClick={() => { setLegalModalTab("support"); setIsLegalModalOpen(true); }}
+              <a
+                href="/support"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); setLegalModalTab("support"); setIsLegalModalOpen(true); }}
                 className="text-[#0B1F4D] hover:text-[#FF9800] dark:text-slate-300 dark:hover:text-[#FF9800] underline transition cursor-pointer"
               >
                 App Support Page
-              </button>
+              </a>
               <span className="text-slate-300">|</span>
-              <button
-                onClick={() => { setLegalModalTab("deletion"); setIsLegalModalOpen(true); }}
+              <a
+                href="/deletion"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); setLegalModalTab("deletion"); setIsLegalModalOpen(true); }}
                 className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline transition cursor-pointer"
               >
                 Data Deletion request
-              </button>
+              </a>
             </div>
           </div>
 
