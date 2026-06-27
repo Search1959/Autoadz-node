@@ -5629,7 +5629,7 @@ export default function App() {
               <div className="space-y-4 flex-1 flex flex-col">
                 <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                   <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Photo Proof Checklist Auditing</h4>
-                  <span className="text-xs text-slate-400">Approving check-ins triggers auto-payout of ₹450 to drivers</span>
+                  <span className="text-xs text-slate-400">Auditing and verifying daily vehicle display updates</span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -5657,7 +5657,7 @@ export default function App() {
                               onClick={() => handleAuditProof(p.id, "approved")}
                               className="bg-green-500 hover:bg-green-600 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-0.5"
                             >
-                              <ThumbsUp size={10} /> Approve & Payout
+                              <ThumbsUp size={10} /> Approve Check-in
                             </button>
                             <button
                               onClick={() => handleAuditProof(p.id, "rejected")}
@@ -6811,7 +6811,7 @@ export default function App() {
                     <input type="checkbox" defaultChecked className="mt-0.5 rounded text-teal-500" />
                     <div>
                       <span className="font-bold text-slate-800 block">Morning Photo Proof Check-in</span>
-                      <span className="text-slate-500 text-[11px]">Upload vehicle rear photograph before 9:30 AM to activate daily meter (Earn ₹450 reward).</span>
+                      <span className="text-slate-500 text-[11px]">Upload vehicle rear photograph before 9:30 AM to activate daily meter tracking.</span>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">

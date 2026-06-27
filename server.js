@@ -460,25 +460,7 @@ app.put("/api/proofs/:id/status", (req, res) => {
   if (index !== -1) {
     proofs[index].status = status;
     
-    // If approved, trigger auto-payout simulation for the driver
-    if (status === "approved" && proofs[index].type !== "installation") {
-      const dIndex = drivers.findIndex((d) => d.id === proofs[index].driverId);
-      if (dIndex !== -1) {
-        const reward = 450; // ₹450 flat rate per approved proof
-        drivers[dIndex].totalEarnings += reward;
-        drivers[dIndex].walletBalance += reward;
-        walletTransactions.unshift({
-          id: `tx_${Date.now()}`,
-          userId: drivers[dIndex].id,
-          type: "earning",
-          amount: reward,
-          status: "success",
-          description: `Daily Earning - Approved ${proofs[index].type} Proof`,
-          timestamp: new Date().toLocaleString(),
-        });
-      }
-    }
-
+    // Just save status changes, no arbitrary flat-rate payouts are required
     saveDatabase();
 
     res.json(proofs[index]);
