@@ -2016,54 +2016,6 @@ export default function App() {
         {/* LANDING PAGE HERO / PLATFORM INFO SECTION */}
         {landingSection === "hero" && (
           <div className="relative w-full overflow-hidden flex-1 flex flex-col justify-start">
-            {/* Background Auto-Rickshaw Image with light visible options */}
-            <div className="absolute inset-0 pointer-events-none z-0">
-              <img 
-                src="https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&q=80&w=1600"
-                alt="Auto-Rickshaw Background"
-                className={`w-full h-full object-cover transition-opacity duration-500 ${
-                  heroBgVisibility === "none" ? "opacity-0" :
-                  heroBgVisibility === "light" ? "opacity-25" :
-                  heroBgVisibility === "medium" ? "opacity-50" :
-                  "opacity-85"
-                }`}
-                referrerPolicy="no-referrer"
-              />
-              <div className={`absolute inset-0 bg-gradient-to-b ${darkMode ? "from-transparent via-[#05132f]/80 to-[#05132f]" : "from-slate-50/5 via-slate-50/55 to-slate-50"}`}></div>
-            </div>
-
-            {/* Visibility Settings floating badge control */}
-            <div className={`absolute top-4 right-4 md:right-8 z-20 flex items-center gap-1 ${darkMode ? "bg-[#0B1F4D]/90 text-white border-white/10" : "bg-white/95 text-slate-800 border-slate-200/80"} backdrop-blur-md px-2.5 py-1 rounded-full border shadow-xs text-[10px] font-mono font-bold`}>
-              <span className={`${darkMode ? "text-slate-300" : "text-slate-400"} mr-1 uppercase tracking-wider text-[9px]`}>BG Image:</span>
-              <button 
-                type="button"
-                onClick={() => setHeroBgVisibility("none")} 
-                className={`px-2 py-0.5 rounded-full transition-all ${heroBgVisibility === "none" ? (darkMode ? "bg-white/20 text-white shadow-3xs" : "bg-slate-200 text-slate-800 shadow-3xs") : (darkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-800")}`}
-              >
-                Off
-              </button>
-              <button 
-                type="button"
-                onClick={() => setHeroBgVisibility("light")} 
-                className={`px-2 py-0.5 rounded-full transition-all ${heroBgVisibility === "light" ? "bg-emerald-500 text-white shadow-3xs" : (darkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-800")}`}
-              >
-                Light
-              </button>
-              <button 
-                type="button"
-                onClick={() => setHeroBgVisibility("medium")} 
-                className={`px-2 py-0.5 rounded-full transition-all ${heroBgVisibility === "medium" ? "bg-indigo-600 text-white shadow-3xs" : (darkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-800")}`}
-              >
-                Mid
-              </button>
-              <button 
-                type="button"
-                onClick={() => setHeroBgVisibility("full")} 
-                className={`px-2 py-0.5 rounded-full transition-all ${heroBgVisibility === "full" ? "bg-[#0B1F4D] text-white shadow-3xs" : (darkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-800")}`}
-              >
-                Visible
-              </button>
-            </div>
 
             <main className="flex-1 flex flex-col py-10 px-4 md:px-8 max-w-7xl mx-auto z-10 space-y-12 w-full relative">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
