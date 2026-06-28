@@ -1198,24 +1198,30 @@ export default function App() {
 
   // Fetch all state from API
   const fetchData = async () => {
-    try {
-      const [resCamps, resDrivers, resProofs, resTxs, resNotifs, resCities, resBills] = await Promise.all([
-        fetch("/api/campaigns"),
-        fetch("/api/drivers"),
-        fetch("/api/proofs"),
-        fetch("/api/wallet/transactions"),
-        fetch("/api/notifications"),
-        fetch("/api/cities"),
-        fetch("/api/bills"),
-      ]);
+    const safeFetchJson = async <T,>(url: string, fallback: T): Promise<T> => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`Fetch to ${url} returned status ${res.status}`);
+          return fallback;
+        }
+        return await res.json() as T;
+      } catch (err) {
+        console.error(`Error fetching from ${url}:`, err);
+        return fallback;
+      }
+    };
 
-      const dataCamps = await resCamps.json();
-      const dataDrivers = await resDrivers.json();
-      const dataProofs = await resProofs.json();
-      const dataTxs = await resTxs.json();
-      const dataNotifs = await resNotifs.json();
-      const dataCities = await resCities.json();
-      const dataBills = await resBills.json();
+    try {
+      const [dataCamps, dataDrivers, dataProofs, dataTxs, dataNotifs, dataCities, dataBills] = await Promise.all([
+        safeFetchJson<any[]>("/api/campaigns", []),
+        safeFetchJson<any[]>("/api/drivers", []),
+        safeFetchJson<any[]>("/api/proofs", []),
+        safeFetchJson<any[]>("/api/wallet/transactions", []),
+        safeFetchJson<any[]>("/api/notifications", []),
+        safeFetchJson<any[]>("/api/cities", []),
+        safeFetchJson<any[]>("/api/bills", []),
+      ]);
 
       setCampaigns(dataCamps);
       setDrivers(dataDrivers);
