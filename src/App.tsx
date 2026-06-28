@@ -1950,7 +1950,7 @@ export default function App() {
   // Early return for secure login screen if no user is authenticated
   if (userSession === null) {
     return (
-      <div className={`min-h-screen ${darkMode ? "dark-theme-active bg-[#05132f] text-slate-100" : "bg-slate-50 text-slate-900"} flex flex-col relative overflow-hidden font-sans selection:bg-[#10B981] selection:text-white`}>
+      <div className={`min-h-screen ${darkMode ? "dark dark-theme-active bg-[#05132f] text-slate-100" : "bg-slate-50 text-slate-900"} flex flex-col relative overflow-hidden font-sans selection:bg-[#10B981] selection:text-white`}>
         {/* Decorative background grid */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
@@ -3103,7 +3103,7 @@ export default function App() {
   const loggedInDriver = drivers.find(d => d.id === loggedInDriverId) || drivers.find(d => d.id === "driver_delip") || drivers[0];
 
   return (
-    <div className={`min-h-screen ${darkMode ? "dark-theme-active" : "bg-[#F4F7FE]"} flex flex-col font-sans`}>
+    <div className={`min-h-screen ${darkMode ? "dark dark-theme-active" : "bg-[#F4F7FE]"} flex flex-col font-sans`}>
       {/* Dynamic Master Header */}
       <header className="bg-[#0B1F4D] text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 shadow-md border-b border-slate-800">
         <div className="flex items-center gap-3">

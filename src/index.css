@@ -39,13 +39,13 @@ body {
 }
 
 /* Global Light/Dark Contextual Slate Readability Correction */
-body:not(.dark-theme-active) .text-slate-400 {
+.min-h-screen:not(.dark-theme-active) .text-slate-400 {
   color: #4b5563 !important; /* Force darker, legible slate-gray in light mode */
 }
-body:not(.dark-theme-active) .text-slate-500 {
+.min-h-screen:not(.dark-theme-active) .text-slate-500 {
   color: #374151 !important; /* Force highly sharp dark-slate for subheadings */
 }
-body:not(.dark-theme-active) .text-slate-300 {
+.min-h-screen:not(.dark-theme-active) .text-slate-300 {
   color: #4b5563 !important; /* High contrast body elements */
 }
 
@@ -320,3 +320,24 @@ body:not(.dark-theme-active) .text-slate-300 {
 .dark-theme-active .animate-pulse {
   opacity: 0.8;
 }
+
+/* Active tabs inside dark mode stand out with orange background and dark text for maximum contrast and premium aesthetics */
+.dark-theme-active button.bg-white.text-\[\#0B1F4D\],
+.dark-theme-active .bg-white.text-\[\#0B1F4D\],
+.dark-theme-active button.bg-white.text-\[\#0b1f4d\],
+.dark-theme-active .bg-white.text-\[\#0b1f4d\] {
+  background-color: #ff9800 !important; /* Premium Amber/Orange */
+  color: #0b1f4d !important; /* Dark Navy text for perfect readability */
+  font-weight: 700 !important;
+}
+
+/* Overriding default light-themed hover classes inside dark mode to prevent white-on-white text readability issues */
+.dark-theme-active tr.hover\:bg-slate-50\/50:hover,
+.dark-theme-active tr.hover\:bg-slate-50:hover,
+.dark-theme-active tr:hover,
+.dark-theme-active tbody tr:hover,
+.dark-theme-active .hover\:bg-slate-50:hover,
+.dark-theme-active button.hover\:bg-slate-50:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
