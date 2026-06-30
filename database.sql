@@ -1,8 +1,7 @@
 -- AutoAdz MySQL Database Schema
 -- Run this once in your Hostinger phpMyAdmin to set up the database
 
-CREATE DATABASE IF NOT EXISTS autoadz_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE autoadz_db;
+-- NOTE: On Hostinger, select your database in phpMyAdmin before importing (do not run CREATE DATABASE)
 
 -- Campaigns
 CREATE TABLE IF NOT EXISTS campaigns (
