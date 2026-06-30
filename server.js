@@ -32,15 +32,191 @@ import fs from "fs";
 const DB_FILE = path.join(process.cwd(), "db.json");
 
 // Default initial datasets (fallback seeds)
-const defaultCampaigns = [];
+const defaultCampaigns = [
+  {
+    id: "camp_bengaluru_metro",
+    title: "Edge Fashion - Summer Launch Bengaluru",
+    client: "Edge Retail Ltd.",
+    city: "Bangalore",
+    area: "Indiranagar, Koramangala",
+    budget: 150000,
+    autosCount: 25,
+    creativeUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800",
+    status: "active",
+    creativeStatus: "approved",
+    creativeApproved: true,
+    startDate: "2026-06-01",
+    endDate: "2026-07-01",
+    kmsCovered: 1240.50,
+    qrScans: 84
+  },
+  {
+    id: "camp_kolkata_pujo",
+    title: "Pujo Carnival Festive Offer",
+    client: "Senco Jewellers",
+    city: "Kolkata",
+    area: "Gariahat, Salt Lake",
+    budget: 75000,
+    autosCount: 15,
+    creativeUrl: "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&q=80&w=800",
+    status: "pending",
+    creativeStatus: "pending",
+    creativeApproved: false,
+    startDate: "2026-09-15",
+    endDate: "2026-10-15",
+    kmsCovered: 0,
+    qrScans: 0
+  }
+];
 
-const defaultDrivers = [];
+const defaultDrivers = [
+  {
+    id: "driver_delip",
+    name: "Delip Kumar",
+    phone: "+91 98450-12345",
+    autoNumber: "KA-03-AA-4921",
+    location: "Bangalore",
+    state: "online",
+    kycVerified: true,
+    totalEarnings: 14250.00,
+    walletBalance: 1850.00,
+    currentCampaignId: "camp_bengaluru_metro",
+    status: "active",
+    dlNumber: "DL-0420230004921",
+    aadhaarNumber: "4512-8923-3039",
+    dlUrl: "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
+    aadhaarUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400"
+  },
+  {
+    id: "driver_rajesh",
+    name: "Rajesh Gowda",
+    phone: "+91 91220-44932",
+    autoNumber: "KA-01-MJ-8831",
+    location: "Bangalore",
+    state: "online",
+    kycVerified: true,
+    totalEarnings: 9800.00,
+    walletBalance: 1250.00,
+    currentCampaignId: "camp_bengaluru_metro",
+    status: "active",
+    dlNumber: "DL-1220220008831",
+    aadhaarNumber: "8841-2033-9125",
+    dlUrl: "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
+    aadhaarUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400"
+  }
+];
 
-const defaultProofs = [];
+const defaultProofs = [
+  {
+    id: "proof_1",
+    driverId: "driver_delip",
+    driverName: "Delip Kumar",
+    campaignId: "camp_bengaluru_metro",
+    campaignTitle: "Edge Fashion - Summer Launch Bengaluru",
+    imageUrl: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=600",
+    location: "Indiranagar, Bangalore",
+    timestamp: "2026-06-28 16:32 PM",
+    status: "approved",
+    type: "morning_checkin"
+  }
+];
 
-const defaultWalletTransactions = [];
+const defaultWalletTransactions = [
+  {
+    id: "tx_1",
+    userId: "driver_delip",
+    type: "earning",
+    amount: 250.00,
+    status: "success",
+    description: "GPS Telematics Payout - Koramangala Run",
+    timestamp: "6/28/2026, 6:15 PM"
+  },
+  {
+    id: "tx_2",
+    userId: "driver_delip",
+    type: "payout",
+    amount: 1500.00,
+    status: "success",
+    description: "Weekly bank settlement payout",
+    timestamp: "6/27/2026, 11:00 AM"
+  },
+  {
+    id: "tx_adv_1",
+    userId: "advertiser_main",
+    type: "deposit",
+    amount: 25000.00,
+    status: "success",
+    description: "Wallet pre-funding credit card deposit",
+    timestamp: "6/25/2026, 2:30 PM"
+  }
+];
 
-const defaultNotifications = [];
+const defaultNotifications = [
+  {
+    id: "notif_1",
+    title: "Weekly Payout Credited",
+    message: "Your weekly settlement invoice was approved. ₹1,500 has been transferred to HDFC Bank ****3039.",
+    timestamp: "6/27/2026, 11:00 AM",
+    unread: true,
+    type: "payment"
+  },
+  {
+    id: "notif_2",
+    title: "Campaign Assignment Approved",
+    message: "Congratulations! You have been linked to 'Edge Fashion - Summer Launch Bengaluru'.",
+    timestamp: "6/26/2026, 10:15 AM",
+    unread: false,
+    type: "campaign"
+  }
+];
+
+const defaultBills = [
+  {
+    id: "bill_past_1",
+    type: "driver_service_bill",
+    senderId: "driver_delip",
+    senderName: "Delip Kumar",
+    receiverId: "admin",
+    campaignId: "camp_bengaluru_metro",
+    amount: 1500,
+    status: "paid",
+    kmsCovered: 333.33,
+    periodStart: "2026-06-15",
+    periodEnd: "2026-06-22",
+    timestamp: "6/22/2026, 11:00 AM",
+    description: "Weekly auto transit transit-ad service fee"
+  },
+  {
+    id: "bill_past_2",
+    type: "driver_service_bill",
+    senderId: "driver_delip",
+    senderName: "Delip Kumar",
+    receiverId: "admin",
+    campaignId: "camp_bengaluru_metro",
+    amount: 850,
+    status: "pending",
+    kmsCovered: 188.88,
+    periodStart: "2026-06-22",
+    periodEnd: "2026-06-29",
+    timestamp: "6/29/2026, 11:00 AM",
+    description: "Weekly auto transit transit-ad service fee"
+  },
+  {
+    id: "bill_past_adv_1",
+    type: "advertiser_invoice",
+    senderId: "admin",
+    senderName: "AutoAdz Admin",
+    receiverId: "advertiser_main",
+    campaignId: "camp_bengaluru_metro",
+    amount: 25000,
+    status: "paid",
+    kmsCovered: 1240.50,
+    periodStart: "2026-06-01",
+    periodEnd: "2026-06-29",
+    timestamp: "6/29/2026, 12:00 PM",
+    description: "Mid-campaign progress billing invoice"
+  }
+];
 
 // Active databases
 let campaigns = [];
@@ -72,8 +248,6 @@ const defaultCities = [
   { id: "city_mumbai", name: "Mumbai", zone: "West Hub", rate: 22, activeAutos: 180 }
 ];
 
-const defaultBills = [];
-
 // Helper to save all collections to db.json
 function saveDatabase() {
   try {
@@ -97,13 +271,13 @@ function initDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const data = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
-      campaigns = data.campaigns || [];
-      drivers = data.drivers || [];
-      proofs = data.proofs || [];
-      walletTransactions = data.walletTransactions || [];
-      notifications = data.notifications || [];
-      cities = data.cities || [...defaultCities];
-      bills = data.bills || [...defaultBills];
+      campaigns = data.campaigns && data.campaigns.length > 0 ? data.campaigns : [...defaultCampaigns];
+      drivers = data.drivers && data.drivers.length > 0 ? data.drivers : [...defaultDrivers];
+      proofs = data.proofs && data.proofs.length > 0 ? data.proofs : [...defaultProofs];
+      walletTransactions = data.walletTransactions && data.walletTransactions.length > 0 ? data.walletTransactions : [...defaultWalletTransactions];
+      notifications = data.notifications && data.notifications.length > 0 ? data.notifications : [...defaultNotifications];
+      cities = data.cities && data.cities.length > 0 ? data.cities : [...defaultCities];
+      bills = data.bills && data.bills.length > 0 ? data.bills : [...defaultBills];
       schedulerSettings = data.schedulerSettings || {
         enabled: true,
         mileageThreshold: 10,
@@ -121,6 +295,12 @@ function initDatabase() {
       if (schedulerSettings.driverRatePerKm === undefined) {
         schedulerSettings.driverRatePerKm = 4.5;
       }
+      
+      // Ensure driver_delip exists as default backup
+      if (!drivers.find(d => d.id === "driver_delip")) {
+        drivers.push(defaultDrivers[0]);
+      }
+      
       console.log(`Database loaded successfully from ${DB_FILE}`);
     } else {
       console.log(`No database file found. Seeding new database at ${DB_FILE}`);

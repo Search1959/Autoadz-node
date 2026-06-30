@@ -507,6 +507,7 @@ export default function App() {
 
   // Refs for background persistent tracking
   const wasTrackingRef = useRef(false);
+  const previousStateRef = useRef<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastCoordsRef = useRef<{ lat: number; lng: number; timestamp: number } | null>(null);
   const qrVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -636,6 +637,9 @@ export default function App() {
   useEffect(() => {
     const activeDriver = drivers.find(d => d.id === loggedInDriverId);
     if (!activeDriver) return;
+
+    const prevDriverState = previousStateRef.current;
+    previousStateRef.current = activeDriver.state;
 
     let timerInterval: NodeJS.Timeout | null = null;
     const isActiveTracker = localStorage.getItem("autoadz_is_active_tracker") === "true";
@@ -903,7 +907,8 @@ export default function App() {
       };
     } else {
       // Not tracking. Did we just stop tracking? Save stats to database!
-      if (wasTrackingRef.current) {
+      // ONLY process the payout if the previous state of the driver was actually "tracking" (prevents race condition restarts from triggering payout)
+      if (prevDriverState === "tracking" && wasTrackingRef.current) {
         wasTrackingRef.current = false;
         
         const savedKmsStr = localStorage.getItem("autoadz_live_session_kms");
@@ -4288,6 +4293,60 @@ export default function App() {
                                     </span>
                                   </div>
                                 </div>
+
+                                {loggedInDriver?.state === "tracking" && (
+                                  <div className="bg-slate-900/60 p-2 rounded-lg border border-white/5 space-y-1.5 text-center my-2">
+                                    <span className="text-[8px] font-mono text-slate-400 block text-left uppercase tracking-wider font-bold">🛠️ Sandbox Developer Testing Options:</span>
+                                    <div className="flex gap-1.5 justify-center">
+                                      <button
+                                        onClick={() => {
+                                          const addKms = 2.5;
+                                          setLiveSessionKms(prev => {
+                                            const next = parseFloat((prev + addKms).toFixed(3));
+                                            localStorage.setItem("autoadz_live_session_kms", String(next));
+                                            return next;
+                                          });
+                                          setGpsStatus("active");
+                                          setGpsSpeed(38.5);
+                                          // Trigger a fake coordinates update
+                                          setLastCoords({ lat: 12.9716 + (Math.random() - 0.5) * 0.01, lng: 77.5946 + (Math.random() - 0.5) * 0.01 });
+                                        }}
+                                        className="py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 font-mono transition cursor-pointer"
+                                      >
+                                        +2.5 KM (Simulate Ride)
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const addKms = 5.0;
+                                          setLiveSessionKms(prev => {
+                                            const next = parseFloat((prev + addKms).toFixed(3));
+                                            localStorage.setItem("autoadz_live_session_kms", String(next));
+                                            return next;
+                                          });
+                                          setGpsStatus("active");
+                                          setGpsSpeed(45.2);
+                                          // Trigger a fake coordinates update
+                                          setLastCoords({ lat: 12.9716 + (Math.random() - 0.5) * 0.01, lng: 77.5946 + (Math.random() - 0.5) * 0.01 });
+                                        }}
+                                        className="py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 font-mono transition cursor-pointer"
+                                      >
+                                        +5.0 KM (Simulate Ride)
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setLiveSessionSeconds(prev => {
+                                            const next = prev + 60;
+                                            localStorage.setItem("autoadz_live_session_seconds", String(next));
+                                            return next;
+                                          });
+                                        }}
+                                        className="py-1 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/50 rounded text-[9px] font-bold text-slate-300 font-mono transition cursor-pointer"
+                                      >
+                                        +1 Min Time
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
 
                                 <button
                                   onClick={toggleDriverTracking}
