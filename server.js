@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import Anthropic from "@anthropic-ai/sdk";
 import mysql from "mysql2/promise";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -1013,6 +1015,90 @@ app.get("/deletion", (req, res) => {
             });
         </script>
     </div>`));
+});
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+const JWT_SECRET = process.env.JWT_SECRET || "autoadz_jwt_secret_2026";
+
+// One-time admin setup — visit /api/auth/setup-admin once after DB migration
+app.get("/api/auth/setup-admin", async (req, res) => {
+  try {
+    const [existing] = await db("SELECT id FROM users WHERE email = ?", ["admin@autoadz.in"]);
+    if (existing) return res.json({ message: "Admin already exists." });
+    const hash = await bcrypt.hash("Admin@2026", 10);
+    await db(
+      "INSERT INTO users (role, name, email, password_hash, company, phone) VALUES ('admin','AutoAdz Admin','admin@autoadz.in',?,?,?)",
+      [hash, "AutoAdz Platform", "9836130393"]
+    );
+    res.json({ success: true, message: "Admin created. Email: admin@autoadz.in | Password: Admin@2026" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Setup failed" });
+  }
+});
+
+// Advertiser self-registration
+app.post("/api/auth/register", async (req, res) => {
+  const { name, email, password, company, phone, gstin } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: "Name, email and password are required" });
+  try {
+    const [existing] = await db("SELECT id FROM users WHERE email = ?", [email]);
+    if (existing) return res.status(409).json({ error: "Email already registered" });
+    const hash = await bcrypt.hash(password, 10);
+    await db(
+      "INSERT INTO users (role, name, email, password_hash, company, phone, gstin) VALUES ('advertiser',?,?,?,?,?,?)",
+      [name, email, hash, company || "", phone || "", gstin || ""]
+    );
+    res.status(201).json({ success: true, message: "Account created. Please login." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+// Login (admin + advertiser by email; driver by phone)
+app.post("/api/auth/login", async (req, res) => {
+  const { email, phone, password, role } = req.body;
+  try {
+    if (role === "driver") {
+      // Driver login by phone
+      const [driver] = await db("SELECT * FROM drivers WHERE phone = ?", [phone]);
+      if (!driver) return res.status(401).json({ error: "Phone number not registered" });
+      if (driver.status === "pending_approval") return res.status(403).json({ error: "Your account is pending admin approval" });
+      if (driver.status === "rejected") return res.status(403).json({ error: "Your account has been rejected. Contact support." });
+      const token = jwt.sign({ id: driver.id, role: "driver", name: driver.name }, JWT_SECRET, { expiresIn: "7d" });
+      return res.json({ success: true, token, role: "driver", driverId: driver.id, name: driver.name });
+    }
+
+    // Admin / Advertiser login
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+    const [user] = await db("SELECT * FROM users WHERE email = ?", [email]);
+    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (!user.is_active) return res.status(403).json({ error: "Account disabled. Contact support." });
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: "Invalid email or password" });
+    const token = jwt.sign({ id: user.id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
+    res.json({
+      success: true, token, role: user.role,
+      name: user.name, email: user.email,
+      company: user.company, phone: user.phone, gstin: user.gstin,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Verify token
+app.get("/api/auth/verify", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Bearer ")) return res.status(401).json({ valid: false });
+  try {
+    const payload = jwt.verify(auth.split(" ")[1], JWT_SECRET);
+    res.json({ valid: true, user: payload });
+  } catch {
+    res.status(401).json({ valid: false });
+  }
 });
 
 // ─── SERVER START ─────────────────────────────────────────────────────────────

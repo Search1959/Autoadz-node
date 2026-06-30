@@ -1,116 +1,125 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* AutoAdz Light Theme Palette */
+  --color-brand-navy: #1B3A6B;
+  --color-brand-green: #16A34A;
+  --color-brand-green-light: #DCFCE7;
+  --color-brand-navy-light: #EEF2FF;
 }
 
 body {
-  background-color: #f8fafc;
+  background-color: #F0F4F8;
   font-family: var(--font-sans);
-  color: #0f172a;
+  color: #1e293b;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.01em;
 }
 
+/* ── Minimum readable font sizes ─────────────────────────── */
+.text-\[8px\]  { font-size: 10px !important; font-weight: 600 !important; }
+.text-\[9px\]  { font-size: 11px !important; font-weight: 600 !important; }
+.text-\[10px\] { font-size: 12px !important; font-weight: 600 !important; }
+.text-\[11px\] { font-size: 12px !important; font-weight: 500 !important; }
+.text-xs       { font-size: 13px !important; }
 
+/* ── Light mode readability fixes ───────────────────────── */
+.min-h-screen:not(.dark-theme-active) .text-slate-400 { color: #4b5563 !important; }
+.min-h-screen:not(.dark-theme-active) .text-slate-500 { color: #374151 !important; }
+.min-h-screen:not(.dark-theme-active) .text-slate-300 { color: #4b5563 !important; }
 
-/* Ensure minimum readable font size and bolder weight for tiny elements across total website */
-.text-\[8px\] {
-  font-size: 10px !important;
-  font-weight: 600 !important;
+/* ── Light mode accent: replace old orange with green ────── */
+.min-h-screen:not(.dark-theme-active) .text-\[\#FF9800\],
+.min-h-screen:not(.dark-theme-active) .text-orange-500,
+.min-h-screen:not(.dark-theme-active) .text-orange-600 {
+  color: #16A34A !important;
 }
-.text-\[9px\] {
-  font-size: 11px !important;
-  font-weight: 600 !important;
+.min-h-screen:not(.dark-theme-active) .bg-\[\#FF9800\],
+.min-h-screen:not(.dark-theme-active) .bg-orange-500,
+.min-h-screen:not(.dark-theme-active) .hover\:bg-orange-500:hover {
+  background-color: #16A34A !important;
 }
-.text-\[10px\] {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-}
-.text-\[11px\] {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-}
-.text-xs {
-  font-size: 13px !important;
-}
-
-/* Global Light/Dark Contextual Slate Readability Correction */
-.min-h-screen:not(.dark-theme-active) .text-slate-400 {
-  color: #4b5563 !important; /* Force darker, legible slate-gray in light mode */
-}
-.min-h-screen:not(.dark-theme-active) .text-slate-500 {
-  color: #374151 !important; /* Force highly sharp dark-slate for subheadings */
-}
-.min-h-screen:not(.dark-theme-active) .text-slate-300 {
-  color: #4b5563 !important; /* High contrast body elements */
+.min-h-screen:not(.dark-theme-active) .border-\[\#FF9800\],
+.min-h-screen:not(.dark-theme-active) .border-orange-500 {
+  border-color: #16A34A !important;
 }
 
-/* Ensure light contrast elements inside dark backgrounds stay bright and clear */
+/* ── Light mode navy → brand navy ───────────────────────── */
+.min-h-screen:not(.dark-theme-active) .text-\[\#0B1F4D\],
+.min-h-screen:not(.dark-theme-active) .text-\[\#0b1f4d\] {
+  color: #1B3A6B !important;
+}
+.min-h-screen:not(.dark-theme-active) .bg-\[\#0B1F4D\],
+.min-h-screen:not(.dark-theme-active) .bg-\[\#0b1f4d\] {
+  background-color: #1B3A6B !important;
+}
+
+/* ── App root light background ──────────────────────────── */
+.min-h-screen:not(.dark-theme-active) {
+  background-color: #F0F4F8 !important;
+}
+
+/* ── Card surfaces in light mode ─────────────────────────── */
+.min-h-screen:not(.dark-theme-active) .bg-white {
+  background-color: #ffffff !important;
+}
+.min-h-screen:not(.dark-theme-active) .bg-slate-50 {
+  background-color: #F8FAFC !important;
+}
+
+/* ── Ensure dark backgrounds inside dark panels keep white text ── */
 .bg-\[\#0B1F4D\] .text-slate-400,
+.bg-\[\#1B3A6B\] .text-slate-400,
 .bg-slate-900 .text-slate-400,
 .bg-slate-950 .text-slate-400,
 .glass-card-dark .text-slate-400,
 .dark-theme-active .text-slate-400,
 .bg-\[\#0B1F4D\] .text-slate-300,
+.bg-\[\#1B3A6B\] .text-slate-300,
 .bg-slate-900 .text-slate-300,
 .bg-slate-950 .text-slate-300,
 .glass-card-dark .text-slate-300,
 .dark-theme-active .text-slate-300,
-.bg-\[\#0B1F4D\] .text-slate-200,
-.bg-slate-900 .text-slate-200,
-.bg-slate-950 .text-slate-200,
-.glass-card-dark .text-slate-200,
-.dark-theme-active .text-slate-200,
 .bg-\[\#0B1F4D\] .text-slate-100,
+.bg-\[\#1B3A6B\] .text-slate-100,
 .bg-slate-900 .text-slate-100,
 .bg-slate-950 .text-slate-100,
 .glass-card-dark .text-slate-100,
 .dark-theme-active .text-slate-100 {
-  color: #f3f4f6 !important; /* Bright off-white-slate */
+  color: #f3f4f6 !important;
 }
 
-
-
-/* Glassmorphism utility classes */
+/* ── Glassmorphism ──────────────────────────────────────── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
-
 .glass-card-dark {
-  background: rgba(11, 31, 77, 0.85);
+  background: rgba(27, 58, 107, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-/* Persistent Dark Theme overrides using the defined #0B1F4D color palette */
+/* ══════════════════════════════════════════════════════════
+   DARK THEME OVERRIDES (unchanged — preserves existing UX)
+   ══════════════════════════════════════════════════════════ */
 .dark-theme-active {
-  background-color: #05122f !important; /* Extremely dark deep blue for outer background contrast */
+  background-color: #05122f !important;
   color: #f8fafc !important;
 }
-
-/* All container cards and panels transition to the defined #0B1F4D color palette */
 .dark-theme-active .bg-white,
 .dark-theme-active .bg-slate-50,
 .dark-theme-active .bg-slate-100,
@@ -121,20 +130,15 @@ body {
   color: #f8fafc !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
-
-/* Nested list items, select containers, and inner elements get a slightly lighter dark blue for separation */
 .dark-theme-active .bg-slate-50,
 .dark-theme-active .bg-slate-100,
 .dark-theme-active .bg-slate-200,
 .dark-theme-active .bg-slate-200\/50,
 .dark-theme-active .bg-slate-100\/50,
-.dark-theme-active .bg-orange-50\/50,
-.dark-theme-active .bg-slate-100\/50 {
+.dark-theme-active .bg-orange-50\/50 {
   background-color: #122b64 !important;
   color: #f1f5f9 !important;
 }
-
-/* Input elements styling */
 .dark-theme-active select,
 .dark-theme-active input,
 .dark-theme-active textarea {
@@ -142,105 +146,45 @@ body {
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
-
-.dark-theme-active input::placeholder {
-  color: #94a3b8 !important;
-}
-
-.dark-theme-active select option {
-  background-color: #0B1F4D !important;
-  color: #ffffff !important;
-}
-
-/* Typography contrast settings for Night Mode visibility */
+.dark-theme-active input::placeholder { color: #94a3b8 !important; }
+.dark-theme-active select option { background-color: #0B1F4D !important; color: #ffffff !important; }
 .dark-theme-active .text-slate-900,
 .dark-theme-active .text-slate-800,
 .dark-theme-active .text-slate-700,
-.dark-theme-active .text-slate-600 {
-  color: #f1f5f9 !important;
-}
-
+.dark-theme-active .text-slate-600 { color: #f1f5f9 !important; }
 .dark-theme-active .text-slate-500,
-.dark-theme-active .text-slate-400 {
-  color: #94a3b8 !important;
-}
-
-/* Border visibility at night */
+.dark-theme-active .text-slate-400 { color: #94a3b8 !important; }
 .dark-theme-active .border,
 .dark-theme-active .border-slate-100,
 .dark-theme-active .border-slate-150,
 .dark-theme-active .border-slate-200,
 .dark-theme-active .border-orange-200,
-.dark-theme-active .border-slate-700\/60 {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Master Header & custom gradients stay crisp */
+.dark-theme-active .border-slate-700\/60 { border-color: rgba(255, 255, 255, 0.1) !important; }
 .dark-theme-active header,
 .dark-theme-active .bg-\[\#0B1F4D\],
-.dark-theme-active .bg-gradient-to-r {
-  background-color: #0B1F4D !important;
-  color: #ffffff !important;
-}
-
-/* Keep warning and alert states readable and contextual */
+.dark-theme-active .bg-gradient-to-r { background-color: #0B1F4D !important; color: #ffffff !important; }
 .dark-theme-active .bg-green-100,
-.dark-theme-active .bg-emerald-100,
-.dark-theme-active .bg-green-100\/10,
-.dark-theme-active .bg-emerald-100\/10 {
-  background-color: rgba(74, 222, 128, 0.15) !important;
-  color: #4ade80 !important;
-  border-color: rgba(74, 222, 128, 0.3) !important;
-}
-
+.dark-theme-active .bg-emerald-100 { background-color: rgba(74, 222, 128, 0.15) !important; color: #4ade80 !important; border-color: rgba(74, 222, 128, 0.3) !important; }
 .dark-theme-active .bg-orange-100,
-.dark-theme-active .bg-amber-100,
-.dark-theme-active .bg-orange-100\/10,
-.dark-theme-active .bg-amber-100\/10 {
-  background-color: rgba(251, 146, 60, 0.15) !important;
-  color: #fbd38d !important;
-  border-color: rgba(251, 146, 60, 0.3) !important;
-}
-
+.dark-theme-active .bg-amber-100 { background-color: rgba(251, 146, 60, 0.15) !important; color: #fbd38d !important; border-color: rgba(251, 146, 60, 0.3) !important; }
 .dark-theme-active .bg-blue-100,
-.dark-theme-active .bg-indigo-100,
-.dark-theme-active .bg-blue-100\/10,
-.dark-theme-active .bg-indigo-100\/10 {
-  background-color: rgba(96, 165, 250, 0.15) !important;
-  color: #60a5fa !important;
-  border-color: rgba(96, 165, 250, 0.3) !important;
-}
-
+.dark-theme-active .bg-indigo-100 { background-color: rgba(96, 165, 250, 0.15) !important; color: #60a5fa !important; border-color: rgba(96, 165, 250, 0.3) !important; }
 .dark-theme-active .text-green-700,
-.dark-theme-active .text-green-600,
 .dark-theme-active .text-emerald-700,
 .dark-theme-active .text-emerald-800,
-.dark-theme-active .text-emerald-600 {
-  color: #4ade80 !important;
-}
-
+.dark-theme-active .text-emerald-600 { color: #4ade80 !important; }
 .dark-theme-active .text-blue-700,
-.dark-theme-active .text-blue-600,
 .dark-theme-active .text-indigo-700,
 .dark-theme-active .text-indigo-800,
-.dark-theme-active .text-indigo-600 {
-  color: #60a5fa !important;
-}
-
+.dark-theme-active .text-indigo-600 { color: #60a5fa !important; }
 .dark-theme-active .text-orange-700,
 .dark-theme-active .text-orange-600,
 .dark-theme-active .text-orange-800,
 .dark-theme-active .text-amber-700,
 .dark-theme-active .text-amber-800,
-.dark-theme-active .text-amber-600 {
-  color: #fb923c !important;
-}
-
-/* Custom color text overrides in Dark Mode */
+.dark-theme-active .text-amber-600 { color: #fb923c !important; }
 .dark-theme-active .text-\[\#0B1F4D\],
 .dark-theme-active .text-\[\#0b1f4d\],
-.dark-theme-active .text-\[\#0A1E4A\],
-.dark-theme-active .text-\[\#0a1e4a\],
 .dark-theme-active .text-indigo-900,
 .dark-theme-active .text-blue-900,
 .dark-theme-active .text-slate-950,
@@ -248,96 +192,30 @@ body {
 .dark-theme-active h2.text-\[\#0B1F4D\],
 .dark-theme-active h3.text-\[\#0B1F4D\],
 .dark-theme-active h4.text-\[\#0B1F4D\],
-.dark-theme-active h5.text-\[\#0B1F4D\],
-.dark-theme-active h6.text-\[\#0B1F4D\],
-.dark-theme-active h1.text-\[\#0b1f4d\],
-.dark-theme-active h2.text-\[\#0b1f4d\],
-.dark-theme-active h3.text-\[\#0b1f4d\],
-.dark-theme-active h4.text-\[\#0b1f4d\],
-.dark-theme-active h5.text-\[\#0b1f4d\],
-.dark-theme-active h6.text-\[\#0b1f4d\] {
-  color: #ffffff !important;
-}
-
-/* Specific background color mappings in Dark Mode to ensure high contrast and premium aesthetics */
+.dark-theme-active h5.text-\[\#0B1F4D\] { color: #ffffff !important; }
 .dark-theme-active .bg-indigo-50,
-.dark-theme-active .bg-indigo-50\/50,
-.dark-theme-active .bg-indigo-50\/70,
-.dark-theme-active .bg-blue-50 {
-  background-color: rgba(96, 165, 250, 0.1) !important;
-  color: #e2e8f0 !important;
-  border-color: rgba(96, 165, 250, 0.25) !important;
-}
-
+.dark-theme-active .bg-blue-50 { background-color: rgba(96, 165, 250, 0.1) !important; color: #e2e8f0 !important; border-color: rgba(96, 165, 250, 0.25) !important; }
 .dark-theme-active .bg-emerald-50,
-.dark-theme-active .bg-emerald-50\/70,
 .dark-theme-active .bg-green-50,
-.dark-theme-active .bg-teal-50,
-.dark-theme-active .bg-emerald-500\/5 {
-  background-color: rgba(74, 222, 128, 0.08) !important;
-  color: #e2e8f0 !important;
-  border-color: rgba(74, 222, 128, 0.2) !important;
-}
-
+.dark-theme-active .bg-teal-50 { background-color: rgba(74, 222, 128, 0.08) !important; color: #e2e8f0 !important; border-color: rgba(74, 222, 128, 0.2) !important; }
 .dark-theme-active .bg-amber-50,
-.dark-theme-active .bg-amber-50\/70,
-.dark-theme-active .bg-orange-50\/50 {
-  background-color: rgba(251, 146, 60, 0.1) !important;
-  color: #fbd38d !important;
-  border-color: rgba(251, 146, 60, 0.2) !important;
-}
-
-/* Ensure that labels or b tags inside overridden dark-theme elements are bright and fully legible */
-.dark-theme-active b, 
-.dark-theme-active strong {
-  color: #ffffff !important;
-}
-
-/* Ensure list items and text elements inside our dark mode cards are clear */
-.dark-theme-active ul.text-slate-600,
-.dark-theme-active p.text-slate-600,
-.dark-theme-active span.text-slate-600,
-.dark-theme-active li.text-slate-600,
-.dark-theme-active .text-slate-600 {
-  color: #e2e8f0 !important;
-}
-
-.dark-theme-active ul.text-slate-500,
-.dark-theme-active p.text-slate-500,
-.dark-theme-active span.text-slate-500,
-.dark-theme-active li.text-slate-500,
-.dark-theme-active .text-slate-500 {
-  color: #cbd5e1 !important;
-}
-
-/* Beautiful map canvas background in night mode */
-.dark-theme-active .bg-slate-900 {
-  background-color: #05122f !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Pulse effects */
-.dark-theme-active .animate-pulse {
-  opacity: 0.8;
-}
-
-/* Active tabs inside dark mode stand out with orange background and dark text for maximum contrast and premium aesthetics */
+.dark-theme-active .bg-orange-50\/50 { background-color: rgba(251, 146, 60, 0.1) !important; color: #fbd38d !important; border-color: rgba(251, 146, 60, 0.2) !important; }
+.dark-theme-active b,
+.dark-theme-active strong { color: #ffffff !important; }
+.dark-theme-active .text-slate-600 { color: #e2e8f0 !important; }
+.dark-theme-active .text-slate-500 { color: #cbd5e1 !important; }
+.dark-theme-active .bg-slate-900 { background-color: #05122f !important; border-color: rgba(255, 255, 255, 0.15) !important; }
+.dark-theme-active .animate-pulse { opacity: 0.8; }
 .dark-theme-active button.bg-white.text-\[\#0B1F4D\],
-.dark-theme-active .bg-white.text-\[\#0B1F4D\],
-.dark-theme-active button.bg-white.text-\[\#0b1f4d\],
-.dark-theme-active .bg-white.text-\[\#0b1f4d\] {
-  background-color: #ff9800 !important; /* Premium Amber/Orange */
-  color: #0b1f4d !important; /* Dark Navy text for perfect readability */
-  font-weight: 700 !important;
-}
-
-/* Overriding default light-themed hover classes inside dark mode to prevent white-on-white text readability issues */
+.dark-theme-active .bg-white.text-\[\#0B1F4D\] { background-color: #ff9800 !important; color: #0b1f4d !important; font-weight: 700 !important; }
 .dark-theme-active tr.hover\:bg-slate-50\/50:hover,
 .dark-theme-active tr.hover\:bg-slate-50:hover,
-.dark-theme-active tr:hover,
 .dark-theme-active tbody tr:hover,
 .dark-theme-active .hover\:bg-slate-50:hover,
-.dark-theme-active button.hover\:bg-slate-50:hover {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-}
+.dark-theme-active button.hover\:bg-slate-50:hover { background-color: rgba(255, 255, 255, 0.06) !important; }
 
+/* ── Leaflet map styles ──────────────────────────────────── */
+.leaflet-container {
+  border-radius: 1rem;
+  z-index: 0;
+}

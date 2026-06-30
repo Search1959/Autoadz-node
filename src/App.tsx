@@ -437,7 +437,7 @@ export default function App() {
               <p className="text-[9px] text-slate-500 uppercase font-mono font-bold">CUSTOMER SUPPORT LINE</p>
               <p className="text-xs text-white font-bold flex items-center gap-1.5 font-sans">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                +91 99999-99999 <span className="text-slate-400 font-normal">| support@autoadz.in</span>
+                +91 98361-30393 <span className="text-slate-400 font-normal">| apex7tech@gmail.com</span>
               </p>
             </div>
             <button
@@ -470,7 +470,7 @@ export default function App() {
   // Persistent Dark Mode Theme State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("autoadz-dark-mode");
-    return saved !== "false"; // Default to true!
+    return saved === "true"; // Default to light mode
   });
 
   useEffect(() => {
