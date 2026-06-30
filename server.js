@@ -2,1096 +2,796 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import Anthropic from "@anthropic-ai/sdk";
+import mysql from "mysql2/promise";
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Initialize Google GenAI if key is present
-let ai = null;
-if (process.env.GEMINI_API_KEY) {
+// ─── MySQL Connection Pool ────────────────────────────────────────────────────
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "autoadz_db",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  charset: "utf8mb4",
+});
+
+async function db(sql, params = []) {
+  const [rows] = await pool.execute(sql, params);
+  return rows;
+}
+
+// ─── Claude AI Client ─────────────────────────────────────────────────────────
+let claude = null;
+if (process.env.ANTHROPIC_API_KEY) {
   try {
-    ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
-    });
+    claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   } catch (err) {
-    console.error("Failed to initialize Gemini Client", err);
+    console.error("Failed to initialize Claude client:", err);
   }
 }
 
-import fs from "fs";
-
-// Path to persistent JSON database file
-const DB_FILE = path.join(process.cwd(), "db.json");
-
-// Default initial datasets (fallback seeds)
-const defaultCampaigns = [
-  {
-    id: "camp_bengaluru_metro",
-    title: "Edge Fashion - Summer Launch Bengaluru",
-    client: "Edge Retail Ltd.",
-    city: "Bangalore",
-    area: "Indiranagar, Koramangala",
-    budget: 150000,
-    autosCount: 25,
-    creativeUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800",
-    status: "active",
-    creativeStatus: "approved",
-    creativeApproved: true,
-    startDate: "2026-06-01",
-    endDate: "2026-07-01",
-    kmsCovered: 1240.50,
-    qrScans: 84
-  },
-  {
-    id: "camp_kolkata_pujo",
-    title: "Pujo Carnival Festive Offer",
-    client: "Senco Jewellers",
-    city: "Kolkata",
-    area: "Gariahat, Salt Lake",
-    budget: 75000,
-    autosCount: 15,
-    creativeUrl: "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&q=80&w=800",
-    status: "pending",
-    creativeStatus: "pending",
-    creativeApproved: false,
-    startDate: "2026-09-15",
-    endDate: "2026-10-15",
-    kmsCovered: 0,
-    qrScans: 0
-  }
-];
-
-const defaultDrivers = [
-  {
-    id: "driver_delip",
-    name: "Delip Kumar",
-    phone: "+91 98450-12345",
-    autoNumber: "KA-03-AA-4921",
-    location: "Bangalore",
-    state: "online",
-    kycVerified: true,
-    totalEarnings: 14250.00,
-    walletBalance: 1850.00,
-    currentCampaignId: "camp_bengaluru_metro",
-    status: "active",
-    dlNumber: "DL-0420230004921",
-    aadhaarNumber: "4512-8923-3039",
-    dlUrl: "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
-    aadhaarUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400"
-  },
-  {
-    id: "driver_rajesh",
-    name: "Rajesh Gowda",
-    phone: "+91 91220-44932",
-    autoNumber: "KA-01-MJ-8831",
-    location: "Bangalore",
-    state: "online",
-    kycVerified: true,
-    totalEarnings: 9800.00,
-    walletBalance: 1250.00,
-    currentCampaignId: "camp_bengaluru_metro",
-    status: "active",
-    dlNumber: "DL-1220220008831",
-    aadhaarNumber: "8841-2033-9125",
-    dlUrl: "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
-    aadhaarUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400"
-  }
-];
-
-const defaultProofs = [
-  {
-    id: "proof_1",
-    driverId: "driver_delip",
-    driverName: "Delip Kumar",
-    campaignId: "camp_bengaluru_metro",
-    campaignTitle: "Edge Fashion - Summer Launch Bengaluru",
-    imageUrl: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=600",
-    location: "Indiranagar, Bangalore",
-    timestamp: "2026-06-28 16:32 PM",
-    status: "approved",
-    type: "morning_checkin"
-  }
-];
-
-const defaultWalletTransactions = [
-  {
-    id: "tx_1",
-    userId: "driver_delip",
-    type: "earning",
-    amount: 250.00,
-    status: "success",
-    description: "GPS Telematics Payout - Koramangala Run",
-    timestamp: "6/28/2026, 6:15 PM"
-  },
-  {
-    id: "tx_2",
-    userId: "driver_delip",
-    type: "payout",
-    amount: 1500.00,
-    status: "success",
-    description: "Weekly bank settlement payout",
-    timestamp: "6/27/2026, 11:00 AM"
-  },
-  {
-    id: "tx_adv_1",
-    userId: "advertiser_main",
-    type: "deposit",
-    amount: 25000.00,
-    status: "success",
-    description: "Wallet pre-funding credit card deposit",
-    timestamp: "6/25/2026, 2:30 PM"
-  }
-];
-
-const defaultNotifications = [
-  {
-    id: "notif_1",
-    title: "Weekly Payout Credited",
-    message: "Your weekly settlement invoice was approved. ₹1,500 has been transferred to HDFC Bank ****3039.",
-    timestamp: "6/27/2026, 11:00 AM",
-    unread: true,
-    type: "payment"
-  },
-  {
-    id: "notif_2",
-    title: "Campaign Assignment Approved",
-    message: "Congratulations! You have been linked to 'Edge Fashion - Summer Launch Bengaluru'.",
-    timestamp: "6/26/2026, 10:15 AM",
-    unread: false,
-    type: "campaign"
-  }
-];
-
-const defaultBills = [
-  {
-    id: "bill_past_1",
-    type: "driver_service_bill",
-    senderId: "driver_delip",
-    senderName: "Delip Kumar",
-    receiverId: "admin",
-    campaignId: "camp_bengaluru_metro",
-    amount: 1500,
-    status: "paid",
-    kmsCovered: 333.33,
-    periodStart: "2026-06-15",
-    periodEnd: "2026-06-22",
-    timestamp: "6/22/2026, 11:00 AM",
-    description: "Weekly auto transit transit-ad service fee"
-  },
-  {
-    id: "bill_past_2",
-    type: "driver_service_bill",
-    senderId: "driver_delip",
-    senderName: "Delip Kumar",
-    receiverId: "admin",
-    campaignId: "camp_bengaluru_metro",
-    amount: 850,
-    status: "pending",
-    kmsCovered: 188.88,
-    periodStart: "2026-06-22",
-    periodEnd: "2026-06-29",
-    timestamp: "6/29/2026, 11:00 AM",
-    description: "Weekly auto transit transit-ad service fee"
-  },
-  {
-    id: "bill_past_adv_1",
-    type: "advertiser_invoice",
-    senderId: "admin",
-    senderName: "AutoAdz Admin",
-    receiverId: "advertiser_main",
-    campaignId: "camp_bengaluru_metro",
-    amount: 25000,
-    status: "paid",
-    kmsCovered: 1240.50,
-    periodStart: "2026-06-01",
-    periodEnd: "2026-06-29",
-    timestamp: "6/29/2026, 12:00 PM",
-    description: "Mid-campaign progress billing invoice"
-  }
-];
-
-// Active databases
-let campaigns = [];
-let drivers = [];
-let proofs = [];
-let walletTransactions = [];
-let notifications = [];
-let cities = [];
-let bills = [];
-let schedulerSettings = {
-  enabled: true,
-  mileageThreshold: 10,
-  intervalMinutes: 5,
-  lastRunTimestamp: null,
-  driverRatePerKm: 4.5,
-  logs: [
-    {
-      timestamp: new Date().toLocaleString(),
-      status: "Initialized",
-      message: "Automated billing scheduler registered with 10 KM threshold."
-    }
-  ]
-};
-
-const defaultCities = [
-  { id: "city_kolkata", name: "Kolkata", zone: "East Hub", rate: 15, activeAutos: 150 },
-  { id: "city_delhi", name: "Delhi NCR", zone: "North Hub", rate: 18, activeAutos: 220 },
-  { id: "city_bangalore", name: "Bangalore", zone: "South Hub", rate: 20, activeAutos: 250 },
-  { id: "city_mumbai", name: "Mumbai", zone: "West Hub", rate: 22, activeAutos: 180 }
-];
-
-// Helper to save all collections to db.json
-function saveDatabase() {
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify({
-      campaigns,
-      drivers,
-      proofs,
-      walletTransactions,
-      notifications,
-      cities,
-      bills,
-      schedulerSettings
-    }, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Failed to save JSON database to disk:", err);
-  }
-}
-
-// Load databases on startup
-function initDatabase() {
-  try {
-    if (fs.existsSync(DB_FILE)) {
-      const data = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
-      campaigns = data.campaigns && data.campaigns.length > 0 ? data.campaigns : [...defaultCampaigns];
-      drivers = data.drivers && data.drivers.length > 0 ? data.drivers : [...defaultDrivers];
-      proofs = data.proofs && data.proofs.length > 0 ? data.proofs : [...defaultProofs];
-      walletTransactions = data.walletTransactions && data.walletTransactions.length > 0 ? data.walletTransactions : [...defaultWalletTransactions];
-      notifications = data.notifications && data.notifications.length > 0 ? data.notifications : [...defaultNotifications];
-      cities = data.cities && data.cities.length > 0 ? data.cities : [...defaultCities];
-      bills = data.bills && data.bills.length > 0 ? data.bills : [...defaultBills];
-      schedulerSettings = data.schedulerSettings || {
-        enabled: true,
-        mileageThreshold: 10,
-        intervalMinutes: 5,
-        lastRunTimestamp: null,
-        driverRatePerKm: 4.5,
-        logs: [
-          {
-            timestamp: new Date().toLocaleString(),
-            status: "Initialized",
-            message: "Automated billing scheduler registered with 10 KM threshold."
-          }
-        ]
-      };
-      if (schedulerSettings.driverRatePerKm === undefined) {
-        schedulerSettings.driverRatePerKm = 4.5;
-      }
-      
-      // Ensure driver_delip exists as default backup
-      if (!drivers.find(d => d.id === "driver_delip")) {
-        drivers.push(defaultDrivers[0]);
-      }
-      
-      console.log(`Database loaded successfully from ${DB_FILE}`);
-    } else {
-      console.log(`No database file found. Seeding new database at ${DB_FILE}`);
-      campaigns = [...defaultCampaigns];
-      drivers = [...defaultDrivers];
-      proofs = [...defaultProofs];
-      walletTransactions = [...defaultWalletTransactions];
-      notifications = [...defaultNotifications];
-      cities = [...defaultCities];
-      bills = [...defaultBills];
-      schedulerSettings = {
-        enabled: true,
-        mileageThreshold: 10,
-        intervalMinutes: 5,
-        lastRunTimestamp: null,
-        driverRatePerKm: 4.5,
-        logs: [
-          {
-            timestamp: new Date().toLocaleString(),
-            status: "Initialized",
-            message: "Automated billing scheduler registered with 10 KM threshold."
-          }
-        ]
-      };
-      saveDatabase();
-    }
-  } catch (err) {
-    console.error("Failed to initialize database, using memory fallbacks:", err);
-    campaigns = [...defaultCampaigns];
-    drivers = [...defaultDrivers];
-    proofs = [...defaultProofs];
-    walletTransactions = [...defaultWalletTransactions];
-    notifications = [...defaultNotifications];
-    cities = [...defaultCities];
-    bills = [...defaultBills];
-    schedulerSettings = {
-      enabled: true,
-      mileageThreshold: 10,
-      intervalMinutes: 5,
-      lastRunTimestamp: null,
-      driverRatePerKm: 4.5,
-      logs: [
-        {
-          timestamp: new Date().toLocaleString(),
-          status: "Initialized",
-          message: "Automated billing scheduler registered with 10 KM threshold."
-        }
-      ]
-    };
-  }
-}
-
-// Perform synchronous initial load
-initDatabase();
-
-// Background dynamic stats simulation disabled per user request to prevent automatic metrics changes without user/driver movement
-
-// EXPRESS MIDDLEWARES
+// ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 
-// API ROUTES
-// Campaigns
-app.get("/api/campaigns", (req, res) => {
-  res.json(campaigns);
+// ─── Helper ───────────────────────────────────────────────────────────────────
+function ts() {
+  return new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+}
+
+function uid(prefix = "id") {
+  return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+}
+
+// ─── CAMPAIGNS ────────────────────────────────────────────────────────────────
+app.get("/api/campaigns", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM campaigns ORDER BY created_at DESC");
+    res.json(rows.map(r => ({
+      id: r.id, title: r.title, client: r.client, city: r.city,
+      area: r.area, budget: Number(r.budget), autosCount: r.autos_count,
+      creativeUrl: r.creative_url, status: r.status,
+      creativeStatus: r.creative_status, creativeApproved: !!r.creative_approved,
+      startDate: r.start_date, endDate: r.end_date,
+      kmsCovered: Number(r.kms_covered), qrScans: r.qr_scans,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
-app.post("/api/campaigns", (req, res) => {
-  const { title, client, city, area, budget, autosCount, creativeUrl } = req.body;
-  const newCampaign = {
-    id: `camp_${Date.now()}`,
-    title: title || "New Campaign",
-    client: client || "Independent Advertiser",
-    city: city || "Bangalore",
-    area: area || "Central Area",
-    budget: Number(budget) || 50000,
-    autosCount: Number(autosCount) || 10,
-    creativeUrl: creativeUrl || "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800",
-    status: "pending",
-    creativeStatus: "pending",
-    creativeApproved: false,
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    kmsCovered: 0,
-    qrScans: 0,
-    gpsRoute: [
-      { lat: 12.9716, lng: 77.5946 },
-      { lat: 12.9279, lng: 77.6271 },
-    ],
+app.post("/api/campaigns", async (req, res) => {
+  try {
+    const { title, client, city, area, budget, autosCount, creativeUrl } = req.body;
+    const id = uid("camp");
+    const startDate = new Date().toISOString().split("T")[0];
+    const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const safeCreativeUrl = creativeUrl || "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800";
+
+    await db(
+      `INSERT INTO campaigns (id, title, client, city, area, budget, autos_count, creative_url, status, creative_status, creative_approved, start_date, end_date, kms_covered, qr_scans)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', 0, ?, ?, 0, 0)`,
+      [id, title || "New Campaign", client || "Independent Advertiser", city || "Bangalore",
+       area || "Central Area", Number(budget) || 50000, Number(autosCount) || 10,
+       safeCreativeUrl, startDate, endDate]
+    );
+
+    // Auto wallet deduction
+    await db(
+      `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, 'advertiser_main', 'payment', ?, 'success', ?, ?)`,
+      [uid("tx"), Number(budget) || 50000, `Pre-payment for campaign: ${title}`, ts()]
+    );
+
+    // Notification
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Campaign Created', ?, ?, 1, 'campaign')`,
+      [uid("notif"), `Your campaign '${title}' is pending admin approval. Ad creative status: Pending Approval.`, ts()]
+    );
+
+    const [newCamp] = await db("SELECT * FROM campaigns WHERE id = ?", [id]);
+    res.status(201).json({
+      id: newCamp.id, title: newCamp.title, client: newCamp.client, city: newCamp.city,
+      area: newCamp.area, budget: Number(newCamp.budget), autosCount: newCamp.autos_count,
+      creativeUrl: newCamp.creative_url, status: newCamp.status,
+      creativeStatus: newCamp.creative_status, creativeApproved: !!newCamp.creative_approved,
+      startDate: newCamp.start_date, endDate: newCamp.end_date,
+      kmsCovered: Number(newCamp.kms_covered), qrScans: newCamp.qr_scans,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.put("/api/campaigns/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, kmsCovered, qrScans, creativeUrl, creativeStatus, creativeApproved } = req.body;
+
+    const updates = [];
+    const vals = [];
+    if (status !== undefined) { updates.push("status = ?"); vals.push(status); }
+    if (kmsCovered !== undefined) { updates.push("kms_covered = ?"); vals.push(Number(kmsCovered)); }
+    if (qrScans !== undefined) { updates.push("qr_scans = ?"); vals.push(Number(qrScans)); }
+    if (creativeUrl !== undefined) { updates.push("creative_url = ?"); vals.push(creativeUrl); }
+    if (creativeStatus !== undefined) { updates.push("creative_status = ?"); vals.push(creativeStatus); }
+    if (creativeApproved !== undefined) { updates.push("creative_approved = ?"); vals.push(creativeApproved ? 1 : 0); }
+
+    if (updates.length === 0) return res.status(400).json({ error: "Nothing to update" });
+    vals.push(id);
+    await db(`UPDATE campaigns SET ${updates.join(", ")} WHERE id = ?`, vals);
+
+    // Notification
+    let msg = `Your campaign has been updated.`;
+    if (creativeStatus !== undefined) msg = `Ad Creative has been ${creativeStatus}.`;
+    else if (status !== undefined) msg = `Your campaign has been marked as ${status}.`;
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Campaign Updated', ?, ?, 1, 'campaign')`,
+      [uid("notif"), msg, ts()]
+    );
+
+    const [updated] = await db("SELECT * FROM campaigns WHERE id = ?", [id]);
+    if (!updated) return res.status(404).json({ error: "Campaign not found" });
+    res.json({
+      id: updated.id, title: updated.title, client: updated.client, city: updated.city,
+      area: updated.area, budget: Number(updated.budget), autosCount: updated.autos_count,
+      creativeUrl: updated.creative_url, status: updated.status,
+      creativeStatus: updated.creative_status, creativeApproved: !!updated.creative_approved,
+      startDate: updated.start_date, endDate: updated.end_date,
+      kmsCovered: Number(updated.kms_covered), qrScans: updated.qr_scans,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/api/campaigns/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [camp] = await db("SELECT * FROM campaigns WHERE id = ?", [id]);
+    if (!camp) return res.status(404).json({ error: "Campaign not found" });
+
+    await db("DELETE FROM campaigns WHERE id = ?", [id]);
+    await db("UPDATE drivers SET current_campaign_id = NULL WHERE current_campaign_id = ?", [id]);
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Campaign Removed', ?, ?, 1, 'admin')`,
+      [uid("notif"), `Campaign '${camp.title}' has been deleted by Admin.`, ts()]
+    );
+    res.json({ success: true, deleted: camp });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ─── DRIVERS ──────────────────────────────────────────────────────────────────
+function mapDriver(r) {
+  return {
+    id: r.id, name: r.name, phone: r.phone, autoNumber: r.auto_number,
+    location: r.location, state: r.state, kycVerified: !!r.kyc_verified,
+    totalEarnings: Number(r.total_earnings), walletBalance: Number(r.wallet_balance),
+    currentCampaignId: r.current_campaign_id, status: r.status,
+    dlNumber: r.dl_number, aadhaarNumber: r.aadhaar_number,
+    dlImage: r.dl_image, aadhaarImage: r.aadhaar_image,
+    currentSessionKms: Number(r.current_session_kms || 0),
+    currentSessionSeconds: Number(r.current_session_seconds || 0),
+    trackingStartTime: r.tracking_start_time,
   };
-  campaigns.unshift(newCampaign);
+}
 
-  // Auto-deduct from advertiser funds
-  walletTransactions.unshift({
-    id: `tx_${Date.now()}`,
-    userId: "advertiser_main",
-    type: "payment",
-    amount: newCampaign.budget,
-    status: "success",
-    description: `Pre-payment for campaign: ${newCampaign.title}`,
-    timestamp: new Date().toLocaleString(),
-  });
-
-  // Add notification
-  notifications.unshift({
-    id: `notif_${Date.now()}`,
-    title: "Campaign Created",
-    message: `Your campaign '${newCampaign.title}' is pending admin approval. Ad creative status: Pending Approval.`,
-    timestamp: new Date().toLocaleString(),
-    unread: true,
-    type: "campaign",
-  });
-
-  saveDatabase();
-
-  res.status(201).json(newCampaign);
+app.get("/api/drivers", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM drivers ORDER BY created_at DESC");
+    res.json(rows.map(mapDriver));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
-app.put("/api/campaigns/:id", (req, res) => {
-  const { id } = req.params;
-  const { status, kmsCovered, qrScans, creativeUrl, creativeStatus, creativeApproved } = req.body;
-  const index = campaigns.findIndex((c) => c.id === id);
-  if (index !== -1) {
-    if (status !== undefined) campaigns[index].status = status;
-    if (kmsCovered !== undefined) campaigns[index].kmsCovered = Number(kmsCovered);
-    if (qrScans !== undefined) campaigns[index].qrScans = Number(qrScans);
-    if (creativeUrl !== undefined) campaigns[index].creativeUrl = creativeUrl;
-    if (creativeStatus !== undefined) campaigns[index].creativeStatus = creativeStatus;
-    if (creativeApproved !== undefined) campaigns[index].creativeApproved = creativeApproved;
-    
-    // Add notification
-    let msg = `Your campaign '${campaigns[index].title}' has been updated.`;
-    if (creativeStatus !== undefined) {
-      msg = `Ad Creative for '${campaigns[index].title}' has been ${creativeStatus}.`;
-    } else if (status !== undefined) {
-      msg = `Your campaign '${campaigns[index].title}' has been marked as ${status}.`;
+app.post("/api/drivers", async (req, res) => {
+  try {
+    const { name, phone, autoNumber, location, dlNumber, aadhaarNumber, dlImage, aadhaarImage } = req.body;
+    const id = uid("driver");
+    await db(
+      `INSERT INTO drivers (id, name, phone, auto_number, location, state, kyc_verified, total_earnings, wallet_balance, current_campaign_id, status, dl_number, aadhaar_number, dl_image, aadhaar_image)
+       VALUES (?, ?, ?, ?, ?, 'offline', 0, 0, 0, NULL, 'pending_approval', ?, ?, ?, ?)`,
+      [id, name || "Anonymous Driver", phone || "9999999999",
+       autoNumber || "KA-01-XX-0000", location || "Bangalore",
+       dlNumber || "", aadhaarNumber || "",
+       dlImage || "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
+       aadhaarImage || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400"]
+    );
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'New Driver Registered', ?, ?, 1, 'driver')`,
+      [uid("notif"), `${name} has signed up and is waiting for KYC verification.`, ts()]
+    );
+    const [newDriver] = await db("SELECT * FROM drivers WHERE id = ?", [id]);
+    res.status(201).json(mapDriver(newDriver));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.put("/api/drivers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const fields = {
+      name: req.body.name, phone: req.body.phone,
+      auto_number: req.body.autoNumber, location: req.body.location,
+      status: req.body.status, state: req.body.state,
+      kyc_verified: req.body.kycVerified !== undefined ? (req.body.kycVerified ? 1 : 0) : undefined,
+      current_campaign_id: req.body.currentCampaignId,
+      total_earnings: req.body.totalEarnings !== undefined ? Number(req.body.totalEarnings) : undefined,
+      wallet_balance: req.body.walletBalance !== undefined ? Number(req.body.walletBalance) : undefined,
+      current_session_kms: req.body.currentSessionKms !== undefined ? Number(req.body.currentSessionKms) : undefined,
+      current_session_seconds: req.body.currentSessionSeconds !== undefined ? Number(req.body.currentSessionSeconds) : undefined,
+      tracking_start_time: req.body.trackingStartTime,
+      dl_number: req.body.dlNumber, aadhaar_number: req.body.aadhaarNumber,
+      dl_image: req.body.dlImage, aadhaar_image: req.body.aadhaarImage,
+    };
+
+    const updates = [];
+    const vals = [];
+    for (const [col, val] of Object.entries(fields)) {
+      if (val !== undefined) { updates.push(`${col} = ?`); vals.push(val); }
+    }
+    if (updates.length === 0) return res.status(400).json({ error: "Nothing to update" });
+    vals.push(id);
+    await db(`UPDATE drivers SET ${updates.join(", ")} WHERE id = ?`, vals);
+
+    const [updated] = await db("SELECT * FROM drivers WHERE id = ?", [id]);
+    if (!updated) return res.status(404).json({ error: "Driver not found" });
+    res.json(mapDriver(updated));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/api/drivers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [driver] = await db("SELECT * FROM drivers WHERE id = ?", [id]);
+    if (!driver) return res.status(404).json({ error: "Driver not found" });
+    await db("DELETE FROM drivers WHERE id = ?", [id]);
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Driver Removed', ?, ?, 1, 'admin')`,
+      [uid("notif"), `Driver ${driver.name} has been removed by Admin.`, ts()]
+    );
+    res.json({ success: true, deleted: mapDriver(driver) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ─── PROOFS ───────────────────────────────────────────────────────────────────
+app.get("/api/proofs", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM proofs ORDER BY created_at DESC");
+    res.json(rows.map(r => ({
+      id: r.id, driverId: r.driver_id, driverName: r.driver_name,
+      campaignId: r.campaign_id, campaignTitle: r.campaign_title,
+      imageUrl: r.image_url, location: r.location,
+      timestamp: r.timestamp, status: r.status, type: r.type,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.post("/api/proofs", async (req, res) => {
+  try {
+    const { driverId, campaignId, type, imageUrl, location } = req.body;
+    const [driver] = await db("SELECT name FROM drivers WHERE id = ?", [driverId]);
+    const [campaign] = await db("SELECT title FROM campaigns WHERE id = ?", [campaignId]);
+    const id = uid("proof");
+    const nowTs = ts();
+
+    await db(
+      `INSERT INTO proofs (id, driver_id, driver_name, campaign_id, campaign_title, image_url, location, timestamp, status, type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      [id, driverId || "", driver ? driver.name : "Unknown Driver",
+       campaignId || "", campaign ? campaign.title : "Unknown Campaign",
+       imageUrl || "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
+       location || "Unknown", nowTs, type || "installation"]
+    );
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Proof Uploaded', ?, ?, 1, 'driver')`,
+      [uid("notif"), `${driver ? driver.name : "A driver"} uploaded proof for ${campaign ? campaign.title : "a campaign"}.`, nowTs]
+    );
+
+    const [newProof] = await db("SELECT * FROM proofs WHERE id = ?", [id]);
+    res.status(201).json({
+      id: newProof.id, driverId: newProof.driver_id, driverName: newProof.driver_name,
+      campaignId: newProof.campaign_id, campaignTitle: newProof.campaign_title,
+      imageUrl: newProof.image_url, location: newProof.location,
+      timestamp: newProof.timestamp, status: newProof.status, type: newProof.type,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.put("/api/proofs/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    await db("UPDATE proofs SET status = ? WHERE id = ?", [status, id]);
+    const [updated] = await db("SELECT * FROM proofs WHERE id = ?", [id]);
+    if (!updated) return res.status(404).json({ error: "Proof not found" });
+    res.json({
+      id: updated.id, driverId: updated.driver_id, driverName: updated.driver_name,
+      campaignId: updated.campaign_id, campaignTitle: updated.campaign_title,
+      imageUrl: updated.image_url, location: updated.location,
+      timestamp: updated.timestamp, status: updated.status, type: updated.type,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ─── WALLET ───────────────────────────────────────────────────────────────────
+app.get("/api/wallet/transactions", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM wallet_transactions ORDER BY created_at DESC");
+    res.json(rows.map(r => ({
+      id: r.id, userId: r.user_id, type: r.type,
+      amount: Number(r.amount), status: r.status,
+      description: r.description, timestamp: r.timestamp,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.post("/api/wallet/transactions", async (req, res) => {
+  try {
+    const { userId, type, amount, description } = req.body;
+    const id = uid("tx");
+    const nowTs = ts();
+    await db(
+      `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, ?, ?, ?, 'success', ?, ?)`,
+      [id, userId || "advertiser_main", type || "deposit", Number(amount) || 0, description || "Wallet transaction", nowTs]
+    );
+
+    if (type === "withdrawal") {
+      await db("UPDATE drivers SET wallet_balance = GREATEST(0, wallet_balance - ?) WHERE id = ?", [Number(amount), userId]);
     }
 
-    notifications.unshift({
-      id: `notif_${Date.now()}`,
-      title: `Campaign Updated`,
-      message: msg,
-      timestamp: new Date().toLocaleString(),
-      unread: true,
-      type: "campaign",
+    const [newTx] = await db("SELECT * FROM wallet_transactions WHERE id = ?", [id]);
+    res.status(201).json({
+      id: newTx.id, userId: newTx.user_id, type: newTx.type,
+      amount: Number(newTx.amount), status: newTx.status,
+      description: newTx.description, timestamp: newTx.timestamp,
     });
-
-    saveDatabase();
-
-    res.json(campaigns[index]);
-  } else {
-    res.status(404).json({ error: "Campaign not found" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 });
 
-app.delete("/api/campaigns/:id", (req, res) => {
-  const { id } = req.params;
-  const index = campaigns.findIndex((c) => c.id === id);
-  if (index !== -1) {
-    const deletedCampaign = campaigns.splice(index, 1)[0];
-    
-    // De-allocate any drivers assigned to this campaign
-    drivers.forEach(d => {
-      if (d.currentCampaignId === id) {
-        d.currentCampaignId = null;
-      }
+// ─── BILLS ────────────────────────────────────────────────────────────────────
+app.get("/api/bills", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM bills ORDER BY created_at DESC");
+    res.json(rows.map(r => ({
+      id: r.id, type: r.type, senderId: r.sender_id, senderName: r.sender_name,
+      receiverId: r.receiver_id, campaignId: r.campaign_id,
+      amount: Number(r.amount), status: r.status,
+      kmsCovered: Number(r.kms_covered), periodStart: r.period_start,
+      periodEnd: r.period_end, timestamp: r.timestamp, description: r.description,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.post("/api/bills", async (req, res) => {
+  try {
+    const { type, senderId, senderName, receiverId, campaignId, amount, kmsCovered, periodStart, periodEnd, description } = req.body;
+    const id = uid("bill");
+    const nowTs = ts();
+    const pStart = periodStart || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const pEnd = periodEnd || new Date().toISOString().split("T")[0];
+
+    await db(
+      `INSERT INTO bills (id, type, sender_id, sender_name, receiver_id, campaign_id, amount, status, kms_covered, period_start, period_end, timestamp, description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)`,
+      [id, type || "driver_service_bill", senderId || "", senderName || "",
+       receiverId || "admin", campaignId || null, Number(amount) || 0,
+       Number(kmsCovered) || 0, pStart, pEnd, nowTs, description || "Weekly Service Bill"]
+    );
+
+    const notifTitle = type === "driver_service_bill" ? "Service Bill Raised" : "Campaign Invoice Issued";
+    const notifMsg = type === "driver_service_bill"
+      ? `Driver ${senderName} raised a service bill for ₹${amount} (${kmsCovered} KM).`
+      : `Admin issued an invoice of ₹${amount} to campaign advertiser.`;
+    await db(
+      `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, ?, ?, ?, 1, 'billing')`,
+      [uid("notif"), notifTitle, notifMsg, nowTs]
+    );
+
+    const [newBill] = await db("SELECT * FROM bills WHERE id = ?", [id]);
+    res.status(201).json({
+      id: newBill.id, type: newBill.type, senderId: newBill.sender_id,
+      senderName: newBill.sender_name, receiverId: newBill.receiver_id,
+      campaignId: newBill.campaign_id, amount: Number(newBill.amount),
+      status: newBill.status, kmsCovered: Number(newBill.kms_covered),
+      periodStart: newBill.period_start, periodEnd: newBill.period_end,
+      timestamp: newBill.timestamp, description: newBill.description,
     });
-
-    notifications.unshift({
-      id: `notif_${Date.now()}`,
-      title: "Campaign Removed",
-      message: `Campaign '${deletedCampaign.title}' has been deleted from the platform by Admin.`,
-      timestamp: new Date().toLocaleString(),
-      unread: true,
-      type: "admin",
-    });
-
-    saveDatabase();
-    res.json({ success: true, deleted: deletedCampaign });
-  } else {
-    res.status(404).json({ error: "Campaign not found" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 });
 
-// Drivers
-app.get("/api/drivers", (req, res) => {
-  res.json(drivers);
-});
+app.put("/api/bills/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const [bill] = await db("SELECT * FROM bills WHERE id = ?", [id]);
+    if (!bill) return res.status(404).json({ error: "Bill not found" });
 
-app.post("/api/drivers", (req, res) => {
-  const { name, phone, autoNumber, location, dlNumber, aadhaarNumber, dlImage, aadhaarImage } = req.body;
-  const newDriver = {
-    id: `driver_${Date.now()}`,
-    name: name || "Anonymous Driver",
-    phone: phone || "9999999999",
-    autoNumber: autoNumber || "KA-01-XX-0000",
-    location: location || "Bangalore",
-    state: "offline",
-    kycVerified: false,
-    totalEarnings: 0,
-    walletBalance: 0,
-    currentCampaignId: null,
-    status: "pending_approval",
-    dlNumber: dlNumber || `DL-${Math.floor(Math.random() * 90 + 10)}-2023${Math.floor(Math.random() * 90000 + 10000)}`,
-    aadhaarNumber: aadhaarNumber || `${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
-    dlImage: dlImage || "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=400",
-    aadhaarImage: aadhaarImage || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=400",
-  };
-  drivers.push(newDriver);
+    const oldStatus = bill.status;
+    await db("UPDATE bills SET status = ? WHERE id = ?", [status, id]);
+    const nowTs = ts();
 
-  notifications.unshift({
-    id: `notif_${Date.now()}`,
-    title: "New Driver Registered",
-    message: `${newDriver.name} has signed up and is waiting for KYC verification.`,
-    timestamp: new Date().toLocaleString(),
-    unread: true,
-    type: "driver",
-  });
-
-  saveDatabase();
-
-  res.status(201).json(newDriver);
-});
-
-app.put("/api/drivers/:id", (req, res) => {
-  const { id } = req.params;
-  const { 
-    name,
-    phone,
-    autoNumber,
-    location,
-    status, 
-    kycVerified, 
-    currentCampaignId, 
-    state, 
-    totalEarnings, 
-    walletBalance,
-    currentSessionKms,
-    currentSessionSeconds,
-    trackingStartTime,
-    dlNumber,
-    aadhaarNumber,
-    dlImage,
-    aadhaarImage
-  } = req.body;
-  const index = drivers.findIndex((d) => d.id === id);
-  if (index !== -1) {
-    if (name !== undefined) drivers[index].name = name;
-    if (phone !== undefined) drivers[index].phone = phone;
-    if (autoNumber !== undefined) drivers[index].autoNumber = autoNumber;
-    if (location !== undefined) drivers[index].location = location;
-    if (status !== undefined) drivers[index].status = status;
-    if (kycVerified !== undefined) drivers[index].kycVerified = kycVerified;
-    if (currentCampaignId !== undefined) drivers[index].currentCampaignId = currentCampaignId;
-    if (state !== undefined) drivers[index].state = state;
-    if (totalEarnings !== undefined) drivers[index].totalEarnings = Number(totalEarnings);
-    if (walletBalance !== undefined) drivers[index].walletBalance = Number(walletBalance);
-    if (currentSessionKms !== undefined) drivers[index].currentSessionKms = Number(currentSessionKms);
-    if (currentSessionSeconds !== undefined) drivers[index].currentSessionSeconds = Number(currentSessionSeconds);
-    if (trackingStartTime !== undefined) drivers[index].trackingStartTime = trackingStartTime;
-    if (dlNumber !== undefined) drivers[index].dlNumber = dlNumber;
-    if (aadhaarNumber !== undefined) drivers[index].aadhaarNumber = aadhaarNumber;
-    if (dlImage !== undefined) drivers[index].dlImage = dlImage;
-    if (aadhaarImage !== undefined) drivers[index].aadhaarImage = aadhaarImage;
-
-    saveDatabase();
-
-    res.json(drivers[index]);
-  } else {
-    res.status(404).json({ error: "Driver not found" });
-  }
-});
-
-app.delete("/api/drivers/:id", (req, res) => {
-  const { id } = req.params;
-  const index = drivers.findIndex((d) => d.id === id);
-  if (index !== -1) {
-    const deletedDriver = drivers.splice(index, 1)[0];
-    
-    notifications.unshift({
-      id: `notif_${Date.now()}`,
-      title: "Driver Removed",
-      message: `Driver ${deletedDriver.name} has been removed from the platform by Admin.`,
-      timestamp: new Date().toLocaleString(),
-      unread: true,
-      type: "admin",
-    });
-
-    saveDatabase();
-    res.json({ success: true, deleted: deletedDriver });
-  } else {
-    res.status(404).json({ error: "Driver not found" });
-  }
-});
-
-// Proofs
-app.get("/api/proofs", (req, res) => {
-  res.json(proofs);
-});
-
-app.post("/api/proofs", (req, res) => {
-  const { driverId, campaignId, type, imageUrl, location } = req.body;
-  const driver = drivers.find((d) => d.id === driverId);
-  const campaign = campaigns.find((c) => c.id === campaignId);
-
-  const newProof = {
-    id: `proof_${Date.now()}`,
-    driverId: driverId || "driver_1",
-    driverName: driver ? driver.name : "Unknown Driver",
-    campaignId: campaignId || "camp_1",
-    campaignTitle: campaign ? campaign.title : "Unknown Campaign",
-    type: type || "installation",
-    imageUrl: imageUrl || "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
-    timestamp: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString(),
-    location: location || "Bangalore",
-    status: "pending",
-  };
-  proofs.unshift(newProof);
-
-  notifications.unshift({
-    id: `notif_${Date.now()}`,
-    title: "Proof Uploaded",
-    message: `${newProof.driverName} uploaded ${newProof.type} proof for ${newProof.campaignTitle}.`,
-    timestamp: new Date().toLocaleString(),
-    unread: true,
-    type: "driver",
-  });
-
-  saveDatabase();
-
-  res.status(201).json(newProof);
-});
-
-app.put("/api/proofs/:id/status", (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  const index = proofs.findIndex((p) => p.id === id);
-  if (index !== -1) {
-    proofs[index].status = status;
-    
-    // Just save status changes, no arbitrary flat-rate payouts are required
-    saveDatabase();
-
-    res.json(proofs[index]);
-  } else {
-    res.status(404).json({ error: "Proof not found" });
-  }
-});
-
-// Wallet
-app.get("/api/wallet/transactions", (req, res) => {
-  res.json(walletTransactions);
-});
-
-app.post("/api/wallet/transactions", (req, res) => {
-  const { userId, type, amount, description } = req.body;
-  const newTx = {
-    id: `tx_${Date.now()}`,
-    userId: userId || "advertiser_main",
-    type: type || "deposit",
-    amount: Number(amount) || 0,
-    status: "success",
-    description: description || "Wallet transaction",
-    timestamp: new Date().toLocaleString(),
-  };
-  walletTransactions.unshift(newTx);
-
-  if (type === "deposit" && userId === "advertiser_main") {
-    // simulated transaction
-  } else if (type === "withdrawal") {
-    const dIndex = drivers.findIndex((d) => d.id === userId);
-    if (dIndex !== -1) {
-      drivers[dIndex].walletBalance = Math.max(0, drivers[dIndex].walletBalance - Number(amount));
-    }
-  }
-
-  saveDatabase();
-
-  res.status(201).json(newTx);
-});
-
-// Bills / Invoices
-app.get("/api/bills", (req, res) => {
-  res.json(bills);
-});
-
-app.post("/api/bills", (req, res) => {
-  const { type, senderId, senderName, receiverId, campaignId, amount, kmsCovered, periodStart, periodEnd, description } = req.body;
-  const newBill = {
-    id: `bill_${Date.now()}`,
-    type: type || "driver_service_bill", // "driver_service_bill" | "advertiser_invoice"
-    senderId: senderId || "driver_delip",
-    senderName: senderName || "Delip",
-    receiverId: receiverId || "admin",
-    campaignId: campaignId || null,
-    amount: Number(amount) || 0,
-    status: "pending",
-    kmsCovered: Number(kmsCovered) || 0,
-    periodStart: periodStart || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    periodEnd: periodEnd || new Date().toISOString().split("T")[0],
-    timestamp: new Date().toLocaleString(),
-    description: description || "Weekly Service Bill",
-  };
-  bills.unshift(newBill);
-
-  // Add a notification
-  notifications.unshift({
-    id: `notif_${Date.now()}`,
-    title: type === "driver_service_bill" ? "Service Bill Raised" : "Campaign Invoice Issued",
-    message: type === "driver_service_bill" 
-      ? `Driver ${senderName} raised a weekly service bill for ₹${newBill.amount} (${kmsCovered} KM).`
-      : `Admin issued an advertising progress invoice of ₹${newBill.amount} to campaign advertiser.`,
-    timestamp: new Date().toLocaleString(),
-    unread: true,
-    type: "billing",
-  });
-
-  saveDatabase();
-  res.status(201).json(newBill);
-});
-
-app.put("/api/bills/:id", (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body; // "paid" | "rejected" | "pending"
-  const index = bills.findIndex((b) => b.id === id);
-  if (index !== -1) {
-    const oldStatus = bills[index].status;
-    bills[index].status = status;
-
-    // Trigger financial transaction updates when status changes to "paid"
     if (status === "paid" && oldStatus !== "paid") {
-      const bill = bills[index];
-      
       if (bill.type === "driver_service_bill") {
-        // Driver payout
-        const dIndex = drivers.findIndex((d) => d.id === bill.senderId);
-        if (dIndex !== -1) {
-          // Deduct from driver's wallet balance
-          drivers[dIndex].walletBalance = Math.max(0, drivers[dIndex].walletBalance - bill.amount);
-        }
-        
-        // Add corresponding transaction as "withdrawal" (or payout)
-        walletTransactions.unshift({
-          id: `tx_${Date.now()}`,
-          userId: bill.senderId,
-          type: "withdrawal",
-          amount: bill.amount,
-          status: "success",
-          description: `Payout processed for Weekly Service Bill: ${bill.id}`,
-          timestamp: new Date().toLocaleString(),
-        });
-        
-        notifications.unshift({
-          id: `notif_${Date.now()}`,
-          title: "Service Bill Paid",
-          message: `Your weekly service bill of ₹${bill.amount} has been paid and transferred to your bank account.`,
-          timestamp: new Date().toLocaleString(),
-          unread: true,
-          type: "billing",
-        });
-
+        await db("UPDATE drivers SET wallet_balance = GREATEST(0, wallet_balance - ?) WHERE id = ?", [bill.amount, bill.sender_id]);
+        await db(
+          `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, ?, 'withdrawal', ?, 'success', ?, ?)`,
+          [uid("tx"), bill.sender_id, bill.amount, `Payout processed for bill: ${bill.id}`, nowTs]
+        );
+        await db(
+          `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Service Bill Paid', ?, ?, 1, 'billing')`,
+          [uid("notif"), `Your service bill of ₹${bill.amount} has been paid.`, nowTs]
+        );
       } else if (bill.type === "advertiser_invoice") {
-        // Advertiser invoice payment
-        // Deduct from advertiser's pre-deposited budget / wallet
-        walletTransactions.unshift({
-          id: `tx_${Date.now()}`,
-          userId: "advertiser_main",
-          type: "payment",
-          amount: bill.amount,
-          status: "success",
-          description: `Payment for Admin Weekly Invoice: ${bill.id}`,
-          timestamp: new Date().toLocaleString(),
-        });
-
-        notifications.unshift({
-          id: `notif_${Date.now()}`,
-          title: "Invoice Paid",
-          message: `Weekly advertising invoice for ₹${bill.amount} has been successfully settled from your advance wallet balance.`,
-          timestamp: new Date().toLocaleString(),
-          unread: true,
-          type: "billing",
-        });
+        await db(
+          `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, 'advertiser_main', 'payment', ?, 'success', ?, ?)`,
+          [uid("tx"), bill.amount, `Payment for invoice: ${bill.id}`, nowTs]
+        );
+        await db(
+          `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Invoice Paid', ?, ?, 1, 'billing')`,
+          [uid("notif"), `Invoice for ₹${bill.amount} has been settled.`, nowTs]
+        );
       }
     }
 
-    saveDatabase();
-    res.json(bills[index]);
-  } else {
-    res.status(404).json({ error: "Bill not found" });
+    const [updated] = await db("SELECT * FROM bills WHERE id = ?", [id]);
+    res.json({
+      id: updated.id, type: updated.type, senderId: updated.sender_id,
+      senderName: updated.sender_name, receiverId: updated.receiver_id,
+      campaignId: updated.campaign_id, amount: Number(updated.amount),
+      status: updated.status, kmsCovered: Number(updated.kms_covered),
+      periodStart: updated.period_start, periodEnd: updated.period_end,
+      timestamp: updated.timestamp, description: updated.description,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 });
 
-// Automated Billing Scheduler Helper and API routes
-function runBillingScheduler(thresholdOverride) {
-  const threshold = thresholdOverride !== undefined ? Number(thresholdOverride) : schedulerSettings.mileageThreshold;
+// ─── SCHEDULER ────────────────────────────────────────────────────────────────
+async function runBillingScheduler(thresholdOverride) {
+  const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
+  const threshold = thresholdOverride !== undefined ? Number(thresholdOverride) : Number(settings.mileage_threshold);
+  const currentRate = Number(settings.driver_rate_per_km) || 4.5;
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  
+  const nowTs = now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+  const drivers = await db("SELECT * FROM drivers");
   const generatedBills = [];
   const skippedDrivers = [];
-  
-  drivers.forEach(driver => {
-    // Check if there is already a pending service bill for this driver to avoid double billing
-    const hasPendingBill = bills.some(b => b.senderId === driver.id && b.type === "driver_service_bill" && b.status === "pending");
-    if (hasPendingBill) {
-      skippedDrivers.push({ id: driver.id, name: driver.name, reason: "Pending bill exists" });
-      return;
-    }
-    
-    // Calculate total KMs in last 7 days
-    let weekKms = 0;
-    const driverTxs = walletTransactions.filter(t => t.userId === driver.id && t.type === "earning");
-    
-    const currentRate = schedulerSettings.driverRatePerKm || 4.5;
 
+  for (const driver of drivers) {
+    const [pendingBill] = await db(
+      "SELECT id FROM bills WHERE sender_id = ? AND type = 'driver_service_bill' AND status = 'pending' LIMIT 1",
+      [driver.id]
+    );
+    if (pendingBill) {
+      skippedDrivers.push({ id: driver.id, name: driver.name, reason: "Pending bill exists" });
+      continue;
+    }
+
+    const driverTxs = await db(
+      "SELECT amount, description, timestamp FROM wallet_transactions WHERE user_id = ? AND type = 'earning'",
+      [driver.id]
+    );
+
+    let weekKms = 0;
     driverTxs.forEach(tx => {
-      let txDate = new Date(tx.timestamp);
-      if (isNaN(txDate.getTime())) {
-        txDate = new Date();
-      }
-      
-      if (txDate >= sevenDaysAgo) {
-        const kmMatch = tx.description.match(/Completed\s+([\d\.]+)\s*KM/i);
-        if (kmMatch) {
-          weekKms += parseFloat(kmMatch[1]);
-        } else {
-          weekKms += tx.amount / currentRate;
-        }
+      const txDate = new Date(tx.timestamp);
+      if (!isNaN(txDate.getTime()) && txDate >= sevenDaysAgo) {
+        const m = tx.description.match(/Completed\s+([\d.]+)\s*KM/i);
+        weekKms += m ? parseFloat(m[1]) : (Number(tx.amount) / currentRate);
       }
     });
-    
-    // Fallback: if no recent transaction matches but the driver has wallet balance, let's derive from wallet balance
-    if (weekKms === 0 && driver.walletBalance > 0) {
-      weekKms = driver.walletBalance / currentRate;
+
+    if (weekKms === 0 && Number(driver.wallet_balance) > 0) {
+      weekKms = Number(driver.wallet_balance) / currentRate;
     }
-    
     weekKms = parseFloat(weekKms.toFixed(1));
-    
+
     if (weekKms >= threshold) {
-      const billAmount = driver.walletBalance > 0 ? driver.walletBalance : parseFloat((weekKms * currentRate).toFixed(2));
-      
-      const newBill = {
-        id: `bill_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        type: "driver_service_bill",
-        senderId: driver.id,
-        senderName: driver.name,
-        receiverId: "admin",
-        campaignId: driver.currentCampaignId || "camp_active_1",
-        amount: billAmount,
-        status: "pending",
-        kmsCovered: weekKms,
-        periodStart: sevenDaysAgo.toISOString().split("T")[0],
-        periodEnd: now.toISOString().split("T")[0],
-        timestamp: now.toLocaleString(),
-        description: `Automated Weekly Service Bill - ${weekKms} KM verified mileage run (exceeded threshold of ${threshold} KM)`
-      };
-      
-      bills.unshift(newBill);
+      const billAmount = Number(driver.wallet_balance) > 0 ? Number(driver.wallet_balance) : parseFloat((weekKms * currentRate).toFixed(2));
+      const billId = uid("bill_auto");
+
+      await db(
+        `INSERT INTO bills (id, type, sender_id, sender_name, receiver_id, campaign_id, amount, status, kms_covered, period_start, period_end, timestamp, description)
+         VALUES (?, 'driver_service_bill', ?, ?, 'admin', ?, ?, 'pending', ?, ?, ?, ?, ?)`,
+        [billId, driver.id, driver.name, driver.current_campaign_id || null,
+         billAmount, weekKms, sevenDaysAgo.toISOString().split("T")[0],
+         now.toISOString().split("T")[0], nowTs,
+         `Automated Weekly Service Bill - ${weekKms} KM (threshold: ${threshold} KM)`]
+      );
+
+      await db(
+        `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Automated Weekly Bill', ?, ?, 1, 'billing')`,
+        [uid("notif"), `${weekKms} KM exceeded ${threshold} KM threshold. Bill for ₹${billAmount} generated.`, nowTs]
+      );
+
       generatedBills.push({ id: driver.id, name: driver.name, kms: weekKms, amount: billAmount });
-      
-      notifications.unshift({
-        id: `notif_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        title: "Automated Weekly Bill Raised",
-        message: `Your weekly tracking of ${weekKms} KM exceeded the ${threshold} KM threshold. An automated service bill for ₹${billAmount} has been generated.`,
-        timestamp: now.toLocaleString(),
-        unread: true,
-        type: "billing"
-      });
-      
-      notifications.unshift({
-        id: `notif_admin_auto_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        title: "⚡ Auto Bill Generated",
-        message: `Scheduler automatically generated a service bill of ₹${billAmount} for driver ${driver.name} (${weekKms} KM).`,
-        timestamp: now.toLocaleString(),
-        unread: true,
-        type: "billing"
-      });
     } else {
       skippedDrivers.push({ id: driver.id, name: driver.name, kms: weekKms, reason: `Under threshold of ${threshold} KM` });
     }
-  });
-  
-  schedulerSettings.lastRunTimestamp = now.toLocaleString();
-  
-  let summaryMessage = "";
-  if (generatedBills.length > 0) {
-    summaryMessage = `Success! Automatically generated ${generatedBills.length} service bills: ` + 
-      generatedBills.map(gb => `${gb.name} (${gb.kms} KM, ₹${gb.amount})`).join(", ");
-  } else {
-    summaryMessage = `Scheduler ran. No drivers exceeded the threshold of ${threshold} KM. (Checked: ${drivers.length} drivers)`;
   }
-  
-  schedulerSettings.logs.unshift({
-    timestamp: now.toLocaleString(),
-    status: generatedBills.length > 0 ? "Success" : "Idle",
-    message: summaryMessage
-  });
-  
-  if (schedulerSettings.logs.length > 30) {
-    schedulerSettings.logs = schedulerSettings.logs.slice(0, 30);
-  }
-  
-  saveDatabase();
-  return {
-    success: true,
-    generatedBills,
-    skippedDrivers,
-    summary: summaryMessage
-  };
+
+  await db("UPDATE scheduler_settings SET last_run_timestamp = ? WHERE id = 1", [nowTs]);
+
+  const summaryMessage = generatedBills.length > 0
+    ? `Generated ${generatedBills.length} bills: ${generatedBills.map(g => `${g.name} (${g.kms} KM, ₹${g.amount})`).join(", ")}`
+    : `Scheduler ran. No drivers exceeded ${threshold} KM. (${drivers.length} drivers checked)`;
+
+  await db(
+    `INSERT INTO scheduler_logs (timestamp, status, message) VALUES (?, ?, ?)`,
+    [nowTs, generatedBills.length > 0 ? "Success" : "Idle", summaryMessage]
+  );
+
+  return { success: true, generatedBills, skippedDrivers, summary: summaryMessage };
 }
 
-// Background scheduler tick every 3 minutes
-setInterval(() => {
-  if (schedulerSettings.enabled) {
-    const lastRunStr = schedulerSettings.lastRunTimestamp;
-    let runRequired = false;
-    if (!lastRunStr) {
-      runRequired = true;
-    } else {
-      const lastRunDate = new Date(lastRunStr);
-      const diffMs = Date.now() - lastRunDate.getTime();
-      // Run every 3 minutes in background
-      if (diffMs > 3 * 60 * 1000) {
-        runRequired = true;
-      }
+app.get("/api/scheduler/settings", async (req, res) => {
+  try {
+    const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
+    const logs = await db("SELECT * FROM scheduler_logs ORDER BY id DESC LIMIT 30");
+    res.json({
+      enabled: !!settings.enabled,
+      mileageThreshold: Number(settings.mileage_threshold),
+      intervalMinutes: Number(settings.interval_minutes),
+      lastRunTimestamp: settings.last_run_timestamp,
+      driverRatePerKm: Number(settings.driver_rate_per_km),
+      logs: logs.map(l => ({ timestamp: l.timestamp, status: l.status, message: l.message })),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.post("/api/scheduler/settings", async (req, res) => {
+  try {
+    const { enabled, mileageThreshold, driverRatePerKm } = req.body;
+    const updates = [];
+    const vals = [];
+    if (enabled !== undefined) { updates.push("enabled = ?"); vals.push(enabled ? 1 : 0); }
+    if (mileageThreshold !== undefined) { updates.push("mileage_threshold = ?"); vals.push(Number(mileageThreshold)); }
+    if (driverRatePerKm !== undefined) { updates.push("driver_rate_per_km = ?"); vals.push(Number(driverRatePerKm)); }
+    if (updates.length) await db(`UPDATE scheduler_settings SET ${updates.join(", ")} WHERE id = 1`, vals);
+    const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
+    res.json({ success: true, settings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.post("/api/scheduler/trigger", async (req, res) => {
+  try {
+    const result = await runBillingScheduler(req.body.mileageThreshold);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Scheduler error" });
+  }
+});
+
+// Background scheduler tick
+setInterval(async () => {
+  try {
+    const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
+    if (!settings || !settings.enabled) return;
+    const lastRun = settings.last_run_timestamp ? new Date(settings.last_run_timestamp) : null;
+    const diffMs = lastRun ? Date.now() - lastRun.getTime() : Infinity;
+    if (diffMs > 3 * 60 * 1000) {
+      console.log("[Scheduler] Running automated billing check...");
+      await runBillingScheduler();
     }
-    
-    if (runRequired) {
-      console.log("[Scheduler] Triggering automated weekly billing checks...");
-      runBillingScheduler();
-    }
+  } catch (err) {
+    console.error("[Scheduler Error]", err.message);
   }
 }, 60000);
 
-// API Routes for Scheduler
-app.get("/api/scheduler/settings", (req, res) => {
-  res.json(schedulerSettings);
-});
-
-app.post("/api/scheduler/settings", (req, res) => {
-  const { enabled, mileageThreshold, driverRatePerKm } = req.body;
-  if (enabled !== undefined) schedulerSettings.enabled = !!enabled;
-  if (mileageThreshold !== undefined) schedulerSettings.mileageThreshold = Number(mileageThreshold);
-  if (driverRatePerKm !== undefined) schedulerSettings.driverRatePerKm = Number(driverRatePerKm);
-  saveDatabase();
-  res.json({ success: true, settings: schedulerSettings });
-});
-
-app.post("/api/scheduler/trigger", (req, res) => {
-  const { mileageThreshold } = req.body;
-  const result = runBillingScheduler(mileageThreshold);
-  res.json(result);
-});
-
-// Notifications
-app.get("/api/notifications", (req, res) => {
-  res.json(notifications);
-});
-
-app.post("/api/notifications/read", (req, res) => {
-  notifications = notifications.map((n) => ({ ...n, unread: false }));
-  saveDatabase();
-  res.json({ success: true });
-});
-
-// Cities management API
-app.get("/api/cities", (req, res) => {
-  res.json(cities);
-});
-
-app.post("/api/cities", (req, res) => {
-  const { name, zone, rate, activeAutos } = req.body;
-  const newCity = {
-    id: `city_${Date.now()}`,
-    name: name || "New City",
-    zone: zone || "General Zone",
-    rate: Number(rate) || 15,
-    activeAutos: Number(activeAutos) || 50,
-  };
-  cities.push(newCity);
-  saveDatabase();
-  res.status(201).json(newCity);
-});
-
-app.delete("/api/cities/:id", (req, res) => {
-  const { id } = req.params;
-  const index = cities.findIndex((c) => c.id === id);
-  if (index !== -1) {
-    const deleted = cities.splice(index, 1)[0];
-    saveDatabase();
-    res.json({ success: true, deleted });
-  } else {
-    res.status(404).json({ error: "City not found" });
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+app.get("/api/notifications", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100");
+    res.json(rows.map(r => ({
+      id: r.id, title: r.title, message: r.message,
+      timestamp: r.timestamp, unread: !!r.unread, type: r.type,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 });
 
-// AI Assistant
+app.post("/api/notifications/read", async (req, res) => {
+  try {
+    await db("UPDATE notifications SET unread = 0");
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ─── CITIES ───────────────────────────────────────────────────────────────────
+app.get("/api/cities", async (req, res) => {
+  try {
+    const rows = await db("SELECT * FROM cities ORDER BY name ASC");
+    res.json(rows.map(r => ({
+      id: r.id, name: r.name, zone: r.zone,
+      rate: Number(r.rate), activeAutos: r.active_autos,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.post("/api/cities", async (req, res) => {
+  try {
+    const { name, zone, rate, activeAutos } = req.body;
+    const id = uid("city");
+    await db(
+      "INSERT INTO cities (id, name, zone, rate, active_autos) VALUES (?, ?, ?, ?, ?)",
+      [id, name || "New City", zone || "General Zone", Number(rate) || 15, Number(activeAutos) || 50]
+    );
+    const [newCity] = await db("SELECT * FROM cities WHERE id = ?", [id]);
+    res.status(201).json({ id: newCity.id, name: newCity.name, zone: newCity.zone, rate: Number(newCity.rate), activeAutos: newCity.active_autos });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/api/cities/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [city] = await db("SELECT * FROM cities WHERE id = ?", [id]);
+    if (!city) return res.status(404).json({ error: "City not found" });
+    await db("DELETE FROM cities WHERE id = ?", [id]);
+    res.json({ success: true, deleted: city });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ─── AI ENDPOINTS (Claude) ────────────────────────────────────────────────────
+const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
+
 app.post("/api/gemini/chat", async (req, res) => {
   const { messages } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Messages array is required" });
   }
 
-  if (!ai) {
-    return res.status(503).json({
-      reply: "The Gemini AI Client is initializing. Please verify that your `GEMINI_API_KEY` is configured in the Secrets panel on the top right. Here is a simulated, helpful advice: For North Kolkata, we recommend at least 35 autos to achieve effective hyperlocal coverage (budget ₹2,20,000, expected reach 1.2 Million impressions).",
+  if (!claude) {
+    return res.json({
+      reply: "AI Assistant is initializing. Please ensure ANTHROPIC_API_KEY is set in your .env file. Quick estimate: For North Kolkata, recommend 35 autos for 30 days = ₹2,20,000 budget, ~42M impressions.",
     });
   }
 
   try {
-    const userPrompt = messages[messages.length - 1].text;
+    const campaigns = await db("SELECT title, status, budget, autos_count city, kms_covered, qr_scans FROM campaigns");
+    const [driverStats] = await db("SELECT COUNT(*) as total, SUM(CASE WHEN state != 'offline' THEN 1 ELSE 0 END) as online, SUM(CASE WHEN current_campaign_id IS NOT NULL THEN 1 ELSE 0 END) as active FROM drivers");
 
-    // Create a context-rich prompt inject
-    const systemInstruction = `You are the AutoAdz AI Assistant, the intelligent heart of India's leading auto-rickshaw transit advertising platform.
-You are helping advertisers, drivers, and admins maximize marketing ROI and driver earnings.
-Keep responses incredibly actionable, friendly, and structured. Use bullet points and simple headers where appropriate.
-If asked about calculations, perform them mathematically.
-Here is the current live data in the database:
-- Campaigns list: ${JSON.stringify(campaigns.map(c => ({ title: c.title, status: c.status, budget: c.budget, autos: c.autosCount, city: c.city, kms: c.kmsCovered, scans: c.qrScans })))}
-- Drivers summary: Total registered: ${drivers.length}. Online right now: ${drivers.filter(d => d.state !== "offline").length}. Active Campaign-linked: ${drivers.filter(d => d.currentCampaignId).length}.
-- Performance: Average conversion rate from QR scans is 3.4%. Average daily travel of an auto is 85-110 KM, which generates roughly 40,000 eye-level impressions daily in dense Indian tier-1/tier-2 cities.
+    const systemPrompt = `You are the AutoAdz AI Assistant for India's leading auto-rickshaw transit advertising platform.
+Help advertisers, drivers, and admins maximize ROI. Be actionable and friendly.
 
-Capabilities to cover:
-1. Suggest optimal number of autos based on target locations (e.g., "How many autos are needed for North Kolkata?"). North Kolkata is a highly congested commercial and historic hub; recommend 30-45 autos with a budget of ₹1.8L-2.5L for premium visibility.
-2. Predict campaign reach. (Formula: number of autos * days * 40,000 daily impressions).
-3. Analyze QR scan performance (calculate average scans per active vehicle, CTR prediction).
-4. Act as support chatbot for drivers or advertisers.
-Do not use markdown blocks for entire replies, just structure nicely with normal formatting. Let's make it look pristine.`;
+Current live data:
+- Campaigns: ${JSON.stringify(campaigns.map(c => ({ title: c.title, status: c.status, budget: c.budget, autos: c.autos_count, city: c.city, kms: c.kms_covered, scans: c.qr_scans })))}
+- Drivers: Total: ${driverStats.total}, Online: ${driverStats.online}, Campaign-linked: ${driverStats.active}
+- Performance: Avg QR CTR 3.4%, avg auto travels 85-110 KM/day = ~40,000 daily impressions in tier-1 cities.
 
-    const chatSession = ai.chats.create({
-      model: "gemini-3.5-flash",
-      config: {
-        systemInstruction,
-      },
+Capabilities:
+1. Suggest auto counts by location (North Kolkata: 30-45 autos, ₹1.8L-2.5L)
+2. Predict reach: autos × days × 40,000 impressions
+3. Analyze QR scan performance
+4. Support for drivers and advertisers
+Keep responses concise and well-structured. No markdown code blocks.`;
+
+    const claudeMessages = messages.map((m, i) => ({
+      role: i % 2 === 0 ? "user" : "assistant",
+      content: m.text || m.content || "",
+    })).filter(m => m.content);
+
+    if (claudeMessages.length === 0 || claudeMessages[claudeMessages.length - 1].role !== "user") {
+      claudeMessages.push({ role: "user", content: messages[messages.length - 1]?.text || "Hello" });
+    }
+
+    const response = await claude.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: claudeMessages,
     });
 
-    // Send the last message
-    const result = await chatSession.sendMessage({ message: userPrompt });
-    const replyText = result.text || "I apologize, but I couldn't compute an answer. Please check back shortly.";
-
+    const replyText = response.content[0]?.text || "I could not generate a response. Please try again.";
     res.json({ reply: replyText });
-  } catch (error) {
-    console.error("Gemini API Error:", error);
+  } catch (err) {
+    console.error("Claude Chat Error:", err);
     res.status(500).json({
       error: "AI Generation Failed",
-      reply: "My servers are feeling a bit congested right now. Here is a quick estimate: To cover North Kolkata properly, you would need roughly 35 autos running for 30 days to cover Salt Lake, Shyambazar, and Hatibagan, yielding approximately 37.8 Million impressions at a CPM of ₹5.5.",
+      reply: "AI is temporarily unavailable. Quick estimate: 35 autos × 30 days × 40,000 impressions = 42M total reach at ~₹5.2 CPM for North Kolkata.",
     });
   }
 });
 
-// AI Campaign Advisor API
 app.post("/api/gemini/advisor", async (req, res) => {
   const { niche, city } = req.body;
   const targetNiche = niche || "dental clinic";
   const targetCity = city || "Kolkata";
 
-  if (!ai) {
-    // Generate realistic fallback response
-    const zones = targetCity.toLowerCase().includes("kolkata") 
-      ? "Gariahat Crossing, Salt Lake Sector V, Shyambazar Five-Point Crossing, Howrah Station approach road, and Tollywood Metro zone."
-      : targetCity.toLowerCase().includes("delhi")
-      ? "Connaught Place circles, South Extension Market, Karol Bagh commercial hub, Noida Sector 18, and Dwarka Sector 10 transit route."
-      : "Central Business District, high-traffic metro hubs, primary market lanes, and dense residential connector corridors.";
-      
+  if (!claude) {
     const autosCount = targetNiche.toLowerCase().includes("dental") || targetNiche.toLowerCase().includes("clinic") ? 30 : 45;
-    const duration = 30;
-    const budget = autosCount * duration * 250; // ₹250 per auto per day approx
-    const impressions = autosCount * duration * 40000;
-
+    const budget = autosCount * 30 * 250;
     return res.json({
       success: true,
-      niche: targetNiche,
-      city: targetCity,
       advisorReport: {
-        niche: targetNiche,
-        city: targetCity,
-        recommendedAutos: autosCount,
-        recommendedDuration: `${duration} Days`,
-        recommendedBudget: budget,
-        estimatedImpressions: impressions.toLocaleString("en-IN"),
-        targetZones: zones,
-        marketingTip: `For a ${targetNiche} in ${targetCity}, place highly legible contrast layouts on the auto hood and a back panel QR Code. Auto drivers standing near prominent medical hubs and commercial markets will act as stationary referral banners during peak evening hours.`
-      }
+        niche: targetNiche, city: targetCity, recommendedAutos: autosCount,
+        recommendedDuration: "30 Days", recommendedBudget: budget,
+        estimatedImpressions: (autosCount * 30 * 40000).toLocaleString("en-IN"),
+        targetZones: "Central Business District, high-traffic metro hubs, primary market lanes",
+        marketingTip: `For a ${targetNiche} in ${targetCity}, use high-contrast layouts on auto hoods with QR codes.`,
+      },
     });
   }
 
   try {
-    const prompt = `You are the AutoAdz AI Advisor. Generate a highly strategic hyperlocal transit campaign advisor report in JSON format.
+    const response = await claude.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 512,
+      messages: [{
+        role: "user",
+        content: `You are the AutoAdz AI Advisor for India's auto-rickshaw advertising platform. Generate a hyperlocal campaign report.
 Niche: ${targetNiche}
 City: ${targetCity}
 
-You must return EXACTLY a JSON object with this exact schema (no markdown, no code block backticks):
+Return ONLY a valid JSON object with exactly these fields (no markdown, no explanation):
 {
   "niche": "string",
   "city": "string",
@@ -1101,151 +801,86 @@ You must return EXACTLY a JSON object with this exact schema (no markdown, no co
   "estimatedImpressions": "string",
   "targetZones": "string",
   "marketingTip": "string"
-}`;
-
-    const result = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
+}`,
+      }],
     });
 
-    const replyText = result.text || "{}";
-    const reportData = JSON.parse(replyText.trim());
+    const text = response.content[0]?.text || "{}";
+    const reportData = JSON.parse(text.trim());
     res.json({ success: true, advisorReport: reportData });
   } catch (err) {
-    console.error("Gemini Advisor Error:", err);
+    console.error("Claude Advisor Error:", err);
     res.status(500).json({ error: "AI Generation failed" });
   }
 });
 
-// AI Ad Creative Generator API
 app.post("/api/gemini/generator", async (req, res) => {
   const { niche, creativeType } = req.body;
   const targetNiche = niche || "restaurant";
-  const type = creativeType || "headline"; // headline, tagline, qr
+  const type = creativeType || "headline";
 
-  if (!ai) {
-    // Return gorgeous fallback options
-    let suggestions = [];
-    if (type === "headline") {
-      suggestions = [
-        `Craving some tasty bite? Stop driving, start eating at ${targetNiche}!`,
-        `Your neighborhood's favorite ${targetNiche} is just 2 KM away!`,
-        `Hungry? Scan this Auto's back to unlock 20% off at our food counter!`,
-        `Fresh, warm, and authentic. Welcome to the ultimate ${targetNiche} experience.`,
-        `Don't cook tonight! We are delivering hot meals to your doorstep.`
-      ];
-    } else if (type === "tagline") {
-      suggestions = [
-        `Taste the tradition, feel the love.`,
-        `Good food, great mood, quick auto rides.`,
-        `Savor every second, scan for every bite.`,
-        `Hyperefficient meals for hyperactive lives.`,
-        `Your pocket-friendly local flavor hub.`
-      ];
-    } else {
-      suggestions = [
-        `Scan this QR to download our digital menu card & book a table in 10 seconds!`,
-        `Scan to claim an instant free dessert with your first diner bill.`,
-        `A GPS-tracked Auto exclusive: Scan for a personalized route-based discount code!`,
-        `Scan to follow our Instagram reels page and win weekly free meals!`,
-        `QR-Activated: Scan to claim standard 15% discount on checkout.`
-      ];
-    }
-
-    return res.json({
-      success: true,
-      niche: targetNiche,
-      creativeType: type,
-      suggestions
-    });
+  if (!claude) {
+    const fallbacks = {
+      headline: [`Your neighborhood ${targetNiche} is just 2 KM away!`, `Scan this auto for 20% off at ${targetNiche}!`, `Fresh, warm, authentic. Welcome to ${targetNiche}.`, `Don't cook tonight! Hot meals from ${targetNiche}.`, `The city's favorite ${targetNiche} — scan to discover!`],
+      tagline: ["Taste the tradition, feel the love.", "Good food, great mood, quick auto rides.", "Savor every second, scan for every bite.", "Hyperefficient meals for hyperactive lives.", "Your pocket-friendly local flavor hub."],
+      qr: ["Scan to download our menu & book in 10 seconds!", "Scan to claim a free dessert on your first visit!", "Scan for an exclusive auto-passenger discount code!", "Scan to follow us and win weekly free meals!", "Scan to claim 15% off at checkout."],
+    };
+    return res.json({ success: true, niche: targetNiche, creativeType: type, suggestions: fallbacks[type] || fallbacks.headline });
   }
 
   try {
-    const prompt = `You are a professional copywriter for AutoAdz auto-rickshaw marketing.
-Generate exactly 5 short, extremely catchy and high-conversion campaign ${type} concepts for a ${targetNiche} business.
-Format your response as a simple JSON string array of 5 elements, with no additional commentary, markdowns or code block wrapping.
-Example: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]`;
-
-    const result = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
+    const response = await claude.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 512,
+      messages: [{
+        role: "user",
+        content: `You are a copywriter for AutoAdz auto-rickshaw transit advertising in India.
+Generate exactly 5 short, catchy, high-conversion campaign ${type} concepts for a ${targetNiche} business.
+Return ONLY a JSON array of 5 strings, no markdown, no extra text.
+Example: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]`,
+      }],
     });
 
-    const replyText = result.text || "[]";
-    const suggestions = JSON.parse(replyText.trim());
+    const text = response.content[0]?.text || "[]";
+    const suggestions = JSON.parse(text.trim());
     res.json({ success: true, niche: targetNiche, creativeType: type, suggestions });
   } catch (err) {
-    console.error("Gemini Creative Gen Error:", err);
+    console.error("Claude Creative Error:", err);
     res.status(500).json({ error: "Creative Generation failed" });
   }
 });
 
-// Proxy route to send real WhatsApp notifications via WhatsApp Cloud API
+// ─── WHATSAPP ─────────────────────────────────────────────────────────────────
 app.post("/api/whatsapp/send", async (req, res) => {
   const { token, phoneId, recipient, message } = req.body;
   if (!token || !phoneId || !recipient || !message) {
-    return res.status(400).json({ error: "Missing required fields for sending WhatsApp" });
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // Format recipient number (add country code if needed)
   let formattedRecipient = recipient.replace(/\D/g, "");
-  if (formattedRecipient.length === 10) {
-    formattedRecipient = `91${formattedRecipient}`; // Default to India country code
-  }
+  if (formattedRecipient.length === 10) formattedRecipient = `91${formattedRecipient}`;
 
-  const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
   try {
-    const response = await fetch(url, {
+    const response = await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: formattedRecipient,
-        type: "text",
-        text: {
-          body: message
-        }
-      })
+        messaging_product: "whatsapp", recipient_type: "individual",
+        to: formattedRecipient, type: "text", text: { body: message },
+      }),
     });
-
     const data = await response.json();
     if (!response.ok) {
-      console.error("WhatsApp API error response:", data);
-      let errorString = "WhatsApp API rejected the request";
-      if (data.error) {
-        if (typeof data.error === "string") {
-          errorString = data.error;
-        } else if (typeof data.error === "object" && data.error.message) {
-          errorString = `${data.error.message} (Code: ${data.error.code || 'unknown'})`;
-        } else {
-          errorString = JSON.stringify(data.error);
-        }
-      }
-      return res.status(response.status).json({
-        success: false,
-        error: errorString,
-        details: data
-      });
+      const errMsg = data.error?.message ? `${data.error.message} (Code: ${data.error.code})` : JSON.stringify(data.error);
+      return res.status(response.status).json({ success: false, error: errMsg, details: data });
     }
-
     return res.json({ success: true, response: data });
-  } catch (error) {
-    console.error("Error calling WhatsApp Cloud API:", error);
-    return res.status(500).json({ success: false, error: error.message });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Helper to render beautiful compliance pages
+// ─── LEGAL PAGES ──────────────────────────────────────────────────────────────
 function renderLegalPage(title, activeTab, contentHtml) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1253,59 +888,36 @@ function renderLegalPage(title, activeTab, contentHtml) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title} - AutoAdz Legal Compliance</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
-    <!-- Navbar Header -->
     <header class="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-30 shadow-xs">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <div class="bg-[#0B1F4D] text-[#FF9800] p-1.5 rounded-lg font-extrabold text-sm tracking-wide">
-                    AA
-                </div>
+                <div class="bg-[#0B1F4D] text-[#FF9800] p-1.5 rounded-lg font-extrabold text-sm tracking-wide">AA</div>
                 <div>
                     <h1 class="font-bold text-sm text-[#0B1F4D] tracking-tight">AutoAdz Legal & Compliance Hub</h1>
                     <p class="text-[9px] text-slate-400 font-mono">Managed by M/s Deinrim Solutionss (P) ltd.</p>
                 </div>
             </div>
             <div class="flex gap-4 text-xs font-semibold">
-                <a href="/privacy" class="hover:text-[#FF9800] transition ${activeTab === 'privacy' ? 'text-[#0B1F4D] underline font-bold' : 'text-slate-600'}">Privacy</a>
-                <a href="/terms" class="hover:text-[#FF9800] transition ${activeTab === 'terms' ? 'text-[#0B1F4D] underline font-bold' : 'text-slate-600'}">Terms</a>
-                <a href="/support" class="hover:text-[#FF9800] transition ${activeTab === 'support' ? 'text-[#0B1F4D] underline font-bold' : 'text-slate-600'}">Support</a>
-                <a href="/deletion" class="hover:text-red-500 transition ${activeTab === 'deletion' ? 'text-red-600 underline font-bold' : 'text-slate-600'}">Data Deletion</a>
+                <a href="/privacy" class="hover:text-[#FF9800] transition ${activeTab === "privacy" ? "text-[#0B1F4D] underline font-bold" : "text-slate-600"}">Privacy</a>
+                <a href="/terms" class="hover:text-[#FF9800] transition ${activeTab === "terms" ? "text-[#0B1F4D] underline font-bold" : "text-slate-600"}">Terms</a>
+                <a href="/support" class="hover:text-[#FF9800] transition ${activeTab === "support" ? "text-[#0B1F4D] underline font-bold" : "text-slate-600"}">Support</a>
+                <a href="/deletion" class="hover:text-red-500 transition ${activeTab === "deletion" ? "text-red-600 underline font-bold" : "text-slate-600"}">Data Deletion</a>
             </div>
         </div>
     </header>
-
-    <!-- Main Content Area -->
-    <main class="flex-1 max-w-3xl w-full mx-auto p-6 my-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
-        ${contentHtml}
-    </main>
-
-    <!-- Footer -->
+    <main class="flex-1 max-w-3xl w-full mx-auto p-6 my-8 bg-white border border-slate-200 rounded-3xl shadow-sm">${contentHtml}</main>
     <footer class="bg-[#0B1F4D] text-slate-400 py-8 px-6 text-xs font-mono mt-auto">
         <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <h5 class="font-bold text-white uppercase text-[11px] mb-2 tracking-wider">OPERATOR & DEVELOPER</h5>
-                <p class="leading-relaxed text-[11px]">
-                    <b>M/s Deinrim Solutionss (P) ltd.</b><br>
-                    Kolkata, West Bengal (WB), India<br>
-                    Corporate Hotline: +91 98361-30393<br>
-                    Email: support@deinrimsolutions.com
-                </p>
+                <p class="leading-relaxed text-[11px]">M/s Deinrim Solutionss (P) ltd.<br>Kolkata, West Bengal (WB), India<br>Hotline: +91 98361-30393<br>Email: support@deinrimsolutions.com</p>
             </div>
             <div class="text-left md:text-right">
-                <h5 class="font-bold text-white uppercase text-[11px] mb-2 tracking-wider">REGULATORY STATEMENT</h5>
-                <p class="leading-relaxed text-[11px]">
-                    This public endpoint serves as the official Google Developer Console and Apple App Store verification page. All database elements are hosted securely and comply with worldwide location privacy policies.
-                </p>
                 <p class="text-[9px] text-slate-500 mt-2">© 2026 M/s Deinrim Solutionss (P) ltd. All rights reserved.</p>
             </div>
         </div>
@@ -1314,221 +926,107 @@ function renderLegalPage(title, activeTab, contentHtml) {
 </html>`;
 }
 
-// 1. Privacy Policy Endpoint
 app.get("/privacy", (req, res) => {
-  const content = `
+  res.send(renderLegalPage("Privacy Policy", "privacy", `
     <div class="space-y-4">
-        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">PUBLIC COMPLIANCE PORTAL</span>
-        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Privacy Policy & Location Consent</h2>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D]">Privacy Policy & Location Consent</h2>
         <p class="text-xs text-slate-500 font-mono">Last Updated: June 25, 2026</p>
         <hr class="border-slate-100 my-4" />
-        
         <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
-            <p>
-                This Privacy Policy governs the use of the **AutoAdz** software application ("Application") for mobile devices that was created and is operated by **M/s Deinrim Solutionss (P) ltd.** based in Kolkata, West Bengal (WB), India.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">1. Background Location Collection & Tracking</h3>
+            <p>This Privacy Policy governs the AutoAdz application operated by M/s Deinrim Solutionss (P) ltd., Kolkata, West Bengal, India.</p>
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase">1. Background Location Tracking</h3>
             <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-900 text-xs space-y-2">
-                <p class="font-bold">🚨 CRITICAL LOCATION USAGE COMPLIANCE NOTICE:</p>
-                <p>
-                    To allocate advertising mileage payouts fairly and verify active campaign runs, AutoAdz tracks and collects the physical coordinates (GPS telemetry data) of registered auto-rickshaw driver partners.
-                </p>
-                <p>
-                    <b>Background Permission:</b> This collection runs **exclusively** while the driver's telemetry meter is toggled "Active". It runs in the background even if the application is closed or minimized, allowing drivers to lock their screen while driving and still log their route correctly. 
-                </p>
-                <p>
-                    No location tracking is performed when the driver is "Offline".
-                </p>
+                <p class="font-bold">CRITICAL LOCATION USAGE NOTICE:</p>
+                <p>AutoAdz tracks GPS coordinates of registered auto-rickshaw driver partners to allocate advertising mileage payouts. Tracking runs exclusively while the driver's telemetry meter is toggled Active, including in the background. No tracking occurs when the driver is Offline.</p>
             </div>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">2. Camera & Photo Captures</h3>
-            <p>
-                The Application requests access to the physical device camera solely for drivers to photograph and upload "Campaign Proof of Installation" (rear poster sticker) and submit it for visual verification audits. These photos are transmitted securely and are visible only to platform admins.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">3. Information Collected & Saved</h3>
-            <ul class="list-disc pl-4 space-y-1">
-                <li><b>User Profile Information:</b> Full Name, Verified Mobile Number, City of Operation, Vehicle Number Plate, and Bank account credentials for payouts.</li>
-                <li><b>Telemetry Log History:</b> Distance covered in kilometers, speed indicators, latitude/longitude mapping, and timestamp records.</li>
-            </ul>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">4. Data Sharing & Security</h3>
-            <p>
-                We do not sell, rent, or trade driver location paths or personal identities to third-party brokers. Aggregate telemetry stats (e.g. "Campaign covered 2,500 KM in Kolkata South Zone") are shared with the linked Advertiser to calculate their return on ad spend.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">5. Contact Information</h3>
-            <p>
-                For any queries or compliance concerns regarding location coordinates or data encryption:
-                <br><b>M/s Deinrim Solutionss (P) ltd.</b>
-                <br>Kolkata, WB, India
-                <br>Corporate Hotline: <b>+91 98361-30393</b>
-                <br>Email: <b>support@deinrimsolutions.com</b>
-            </p>
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase">2. Camera & Photos</h3>
+            <p>Camera access is used solely for drivers to upload Campaign Proof of Installation photos for admin verification.</p>
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase">3. Contact</h3>
+            <p>M/s Deinrim Solutionss (P) ltd., Kolkata, WB, India. Hotline: +91 98361-30393. Email: support@deinrimsolutions.com</p>
         </div>
-    </div>
-  `;
-  res.send(renderLegalPage("Privacy Policy & Background Location", "privacy", content));
+    </div>`));
 });
 
-// 2. Terms of Service Endpoint
 app.get("/terms", (req, res) => {
-  const content = `
+  res.send(renderLegalPage("Terms of Service", "terms", `
     <div class="space-y-4">
-        <span class="text-[10px] bg-blue-100 text-blue-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">LEGAL CONTRACT</span>
-        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Terms of Service Agreement</h2>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D]">Terms of Service Agreement</h2>
         <p class="text-xs text-slate-500 font-mono">Last Updated: June 25, 2026</p>
         <hr class="border-slate-100 my-4" />
-        
         <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
-            <p>
-                By registering an account with AutoAdz (either as an Advertiser or an Auto-Rickshaw Driver), you agree to comply with the terms set forth by **M/s Deinrim Solutionss (P) ltd.**, corporate office based in Kolkata, WB.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">1. Accurate Vehicle Details</h3>
-            <p>
-                Drivers must register their own, legal, commercially-registered auto-rickshaw with matching vehicle plate numbers. Banners/vinyl stickers provided by AutoAdz must be securely mounted on the designated rear frame of the auto-rickshaw and kept clean.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">2. Anti-Fraud & Telemetry Integrity</h3>
-            <p>
-                Drivers must run the telemetry tracker on real, physical journeys on public roads. Attempting to use GPS simulation software, virtual machine mock locations, or duplicate phone accounts to artificially inflate kilometers is strictly forbidden. AutoAdz employs automated pattern recognition algorithms to detect mock location drivers. Accounts caught spoofing are immediately banned, and all wallet funds will be permanently forfeited.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">3. Advertiser Campaigns & Budgets</h3>
-            <p>
-                Advertisers fund campaign wallets with advance budgets. AutoAdz manages the printing, allocation, and delivery tracking. Advertiser accounts are bound to verify proof of driver installations in their respective dashboards.
-            </p>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">4. Jurisdiction & Legal Dispute</h3>
-            <p>
-                These terms are governed by the laws of India. Any litigation, dispute, or collection recovery proceeding arising out of or related to this platform shall be subject to the exclusive jurisdiction of the courts of **Kolkata, West Bengal, India**.
-            </p>
+            <p>By registering with AutoAdz you agree to the terms set by M/s Deinrim Solutionss (P) ltd., Kolkata, WB.</p>
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase">1. Accurate Vehicle Details</h3>
+            <p>Drivers must register legally-registered auto-rickshaws with matching plate numbers.</p>
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase">2. Anti-Fraud & Telemetry Integrity</h3>
+            <p>GPS simulation or mock location use is strictly forbidden and results in permanent ban with wallet forfeiture.</p>
+            <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase">3. Jurisdiction</h3>
+            <p>Disputes are subject to exclusive jurisdiction of courts in Kolkata, West Bengal, India.</p>
         </div>
-    </div>
-  `;
-  res.send(renderLegalPage("Terms of Service Agreement", "terms", content));
+    </div>`));
 });
 
-// 3. Support Endpoint
 app.get("/support", (req, res) => {
-  const content = `
+  res.send(renderLegalPage("Support", "support", `
     <div class="space-y-4">
-        <span class="text-[10px] bg-orange-100 text-orange-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">DEVELOPER CONSOLE REQUIRED ENDPOINT</span>
-        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Developer Support & Contacts Desk</h2>
-        <p class="text-xs text-slate-500 font-mono">Direct Support Gateway</p>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D]">Developer Support & Contacts Desk</h2>
         <hr class="border-slate-100 my-4" />
-        
-        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
-            <p>
-                Need assistance, have hardware/GPS tracking problems, or require official verification certificates for your Google Play Console / App Store listing? Our developer support engineering desk is open 6 days a week.
-            </p>
-
-            <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-3">
-                <h4 class="font-bold text-sm text-[#0B1F4D]">M/s Deinrim Solutionss (P) ltd.</h4>
-                <div class="space-y-2 font-sans text-xs">
-                    <p>📞 <b>Helpline Hotline:</b> +91 98361-30393</p>
-                    <p>✉️ <b>Support Email:</b> support@deinrimsolutions.com</p>
-                    <p>📍 <b>Corporate Address:</b> Kolkata, West Bengal (WB), India</p>
-                </div>
-            </div>
-
-            <h3 class="font-extrabold text-sm text-[#0B1F4D] mt-4 uppercase tracking-wide">Frequently Answered Queries</h3>
-            <div class="space-y-3">
-                <div class="border-l-4 border-[#FF9800] pl-3">
-                    <h4 class="font-bold text-slate-900">How do I verify sticker installation?</h4>
-                    <p class="text-slate-600 mt-1">
-                        Once the physical vinyl sticker is applied, log into the Driver Panel, select your linked Campaign, click "Verify QR", and scan the sticker's unique QR code. Alternatively, submit a back panel photo in the Proof tab.
-                    </p>
-                </div>
-                <div class="border-l-4 border-[#FF9800] pl-3">
-                    <h4 class="font-bold text-slate-900">Why did my location stop tracking?</h4>
-                    <p class="text-slate-600 mt-1">
-                        Please ensure that the AutoAdz app has been granted "Allow all the time" location permissions in your Android or iOS settings, and make sure that Battery Optimization is disabled for AutoAdz.
-                    </p>
-                </div>
-            </div>
+        <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-3">
+            <h4 class="font-bold text-sm text-[#0B1F4D]">M/s Deinrim Solutionss (P) ltd.</h4>
+            <p class="text-xs">📞 +91 98361-30393</p>
+            <p class="text-xs">✉️ support@deinrimsolutions.com</p>
+            <p class="text-xs">📍 Kolkata, West Bengal, India</p>
         </div>
-    </div>
-  `;
-  res.send(renderLegalPage("Developer Support & Contacts Desk", "support", content));
+    </div>`));
 });
 
-// 4. Data Deletion Endpoint
 app.get("/deletion", (req, res) => {
-  const content = `
+  res.send(renderLegalPage("Data Deletion", "deletion", `
     <div class="space-y-4">
-        <span class="text-[10px] bg-red-100 text-red-800 font-extrabold px-2 py-0.5 rounded font-mono uppercase tracking-wider">REGULATORY PRIVACY RIGHT</span>
-        <h2 class="text-xl font-extrabold text-[#0B1F4D] tracking-tight">Driver Data Deletion & Account Erasure</h2>
-        <p class="text-xs text-slate-500 font-mono">Request Deletion online under Google Play Developer Policy</p>
+        <h2 class="text-xl font-extrabold text-[#0B1F4D]">Driver Data Deletion & Account Erasure</h2>
         <hr class="border-slate-100 my-4" />
-        
-        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
-            <p>
-                In compliance with the Google Play Developer Console requirement for data deletion paths, registered users can submit a request here to purge their telemetry history, photos, and linked account data from our cloud servers.
-            </p>
-
-            <div class="bg-red-50 border border-red-200 text-red-900 p-4 rounded-xl space-y-1">
-                <h4 class="font-bold text-xs uppercase tracking-wide">⚠️ Irreversible Data Erasure Alert:</h4>
-                <p>
-                    Account erasure will delete your registered mobile number, background GPS telemetry logs, payout wallet balances, and campaign linkages. This action cannot be undone.
-                </p>
-            </div>
-
-            <!-- Submission Form -->
-            <div class="border border-slate-200 p-5 rounded-2xl bg-slate-50 space-y-4">
-                <h3 class="font-extrabold text-sm text-[#0B1F4D] uppercase tracking-wide">Submit Online Erasure Request</h3>
-                
-                <form id="public-deletion-form" class="space-y-3">
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-bold uppercase tracking-wide text-slate-600">Registered Mobile Number</label>
-                        <input type="tel" id="pub-phone" required placeholder="e.g. +91 98361-30393" class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-red-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-bold uppercase tracking-wide text-slate-600">Reason for leaving (Optional)</label>
-                        <textarea id="pub-reason" rows="2" placeholder="Help us understand your feedback..." class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-red-500"></textarea>
-                    </div>
-                    <div class="flex items-start gap-2 py-1">
-                        <input type="checkbox" id="pub-ack" required class="mt-0.5 rounded text-red-500">
-                        <label for="pub-ack" class="text-[10px] text-slate-500 select-none cursor-pointer">
-                            I confirm that I want to completely erase my active driver telemetry records and acknowledge that all unpaid earnings will be forfeited permanently.
-                        </label>
-                    </div>
-                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition">
-                        SUBMIT DATA PURGE REQUEST
-                    </button>
-                </form>
-
-                <div id="deletion-success" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-center space-y-2">
-                    <h5 class="font-bold text-sm">✓ Erasure Request Safely Received</h5>
-                    <p class="text-[11px] text-slate-600 leading-normal">
-                        We have successfully queued your account data for erasure. Our DPO officer at <b>M/s Deinrim Solutionss (P) ltd.</b> will contact you via SMS within 7 working days to finalize verification.
-                    </p>
+        <div class="bg-red-50 border border-red-200 text-red-900 p-4 rounded-xl text-xs">
+            <p class="font-bold">⚠️ Irreversible: Account erasure deletes all GPS logs, wallet balances, and campaign linkages.</p>
+        </div>
+        <div class="border border-slate-200 p-5 rounded-2xl bg-slate-50 space-y-4">
+            <form id="deletion-form" class="space-y-3">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-bold uppercase text-slate-600">Registered Mobile Number</label>
+                    <input type="tel" id="pub-phone" required placeholder="e.g. +91 98361-30393" class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-mono">
                 </div>
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" id="pub-ack" required class="mt-0.5">
+                    <label for="pub-ack" class="text-[10px] text-slate-500">I confirm erasure of all my data and acknowledge unpaid earnings will be forfeited.</label>
+                </div>
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs uppercase">SUBMIT DATA PURGE REQUEST</button>
+            </form>
+            <div id="deletion-success" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-center">
+                <h5 class="font-bold text-sm">✓ Erasure Request Received</h5>
+                <p class="text-[11px] mt-1">Our DPO will contact you via SMS within 7 working days.</p>
             </div>
         </div>
-
         <script>
-            document.getElementById('public-deletion-form').addEventListener('submit', function(e) {
+            document.getElementById('deletion-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                const phone = document.getElementById('pub-phone').value;
-                if(!phone) {
-                    alert('Please provide a valid registered phone number.');
-                    return;
-                }
-                // Show feedback success
-                document.getElementById('public-deletion-form').classList.add('hidden');
+                if(!document.getElementById('pub-phone').value) { alert('Please provide a phone number.'); return; }
+                document.getElementById('deletion-form').classList.add('hidden');
                 document.getElementById('deletion-success').classList.remove('hidden');
             });
         </script>
-    </div>
-  `;
-  res.send(renderLegalPage("Driver Data Deletion Request", "deletion", content));
+    </div>`));
 });
 
-// START EXPRESS SERVER WITH VITE INTEGRATION
+// ─── SERVER START ─────────────────────────────────────────────────────────────
 async function startServer() {
+  // Test DB connection
+  try {
+    await db("SELECT 1");
+    console.log("✅ MySQL connected successfully");
+  } catch (err) {
+    console.error("❌ MySQL connection failed:", err.message);
+    console.error("Please check your .env DB credentials and ensure the database exists.");
+    process.exit(1);
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -1544,7 +1042,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`AutoAdz full-stack server running on http://0.0.0.0:${PORT}`);
+    console.log(`🚀 AutoAdz server running on http://0.0.0.0:${PORT}`);
   });
 }
 
