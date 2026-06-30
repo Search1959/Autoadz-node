@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import AiAssistant from "./components/AiAssistant";
 import LegalModal from "./components/LegalModal";
+import RouteMap from "./components/RouteMap";
+import { exportCampaignPDF } from "./components/CampaignPDF";
 
 export default function App() {
   // Simulator state
@@ -3692,11 +3694,9 @@ export default function App() {
 
                               <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-[10px]">
                                 <span className="text-slate-500 font-mono">Budget: <b>₹{camp.budget.toLocaleString()}</b></span>
-                                <button 
-                                  onClick={() => {
-                                    alert(`Mock Campaign Report downloaded for: ${camp.title}\nTotal Autos: ${camp.autosCount}\nSimulated KMs: ${camp.kmsCovered} km\nTotal Impressions: ${(camp.kmsCovered * 380).toLocaleString()} Eye-level exposures.`);
-                                  }}
-                                  className="text-[#FF9800] hover:underline font-bold flex items-center gap-0.5 text-[9px]"
+                                <button
+                                  onClick={() => exportCampaignPDF(camp, drivers)}
+                                  className="text-[#16A34A] hover:underline font-bold flex items-center gap-0.5 text-[9px]"
                                 >
                                   <FileText size={10} /> Report PDF
                                 </button>
@@ -3725,22 +3725,12 @@ export default function App() {
                               <span className="text-[8px] font-mono bg-green-100 text-green-700 px-1.5 rounded">LIVE</span>
                             </div>
 
-                            {/* Mini Vector Map Mockup with route coordinates list */}
-                            <div className="h-28 bg-slate-900 rounded-lg relative overflow-hidden flex items-center justify-center">
-                              {/* Background grids */}
-                              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:14px_14px]"></div>
-                              <div className="absolute w-12 h-12 rounded-full border border-[#FF9800]/30 animate-ping"></div>
-                              <div className="absolute w-24 h-24 rounded-full border border-green-500/20 animate-pulse"></div>
-
-                              {/* Target pins */}
-                              <div className="absolute top-4 left-6 w-2.5 h-2.5 bg-[#FF9800] rounded-full ring-2 ring-white"></div>
-                              <div className="absolute bottom-6 right-12 w-2.5 h-2.5 bg-[#FF9800] rounded-full ring-2 ring-white"></div>
-                              <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-green-500 rounded-full ring-4 ring-green-500/30"></div>
-
-                              <div className="absolute bottom-2 left-2 bg-slate-950/80 p-1 rounded text-[8px] text-white font-mono">
-                                {camp.city} Grid: {camp.autosCount} Autos Running
-                              </div>
-                            </div>
+                            {/* Live Leaflet Map */}
+                            <RouteMap
+                              driverCoords={lastCoords}
+                              city={camp.city}
+                              height="220px"
+                            />
 
                             <div className="text-[9px] text-slate-500 space-y-1">
                               <p className="font-mono flex items-center gap-1 text-slate-700">
