@@ -1016,7 +1016,7 @@ export default function App() {
   }, [drivers, loggedInDriverId, trackingMode]);
 
   // App UI Navigation States
-  const [advertiserTab, setAdvertiserTab] = useState<"home" | "campaigns" | "tracking" | "ai" | "profile" | "billing">("home");
+  const [advertiserTab, setAdvertiserTab] = useState<"home" | "campaigns" | "tracking" | "profile" | "billing">("home");
   const [expandedFleetCampaignId, setExpandedFleetCampaignId] = useState<string | null>(null);
   const [driverTab, setDriverTab] = useState<"dashboard" | "proof" | "tracker" | "earnings" | "profile">("dashboard");
   const [adminTab, setAdminTab] = useState<"campaigns" | "drivers" | "proofs" | "analytics" | "cities" | "settings" | "finance_crm">("campaigns");
@@ -3292,72 +3292,107 @@ export default function App() {
                     {/* ADVERTISER HOME TAB */}
                     {advertiserTab === "home" && (
                       <>
-                        {/* Elegant App Balance Banner */}
-                        <div className="bg-gradient-to-r from-[#0B1F4D] to-[#1e3b7a] rounded-2xl p-4 text-white shadow-sm relative overflow-hidden">
-                          <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4">
-                            <TrendingUp size={120} />
+                        {/* Hero wallet card — deep navy, amber accent */}
+                        <div className="bg-gradient-to-br from-[#0B1F4D] via-[#112660] to-[#0d2052] rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
+                          {/* decorative circles */}
+                          <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/5 pointer-events-none" />
+                          <div className="absolute -right-2 top-8 w-14 h-14 rounded-full bg-[#FF9800]/10 pointer-events-none" />
+
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-[9px] text-slate-400 font-mono uppercase tracking-widest">Campaign Wallet</p>
+                              <h2 className="text-[26px] font-display font-extrabold mt-0.5 leading-none text-[#FF9800]">
+                                ₹{(transactions.filter(t => t.userId === "advertiser_main" && t.status === "success").reduce((acc, curr) => curr.type === "deposit" ? acc + curr.amount : acc - curr.amount, 0)).toLocaleString()}
+                              </h2>
+                              <p className="text-[9px] text-slate-400 mt-1">Available balance</p>
+                            </div>
+                            <div className="w-8 h-8 rounded-xl bg-[#FF9800]/20 flex items-center justify-center mt-1">
+                              <Wallet size={15} className="text-[#FF9800]" />
+                            </div>
                           </div>
-                          <span className="text-[10px] text-slate-300 font-mono tracking-wider uppercase">Active Wallet Balance</span>
-                          <h2 className="text-2xl font-display font-extrabold mt-0.5 text-[#FF9800]">
-                            ₹{(transactions.filter(t => t.userId === "advertiser_main" && t.status === "success").reduce((acc, curr) => curr.type === "deposit" ? acc + curr.amount : acc - curr.amount, 0)).toLocaleString()}
-                          </h2>
-                          <div className="mt-3 flex gap-2">
-                            <input 
+
+                          <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
+                            <input
                               type="number"
-                              placeholder="₹ Add Funds"
+                              placeholder="Amount (₹)"
                               value={addFundsAmount}
                               onChange={(e) => setAddFundsAmount(e.target.value)}
-                              className="bg-white/10 text-white placeholder-slate-400 rounded-lg px-2.5 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-[#FF9800]"
+                              className="flex-1 min-w-0 bg-white/10 text-white placeholder-slate-500 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF9800]"
                             />
-                            <button 
+                            <button
                               onClick={handleAddFunds}
-                              className="bg-[#FF9800] hover:bg-orange-500 text-[#0B1F4D] text-[10px] font-bold px-3 py-1 rounded-lg transition"
+                              className="bg-[#FF9800] hover:bg-orange-500 text-[#0B1F4D] text-[10px] font-bold px-4 py-1.5 rounded-lg transition whitespace-nowrap"
                             >
-                              Add
+                              + Add Funds
                             </button>
                           </div>
                           {walletSuccessMsg && (
-                            <p className="text-[10px] text-green-300 mt-2 font-medium">{walletSuccessMsg}</p>
+                            <p className="text-[10px] text-green-300 mt-2 font-medium flex items-center gap-1">
+                              <CheckCircle size={10} /> {walletSuccessMsg}
+                            </p>
                           )}
                         </div>
 
-                        {/* Quick Stats Grid */}
+                        {/* KPI strip — 4 cards */}
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs">
-                            <span className="text-slate-400 text-[9px] font-mono block uppercase">Active Autos</span>
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="text-lg font-bold text-[#0B1F4D]">{activeAutosAll}</span>
-                              <span className="text-green-500 text-[9px] font-medium font-mono">Vehicles</span>
+                          {/* Active Autos */}
+                          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-3 flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+                              <Truck size={15} className="text-green-600" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wide">Active Autos</p>
+                              <p className="text-base font-extrabold text-[#0B1F4D] leading-tight">{activeAutosAll}</p>
                             </div>
                           </div>
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs">
-                            <span className="text-slate-400 text-[9px] font-mono block uppercase">Total Distance</span>
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="text-lg font-bold text-[#0B1F4D]">
-                                {totalKmsAll.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
-                              </span>
-                              <span className="text-blue-500 text-[9px] font-medium font-mono">KM</span>
+                          {/* Distance */}
+                          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-3 flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                              <Navigation size={15} className="text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wide">Total KM</p>
+                              <p className="text-base font-extrabold text-[#0B1F4D] leading-tight">
+                                {totalKmsAll.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                              </p>
                             </div>
                           </div>
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs">
-                            <span className="text-slate-400 text-[9px] font-mono block uppercase">QR Code Scans</span>
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="text-lg font-bold text-[#0B1F4D]">
-                                {totalScansAll.toLocaleString()}
-                              </span>
-                              <span className="text-orange-500 text-[9px] font-medium font-mono">Clicks</span>
+                          {/* QR Scans */}
+                          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-3 flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
+                              <QrCode size={15} className="text-[#FF9800]" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wide">QR Scans</p>
+                              <p className="text-base font-extrabold text-[#0B1F4D] leading-tight">{totalScansAll.toLocaleString()}</p>
                             </div>
                           </div>
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs">
-                            <span className="text-slate-400 text-[9px] font-mono block uppercase">Campaigns</span>
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="text-lg font-bold text-[#FF9800]">{campaigns.length}</span>
-                              <span className="text-slate-500 text-[9px] font-medium font-mono">Total</span>
+                          {/* Est. Views */}
+                          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-3 flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                              <Eye size={15} className="text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wide">Est. Views</p>
+                              <p className="text-base font-extrabold text-[#0B1F4D] leading-tight">
+                                {totalKmsAll * 250 >= 1000 ? `${((totalKmsAll * 250) / 1000).toFixed(1)}K` : Math.round(totalKmsAll * 250).toLocaleString()}
+                              </p>
                             </div>
                           </div>
                         </div>
 
-                        {/* Campaign Creation Quick Panel */}
+                        {/* Launch campaign CTA — only shown when form is hidden */}
+                        {!showCreateCampaign && (
+                          <button
+                            onClick={() => setShowCreateCampaign(true)}
+                            className="w-full bg-[#0B1F4D] hover:bg-[#152e68] text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm"
+                          >
+                            <Plus size={14} />
+                            Launch New Campaign
+                          </button>
+                        )}
+
+                        {/* Campaign Creation Panel */}
                         {showCreateCampaign ? (
                           <form onSubmit={handleCreateCampaign} className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm space-y-2.5">
                             <div className="flex justify-between items-center pb-1 border-b border-slate-100">
@@ -3897,12 +3932,6 @@ export default function App() {
                     )}
 
                     {/* ADVERTISER AI STUDY TAB */}
-                    {advertiserTab === "ai" && (
-                      <div className="h-[520px]">
-                        <AiAssistant embedded={true} />
-                      </div>
-                    )}
-
                     {/* ADVERTISER PROFILE TAB */}
                     {advertiserTab === "profile" && (
                       <div className="space-y-3 pb-2 max-h-[460px] overflow-y-auto pr-1">
@@ -4089,14 +4118,7 @@ export default function App() {
                       <Wallet size={16} />
                       <span className="text-[9px] font-bold uppercase tracking-wider">Payments</span>
                     </button>
-                    <button 
-                      onClick={() => setAdvertiserTab("ai")}
-                      className={`flex flex-col items-center gap-1 ${advertiserTab === "ai" ? "text-[#0B1F4D] text-[#FF9800]" : "text-slate-400"}`}
-                    >
-                      <Sparkles size={16} />
-                      <span className="text-[9px] font-bold uppercase tracking-wider">Planner AI</span>
-                    </button>
-                    <button 
+                    <button
                       onClick={() => setAdvertiserTab("profile")}
                       className={`flex flex-col items-center gap-1 ${advertiserTab === "profile" ? "text-[#0B1F4D]" : "text-slate-400"}`}
                     >
