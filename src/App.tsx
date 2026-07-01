@@ -5131,8 +5131,8 @@ export default function App() {
                         onClick={() => setAdminTab(tab.key)}
                         className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-all ${
                           adminTab === tab.key
-                            ? "border-[#FF9800] text-[#FF9800] bg-white/5"
-                            : "border-transparent text-slate-400 hover:text-white hover:bg-white/5"
+                            ? "border-[#FF9800] text-[#FF9800] bg-white/8"
+                            : "border-transparent text-slate-200 hover:text-white hover:bg-white/8"
                         }`}
                       >
                         {tab.icon}
