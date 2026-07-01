@@ -3027,6 +3027,7 @@ export default function App() {
                     if (loginEmail && loginPassword) {
                       setUserSession("advertiser");
                       setActiveSimulator("advertiser");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     } else {
                       setLoginError("Please enter valid brand credentials.");
                     }
@@ -3045,6 +3046,7 @@ export default function App() {
                       setUserSession("driver");
                       setActiveSimulator("driver");
                       setLoginError("");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     } else {
                       // Auto-register driver on-the-fly to guarantee absolute seamless login
                       const nameToCreate = cleanPhone === "9836130393" ? "Delip" : `Driver ${loginPhone}`;
@@ -3077,8 +3079,10 @@ export default function App() {
                   } else if (activeLoginSubTab === "admin") {
                     if (loginEmail === "admin@autoadz.in" && loginPassword === "password") {
                       setUserSession("admin");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     } else {
                       setUserSession("admin"); // fallback for smooth user access anyway
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }
                   }
                 }}
@@ -4486,76 +4490,55 @@ export default function App() {
                             </div>
                           </div>
 
-                          {/* Wallet Row */}
-                          <div className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs col-span-2 flex justify-between items-center">
+                          {/* Wallet card — full width */}
+                          <div className="col-span-2 bg-gradient-to-r from-[#0B1F4D] to-[#112660] rounded-xl p-3 flex items-center justify-between relative overflow-hidden">
+                            <div className="absolute right-2 bottom-0 opacity-10"><Wallet size={52} /></div>
                             <div>
-                              <span className="text-slate-400 text-[9px] block uppercase">Wallet Balance Available</span>
-                              <span className="text-base font-bold text-slate-800 font-mono">
-                                ₹{loggedInDriver?.walletBalance?.toLocaleString()}
-                              </span>
+                              <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">Driver Wallet</p>
+                              <p className="text-lg font-extrabold text-[#FF9800] font-display leading-tight mt-0.5">
+                                ₹{(loggedInDriver?.walletBalance ?? 0).toLocaleString()}
+                              </p>
+                              <p className="text-[9px] text-slate-400 mt-0.5">Available balance</p>
                             </div>
-                          </div>
-                        </div>
-
-                        {/* Driver KYC Registration Status Container */}
-                        <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
-                          <span className="text-[10px] font-bold text-slate-700 block uppercase">KYC & Vehicle Documents Status</span>
-                          <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-150 text-xs">
-                            <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
-                              <CheckCircle size={16} />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-800">Driving License Verified</p>
-                              <p className="text-[10px] text-slate-500">Auto RC Number: {loggedInDriver?.autoNumber || "KA-03-EX-4921"}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Driver Registration Quick Form for demo other drivers */}
-                        <div className="bg-slate-100 p-3.5 rounded-xl border border-slate-200 space-y-2">
-                          <div className="flex justify-between items-center">
-                            <h5 className="font-bold text-xs text-[#0B1F4D] flex items-center gap-1">
-                              ✨ Sign Up Another Auto-Rickshaw
-                            </h5>
-                          </div>
-                          <p className="text-[9px] text-slate-500">Demo registering a secondary driver. Then approve them instantly in the Admin Dashboard on the right!</p>
-
-                          <form onSubmit={handleDriverRegister} className="space-y-1.5">
-                            <input 
-                              type="text"
-                              required
-                              placeholder="Driver Full Name"
-                              value={driverRegName}
-                              onChange={(e) => setDriverRegName(e.target.value)}
-                              className="w-full text-[11px] bg-white border border-slate-200 rounded p-1.5 focus:outline-none"
-                            />
-                            <div className="grid grid-cols-2 gap-1.5">
-                              <input 
-                                type="text"
-                                required
-                                placeholder="Phone Number"
-                                value={driverRegPhone}
-                                onChange={(e) => setDriverRegPhone(e.target.value)}
-                                className="w-full text-[11px] bg-white border border-slate-200 rounded p-1.5 focus:outline-none"
-                              />
-                              <input 
-                                type="text"
-                                placeholder="Auto No (e.g. KA-03-A-1234)"
-                                value={driverRegAutoNum}
-                                onChange={(e) => setDriverRegAutoNum(e.target.value)}
-                                className="w-full text-[11px] bg-white border border-slate-200 rounded p-1.5 focus:outline-none"
-                              />
-                            </div>
-                            <button 
-                              type="submit"
-                              className="w-full bg-[#FF9800] hover:bg-orange-600 text-[#0B1F4D] text-[10px] font-bold py-1.5 rounded transition"
+                            <button
+                              onClick={() => setDriverTab("earnings")}
+                              className="bg-[#FF9800]/20 hover:bg-[#FF9800]/30 text-[#FF9800] text-[9px] font-bold px-3 py-1.5 rounded-lg transition border border-[#FF9800]/30"
                             >
-                              SUBMIT KYC APPLICATION
+                              Withdraw →
                             </button>
-                          </form>
-                          {driverSuccessMsg && (
-                            <p className="text-[10px] text-green-700 font-medium text-center mt-1">{driverSuccessMsg}</p>
-                          )}
+                          </div>
+                        </div>
+
+                        {/* Driver identity card */}
+                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                          <div className="bg-slate-50 px-3 py-2 border-b border-slate-100 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#0B1F4D] uppercase tracking-wide flex items-center gap-1.5">
+                              <Shield size={11} className="text-[#FF9800]" /> KYC & Vehicle Status
+                            </span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                              loggedInDriver?.kycVerified ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700 animate-pulse"
+                            }`}>
+                              {loggedInDriver?.kycVerified ? "✓ Verified" : "Pending"}
+                            </span>
+                          </div>
+                          <div className="px-3 py-2.5 space-y-2 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Driver Name</span>
+                              <span className="font-bold text-[#0B1F4D]">{loggedInDriver?.name || "—"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Auto Number</span>
+                              <span className="font-mono font-bold text-[#0B1F4D]">{loggedInDriver?.autoNumber || "—"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Phone</span>
+                              <span className="font-mono text-slate-700">{loggedInDriver?.phone || "—"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Zone</span>
+                              <span className="text-slate-700">{loggedInDriver?.location || "Kolkata"}</span>
+                            </div>
+                          </div>
                         </div>
                       </>
                     )}
