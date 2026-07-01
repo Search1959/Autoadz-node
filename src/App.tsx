@@ -6839,32 +6839,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* City Zone Heatmap */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                <div>
-                  <h4 className="font-display font-extrabold text-sm text-[#0B1F4D]">Bangalore Density Performance</h4>
-                  <p className="text-[11px] text-slate-400">Daily average impressions coverage yield per administrative ward</p>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    { name: "Koramangala (High Saturation)", value: 92, count: "48,000 views/day" },
-                    { name: "Indiranagar (Retail Hub)", value: 85, count: "44,500 views/day" },
-                    { name: "Whitefield (Tech Hub)", value: 78, count: "39,000 views/day" },
-                    { name: "MG Road (Central CBD)", value: 65, count: "31,000 views/day" },
-                  ].map((zone, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-slate-700">{zone.name}</span>
-                        <span className="text-slate-500 font-mono text-[10px]">{zone.count}</span>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#FF9800] rounded-full" style={{ width: `${zone.value}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Embedded AI Campaign Planner */}
               <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden h-[480px]">
                 <AiAssistant embedded />
