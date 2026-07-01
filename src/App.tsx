@@ -5087,68 +5087,84 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
               <div className="lg:col-span-12 flex flex-col gap-6">
                 
-                {/* Admin Control Header */}
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-                  <div className="flex flex-col gap-4">
-                    <div className="w-full">
-                      <h3 className="font-display font-extrabold text-[#0B1F4D] text-lg flex items-center gap-2">
+                {/* ── Admin Command Header ─────────────────────────────── */}
+                <div className="bg-gradient-to-br from-[#0B1F4D] to-[#112660] rounded-3xl overflow-hidden shadow-lg">
+                  {/* Top bar */}
+                  <div className="px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#FF9800]/20 flex items-center justify-center">
                         <Shield size={20} className="text-[#FF9800]" />
-                        AutoAdz Master Admin Panel
-                      </h3>
-                      <p className="text-xs text-slate-500 font-mono mt-1">Verify KYC, Audit image uploads, approve payments, and manage automated billing scheduler.</p>
+                      </div>
+                      <div>
+                        <h3 className="font-display font-extrabold text-white text-lg leading-tight">Command Center</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">AutoAdz Master Admin — KYC · Proofs · Payments · Config</p>
+                      </div>
                     </div>
+                    {/* Quick KPI strip */}
+                    <div className="flex gap-3 flex-wrap">
+                      {[
+                        { label: "Campaigns", value: campaigns.length, color: "text-[#FF9800]" },
+                        { label: "Drivers", value: drivers.length, color: "text-emerald-400" },
+                        { label: "Pending Proofs", value: proofs.filter(p => p.status === "pending").length, color: "text-amber-400" },
+                        { label: "Total KM", value: `${totalKmsAll.toFixed(1)}`, color: "text-sky-400" },
+                      ].map((k) => (
+                        <div key={k.label} className="bg-white/8 rounded-xl px-4 py-2 text-center min-w-[72px]">
+                          <p className={`text-lg font-extrabold font-display leading-none ${k.color}`}>{k.value}</p>
+                          <p className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-wide font-mono">{k.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                    {/* Admin Selector Navigation */}
-                    <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold flex-wrap gap-1 w-full justify-start">
-                      <button 
-                        onClick={() => setAdminTab("campaigns")}
-                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "campaigns" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
+                  {/* Tab nav */}
+                  <div className="flex border-t border-white/10 overflow-x-auto">
+                    {([
+                      { key: "campaigns",   icon: <Rocket size={13} />,    label: "Campaigns",    count: campaigns.length },
+                      { key: "drivers",     icon: <Truck size={13} />,     label: "Drivers KYC",  count: drivers.length },
+                      { key: "proofs",      icon: <Camera size={13} />,    label: "Audit Proofs", count: proofs.length },
+                      { key: "cities",      icon: <MapPin size={13} />,    label: "Cities",       count: cities.length },
+                      { key: "finance_crm", icon: <DollarSign size={13} />,label: "Finance & CRM",count: bills.length },
+                      { key: "settings",    icon: <Settings size={13} />,  label: "Gateway",      count: null },
+                    ] as const).map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setAdminTab(tab.key)}
+                        className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-all ${
+                          adminTab === tab.key
+                            ? "border-[#FF9800] text-[#FF9800] bg-white/5"
+                            : "border-transparent text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
                       >
-                        Campaigns ({campaigns.length})
+                        {tab.icon}
+                        {tab.label}
+                        {tab.count !== null && (
+                          <span className={`ml-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                            adminTab === tab.key ? "bg-[#FF9800]/20 text-[#FF9800]" : "bg-white/10 text-slate-400"
+                          }`}>
+                            {tab.count}
+                          </span>
+                        )}
                       </button>
-                      <button 
-                        onClick={() => setAdminTab("drivers")}
-                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "drivers" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                      >
-                        Drivers KYC ({drivers.length})
-                      </button>
-                      <button 
-                        onClick={() => setAdminTab("proofs")}
-                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "proofs" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                      >
-                        Audit Proofs ({proofs.length})
-                      </button>
-                      <button 
-                        onClick={() => setAdminTab("cities")}
-                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "cities" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                      >
-                        Operating Cities ({cities.length})
-                      </button>
-                      <button 
-                        onClick={() => setAdminTab("finance_crm")}
-                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "finance_crm" ? "bg-white text-[#0B1F4D] border-b-2 border-orange-500 shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                      >
-                        💼 Finance Ledger & CRM ({bills.length})
-                      </button>
-                      <button 
-                        onClick={() => setAdminTab("settings")}
-                        className={`px-3 py-1.5 rounded-md transition ${adminTab === "settings" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:bg-slate-50"}`}
-                      >
-                        ⚙️ Gateway Config
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
           {/* Dynamic Admin Viewports */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-5 flex-1 min-h-[420px] flex flex-col">
-            
+
             {/* ADMIN CAMPAIGNS SUB-TAB */}
             {adminTab === "campaigns" && (
               <div className="space-y-4 flex-1 flex flex-col">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                  <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Campaign Booking Approvals</h4>
-                  <span className="text-xs text-slate-400">Funds are auto-held from advertiser wallets</span>
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 className="font-display font-bold text-sm text-[#0B1F4D] flex items-center gap-2">
+                      <Rocket size={14} className="text-[#FF9800]" /> Campaign Booking Approvals
+                    </h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Funds are auto-held from advertiser wallets on booking</p>
+                  </div>
+                  <span className="text-[10px] font-mono bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-semibold">
+                    {campaigns.filter(c => c.status === "pending").length} awaiting approval
+                  </span>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -5333,10 +5349,14 @@ export default function App() {
             {/* ADMIN DRIVERS KYC SUB-TAB */}
             {adminTab === "drivers" && (
               <div className="space-y-4 flex-1 flex flex-col relative">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100 flex-wrap gap-2">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100 flex-wrap gap-2">
                   <div>
-                    <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Driver Registrations & KYC Vault</h4>
-                    <span className="text-xs text-slate-400">Approval links driver to active local campaigns</span>
+                    <h4 className="font-display font-bold text-sm text-[#0B1F4D] flex items-center gap-2">
+                      <Truck size={14} className="text-[#FF9800]" /> Driver Registrations & KYC Vault
+                    </h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {drivers.filter(d => d.status === "pending_approval").length} pending approval · {drivers.filter(d => d.status === "active").length} active carriers
+                    </p>
                   </div>
                   <button
                     onClick={() => {
@@ -5704,9 +5724,16 @@ export default function App() {
             {/* ADMIN AUDIT PROOFS SUB-TAB */}
             {adminTab === "proofs" && (
               <div className="space-y-4 flex-1 flex flex-col">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                  <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Photo Proof Checklist Auditing</h4>
-                  <span className="text-xs text-slate-400">Auditing and verifying daily vehicle display updates</span>
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 className="font-display font-bold text-sm text-[#0B1F4D] flex items-center gap-2">
+                      <Camera size={14} className="text-[#FF9800]" /> Photo Proof Audit
+                    </h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Verify daily vehicle display check-in uploads</p>
+                  </div>
+                  <span className="text-[10px] font-mono bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-semibold">
+                    {proofs.filter(p => p.status === "pending").length} pending review
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
