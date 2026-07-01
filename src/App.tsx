@@ -5091,9 +5091,9 @@ export default function App() {
                         { label: "Pending Proofs", value: proofs.filter(p => p.status === "pending").length, color: "text-amber-400" },
                         { label: "Total KM", value: `${totalKmsAll.toFixed(1)}`, color: "text-sky-400" },
                       ].map((k) => (
-                        <div key={k.label} className="bg-white/8 rounded-xl px-4 py-2 text-center min-w-[72px]">
+                        <div key={k.label} className="bg-white/10 border border-white/15 rounded-xl px-4 py-2 text-center min-w-[72px]">
                           <p className={`text-lg font-extrabold font-display leading-none ${k.color}`}>{k.value}</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-wide font-mono">{k.label}</p>
+                          <p className="text-[9px] text-slate-300 mt-0.5 uppercase tracking-wide font-mono">{k.label}</p>
                         </div>
                       ))}
                     </div>
