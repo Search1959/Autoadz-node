@@ -3264,8 +3264,8 @@ export default function App() {
                       setUserSession("advertiser");
                       setActiveSimulator("advertiser");
                       window.scrollTo({ top: 0, behavior: "smooth" });
-                    } catch {
-                      setLoginError("Network error. Please try again.");
+                    } catch (err: any) {
+                      setLoginError(`Error: ${err?.message || "Network failure — check internet connection."}`);
                     }
                   } else if (activeLoginSubTab === "driver") {
                     const cleanPhone = loginPhone.trim().replace(/\D/g, "");
