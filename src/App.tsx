@@ -1054,6 +1054,8 @@ export default function App() {
   const [driverTab, setDriverTab] = useState<"dashboard" | "proof" | "tracker" | "earnings" | "profile">("dashboard");
   const [adminTab, setAdminTab] = useState<"campaigns" | "drivers" | "proofs" | "analytics" | "cities" | "settings" | "finance_crm" | "advertisers">("campaigns");
   const [advertisers, setAdvertisers] = useState<any[]>([]);
+  const [resetPwdTarget, setResetPwdTarget] = useState<{id: number, email: string} | null>(null);
+  const [resetPwdVal, setResetPwdVal] = useState("");
 
   // Localized SEO subpage simulation states
   const [selectedSeoCity, setSelectedSeoCity] = useState<string | null>(null);
@@ -6220,17 +6222,7 @@ export default function App() {
                           {/* Action buttons */}
                           <div className="flex gap-2 border-t border-slate-100 pt-2">
                             <button
-                              onClick={async () => {
-                                const newPwd = prompt(`Set new password for ${adv.email}:`);
-                                if (!newPwd || newPwd.length < 6) { alert("Minimum 6 characters."); return; }
-                                const res = await fetch(`/api/advertisers/${adv.id}/reset-password`, {
-                                  method: "PUT",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ newPassword: newPwd }),
-                                });
-                                const data = await res.json();
-                                alert(data.success ? `✅ Password reset to: ${newPwd}` : `❌ ${data.error}`);
-                              }}
+                              onClick={() => { setResetPwdTarget({id: adv.id, email: adv.email}); setResetPwdVal(""); }}
                               className="flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
                             >
                               🔑 RESET PWD
@@ -6266,6 +6258,48 @@ export default function App() {
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* RESET PASSWORD MODAL */}
+            {resetPwdTarget && (
+              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+                  <h3 className="font-bold text-[#0B1F4D] text-sm font-mono uppercase">Reset Password</h3>
+                  <p className="text-xs text-slate-500">{resetPwdTarget.email}</p>
+                  <input
+                    type="password"
+                    placeholder="New password (min 6 chars)"
+                    value={resetPwdVal}
+                    onChange={e => setResetPwdVal(e.target.value)}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setResetPwdTarget(null); setResetPwdVal(""); }}
+                      className="flex-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    >Cancel</button>
+                    <button
+                      onClick={async () => {
+                        if (resetPwdVal.length < 6) { alert("Minimum 6 characters"); return; }
+                        const res = await fetch(`/api/advertisers/${resetPwdTarget.id}/reset-password`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ newPassword: resetPwdVal }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          alert(`✅ Password reset successfully`);
+                          setResetPwdTarget(null); setResetPwdVal("");
+                        } else {
+                          alert(`❌ ${data.error}`);
+                        }
+                      }}
+                      className="flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700"
+                    >Set Password</button>
+                  </div>
+                </div>
               </div>
             )}
 
