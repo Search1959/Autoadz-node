@@ -3207,10 +3207,15 @@ export default function App() {
                   <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Admin Email</label>
                     <input
-                      type="email"
+                      type="text"
+                      inputMode="email"
                       value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
+                      onChange={(e) => setLoginEmail(e.target.value.trim())}
                       placeholder="Enter admin email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      autoComplete="off"
+                      spellCheck={false}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
@@ -3221,6 +3226,9 @@ export default function App() {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="Enter password"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      autoComplete="off"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
