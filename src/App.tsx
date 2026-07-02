@@ -3183,27 +3183,24 @@ export default function App() {
               {activeLoginSubTab === "admin" && (
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Admin ID Name</label>
-                    <input 
+                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Admin Email</label>
+                    <input
                       type="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="admin@autoadz.in"
+                      placeholder="Enter admin email"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Master Security Pin</label>
-                    <input 
+                    <input
                       type="password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="Enter password"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
                     />
-                  </div>
-                  <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] p-2.5 rounded-lg font-mono">
-                    💡 <b>Sandbox Operations Admin</b>: admin@autoadz.in / password
                   </div>
                 </div>
               )}
@@ -3303,12 +3300,11 @@ export default function App() {
                       });
                     }
                   } else if (activeLoginSubTab === "admin") {
-                    if (loginEmail === "admin@autoadz.in" && loginPassword === "password") {
+                    if (loginEmail === "apex7tech@gmail.com" && loginPassword === "Search@1959") {
                       setUserSession("admin");
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     } else {
-                      setUserSession("admin"); // fallback for smooth user access anyway
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      setLoginError("Invalid admin credentials.");
                     }
                   }
                 }}
