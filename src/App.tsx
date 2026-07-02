@@ -3022,7 +3022,7 @@ export default function App() {
                   {activeLoginSubTab === "driver" && "Driver OTP Gateway"}
                   {activeLoginSubTab === "admin" && "Operations Control Panel"}
                 </h4>
-                <p className="text-[10px] text-slate-400 mt-0.5">Secure sandbox credentials loaded automatically below for convenience</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Secure multi-tenant portal — login with your registered brand account</p>
               </div>
 
               {/* ADVERTISER LOGIN / REGISTER FIELDS */}
