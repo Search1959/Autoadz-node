@@ -6204,6 +6204,34 @@ export default function App() {
                               ))}
                             </div>
                           )}
+                          {/* Action buttons */}
+                          <div className="flex gap-2 border-t border-slate-100 pt-2">
+                            <button
+                              onClick={async () => {
+                                const action = adv.isActive ? "disable" : "enable";
+                                if (!confirm(`${action.toUpperCase()} account for ${adv.name}?`)) return;
+                                await fetch(`/api/advertisers/${adv.id}/status`, {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ isActive: !adv.isActive }),
+                                });
+                                setAdvertisers(prev => prev.map(a => a.id === adv.id ? { ...a, isActive: !adv.isActive } : a));
+                              }}
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono transition ${adv.isActive ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100" : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"}`}
+                            >
+                              {adv.isActive ? "⛔ DISABLE" : "✅ ENABLE"}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`PERMANENTLY DELETE account for ${adv.name} (${adv.email})? This cannot be undone.`)) return;
+                                await fetch(`/api/advertisers/${adv.id}`, { method: "DELETE" });
+                                setAdvertisers(prev => prev.filter(a => a.id !== adv.id));
+                              }}
+                              className="flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
+                            >
+                              🗑 DELETE
+                            </button>
+                          </div>
                         </div>
                       );
                     })}

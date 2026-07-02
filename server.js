@@ -1100,6 +1100,31 @@ app.get("/api/advertisers", async (req, res) => {
   }
 });
 
+// Admin: toggle advertiser active status
+app.put("/api/advertisers/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    await db("UPDATE users SET is_active = ? WHERE id = ? AND role = 'advertiser'", [isActive ? 1 : 0, id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
+// Admin: delete advertiser account
+app.delete("/api/advertisers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db("DELETE FROM users WHERE id = ? AND role = 'advertiser'", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete advertiser" });
+  }
+});
+
 // Advertiser self-registration
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password, company, phone, gstin, office } = req.body;
