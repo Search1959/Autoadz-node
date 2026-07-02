@@ -56,6 +56,7 @@ export default function App() {
   const [regPhone, setRegPhone] = useState("");
   const [regGstin, setRegGstin] = useState("");
   const [regLoading, setRegLoading] = useState(false);
+  const [showAdvPassword, setShowAdvPassword] = useState(false);
 
   // Advertiser Reach Calculator States
   const [calcVehicles, setCalcVehicles] = useState<number>(25);
@@ -3057,16 +3058,22 @@ export default function App() {
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Password</label>
-                        <input
-                          type="password"
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          placeholder="••••••••"
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          autoComplete="current-password"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showAdvPassword ? "text" : "password"}
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            placeholder="••••••••"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            autoComplete="off"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 pr-10 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                          />
+                          <button type="button" onClick={() => setShowAdvPassword(p => !p)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-[10px]">
+                            {showAdvPassword ? "HIDE" : "SHOW"}
+                          </button>
+                        </div>
                       </div>
                     </>
                   ) : (
