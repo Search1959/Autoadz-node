@@ -506,6 +506,8 @@ export default function App() {
   const [gpsSpeed, setGpsSpeed] = useState<number>(0); // speed in km/h
   const [gpsErrorMsg, setGpsErrorMsg] = useState<string>("");
   const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | null>(null);
+  // Per-driver live positions for advertiser map — keyed by driver id
+  const [driverPositions, setDriverPositions] = useState<Record<string, { lat: number; lng: number; name: string; autoNumber: string; state: string }>>({});
 
   // Refs for background persistent tracking
   const wasTrackingRef = useRef(false);
@@ -757,6 +759,7 @@ export default function App() {
               const accuracy = position.coords.accuracy || 0;
               
               setLastCoords({ lat: latitude, lng: longitude });
+              if (loggedInDriver) setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], lat: latitude, lng: longitude, state: "tracking" } }));
 
               if (lastCoordsRef.current === null) {
                 // First coordinate acquired!
@@ -1233,6 +1236,34 @@ export default function App() {
       setCampaigns(dataCamps);
       setDrivers(dataDrivers);
       setProofs(dataProofs);
+      // Seed per-driver Kolkata positions for map display
+      const KOLKATA_CENTER = { lat: 22.5726, lng: 88.3639 };
+      const KOL_ZONES = [
+        { lat: 22.5958, lng: 88.3697 }, // Shyambazar
+        { lat: 22.5195, lng: 88.3617 }, // Gariahat
+        { lat: 22.5697, lng: 88.4308 }, // Salt Lake
+        { lat: 22.6238, lng: 88.4338 }, // New Town
+        { lat: 22.5852, lng: 88.3423 }, // Howrah Bridge
+        { lat: 22.5514, lng: 88.3473 }, // Park Street
+      ];
+      setDriverPositions(prev => {
+        const next = { ...prev };
+        dataDrivers.forEach((d: any, i: number) => {
+          if (!next[d.id]) {
+            const base = KOL_ZONES[i % KOL_ZONES.length];
+            next[d.id] = {
+              lat: base.lat + (Math.random() - 0.5) * 0.008,
+              lng: base.lng + (Math.random() - 0.5) * 0.008,
+              name: d.name,
+              autoNumber: d.autoNumber,
+              state: d.state || "standby",
+            };
+          } else {
+            next[d.id] = { ...next[d.id], name: d.name, autoNumber: d.autoNumber, state: d.state || "standby" };
+          }
+        });
+        return next;
+      });
       setTransactions(dataTxs);
       setNotifications(dataNotifs);
       setCities(dataCities);
@@ -3764,11 +3795,11 @@ export default function App() {
                               <span className="text-[8px] font-mono bg-green-100 text-green-700 px-1.5 rounded">LIVE</span>
                             </div>
 
-                            {/* Live Leaflet Map */}
+                            {/* Live Leaflet Map — all driver positions */}
                             <RouteMap
-                              driverCoords={lastCoords}
+                              allDrivers={driverPositions}
                               city={camp.city}
-                              height="220px"
+                              height="260px"
                             />
 
                             <div className="text-[9px] text-slate-500 space-y-1">
@@ -3780,24 +3811,37 @@ export default function App() {
                           </div>
                         ))}
 
-                        {/* Drivers currently Online and moving */}
+                        {/* Drivers feed */}
                         <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
-                          <span className="text-[10px] font-bold text-slate-700 block uppercase">Online Drivers Feed</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#0B1F4D] uppercase tracking-wide">Fleet Status</span>
+                            <span className="text-[9px] font-mono bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
+                              {drivers.filter(d => d.state === "tracking").length} transmitting
+                            </span>
+                          </div>
                           <div className="space-y-1.5">
-                            {drivers.map(d => (
-                              <div key={d.id} className="flex justify-between items-center text-xs p-2 bg-slate-50 rounded-lg">
-                                <div className="flex items-center gap-2">
-                                  <div className={`w-2 h-2 rounded-full ${d.state === "tracking" ? "bg-green-500 animate-pulse" : d.state === "online" ? "bg-blue-500" : "bg-slate-300"}`}></div>
-                                  <div>
-                                    <span className="font-medium text-slate-800">{d.name}</span>
-                                    <span className="text-[8px] text-slate-400 font-mono ml-1.5">({d.autoNumber})</span>
+                            {drivers.map(d => {
+                              const pos = driverPositions[d.id];
+                              return (
+                                <div key={d.id} className="flex justify-between items-center text-xs p-2 bg-slate-50 rounded-lg border border-slate-100">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full shrink-0 ${d.state === "tracking" ? "bg-green-500 animate-pulse" : "bg-slate-300"}`}></div>
+                                    <div>
+                                      <span className="font-semibold text-slate-800">{d.name}</span>
+                                      <span className="text-[8px] text-slate-400 font-mono ml-1.5">{d.autoNumber}</span>
+                                      {pos && d.state === "tracking" && (
+                                        <span className="text-[8px] text-teal-500 font-mono ml-1.5">
+                                          {pos.lat.toFixed(4)}, {pos.lng.toFixed(4)}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
+                                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${d.state === "tracking" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-500"}`}>
+                                    {d.state === "tracking" ? "🟢 LIVE" : "STANDBY"}
+                                  </span>
                                 </div>
-                                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${d.state === "tracking" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>
-                                  {d.state === "tracking" ? "TRANSMITTING" : "STANDBY"}
-                                </span>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -4324,8 +4368,10 @@ export default function App() {
                                           });
                                           setGpsStatus("active");
                                           setGpsSpeed(38.5);
-                                          // Trigger a fake coordinates update
-                                          setLastCoords({ lat: 12.9716 + (Math.random() - 0.5) * 0.01, lng: 77.5946 + (Math.random() - 0.5) * 0.01 });
+                                          // Trigger a fake coordinates update (Kolkata)
+                                          const simCoords1 = { lat: 22.5726 + (Math.random() - 0.5) * 0.02, lng: 88.3639 + (Math.random() - 0.5) * 0.02 };
+                                          setLastCoords(simCoords1);
+                                          if (loggedInDriver) setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], ...simCoords1, state: "tracking" } }));
                                         }}
                                         className="py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 font-mono transition cursor-pointer"
                                       >
@@ -4341,8 +4387,10 @@ export default function App() {
                                           });
                                           setGpsStatus("active");
                                           setGpsSpeed(45.2);
-                                          // Trigger a fake coordinates update
-                                          setLastCoords({ lat: 12.9716 + (Math.random() - 0.5) * 0.01, lng: 77.5946 + (Math.random() - 0.5) * 0.01 });
+                                          // Trigger a fake coordinates update (Kolkata)
+                                          const simCoords2 = { lat: 22.5726 + (Math.random() - 0.5) * 0.02, lng: 88.3639 + (Math.random() - 0.5) * 0.02 };
+                                          setLastCoords(simCoords2);
+                                          if (loggedInDriver) setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], ...simCoords2, state: "tracking" } }));
                                         }}
                                         className="py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 font-mono transition cursor-pointer"
                                       >
