@@ -53,17 +53,25 @@ function uid(prefix = "id") {
 }
 
 // ─── CAMPAIGNS ────────────────────────────────────────────────────────────────
+function mapCampaign(r) {
+  return {
+    id: r.id, title: r.title, client: r.client, city: r.city,
+    area: r.area, budget: Number(r.budget), autosCount: r.autos_count,
+    creativeUrl: r.creative_url, status: r.status,
+    creativeStatus: r.creative_status, creativeApproved: !!r.creative_approved,
+    startDate: r.start_date, endDate: r.end_date,
+    kmsCovered: Number(r.kms_covered), qrScans: r.qr_scans,
+    advertiserId: r.advertiser_id || null,
+  };
+}
+
 app.get("/api/campaigns", async (req, res) => {
   try {
-    const rows = await db("SELECT * FROM campaigns ORDER BY created_at DESC");
-    res.json(rows.map(r => ({
-      id: r.id, title: r.title, client: r.client, city: r.city,
-      area: r.area, budget: Number(r.budget), autosCount: r.autos_count,
-      creativeUrl: r.creative_url, status: r.status,
-      creativeStatus: r.creative_status, creativeApproved: !!r.creative_approved,
-      startDate: r.start_date, endDate: r.end_date,
-      kmsCovered: Number(r.kms_covered), qrScans: r.qr_scans,
-    })));
+    const { advertiser_id } = req.query;
+    const rows = advertiser_id
+      ? await db("SELECT * FROM campaigns WHERE advertiser_id = ? ORDER BY created_at DESC", [advertiser_id])
+      : await db("SELECT * FROM campaigns ORDER BY created_at DESC");
+    res.json(rows.map(mapCampaign));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -72,18 +80,18 @@ app.get("/api/campaigns", async (req, res) => {
 
 app.post("/api/campaigns", async (req, res) => {
   try {
-    const { title, client, city, area, budget, autosCount, creativeUrl } = req.body;
+    const { title, client, city, area, budget, autosCount, creativeUrl, advertiser_id } = req.body;
     const id = uid("camp");
     const startDate = new Date().toISOString().split("T")[0];
     const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const safeCreativeUrl = creativeUrl || "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800";
 
     await db(
-      `INSERT INTO campaigns (id, title, client, city, area, budget, autos_count, creative_url, status, creative_status, creative_approved, start_date, end_date, kms_covered, qr_scans)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', 0, ?, ?, 0, 0)`,
+      `INSERT INTO campaigns (id, title, client, city, area, budget, autos_count, creative_url, status, creative_status, creative_approved, start_date, end_date, kms_covered, qr_scans, advertiser_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', 0, ?, ?, 0, 0, ?)`,
       [id, title || "New Campaign", client || "Independent Advertiser", city || "Bangalore",
        area || "Central Area", Number(budget) || 50000, Number(autosCount) || 10,
-       safeCreativeUrl, startDate, endDate]
+       safeCreativeUrl, startDate, endDate, advertiser_id || null]
     );
 
     // Auto wallet deduction
@@ -99,14 +107,7 @@ app.post("/api/campaigns", async (req, res) => {
     );
 
     const [newCamp] = await db("SELECT * FROM campaigns WHERE id = ?", [id]);
-    res.status(201).json({
-      id: newCamp.id, title: newCamp.title, client: newCamp.client, city: newCamp.city,
-      area: newCamp.area, budget: Number(newCamp.budget), autosCount: newCamp.autos_count,
-      creativeUrl: newCamp.creative_url, status: newCamp.status,
-      creativeStatus: newCamp.creative_status, creativeApproved: !!newCamp.creative_approved,
-      startDate: newCamp.start_date, endDate: newCamp.end_date,
-      kmsCovered: Number(newCamp.kms_covered), qrScans: newCamp.qr_scans,
-    });
+    res.status(201).json(mapCampaign(newCamp));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -142,14 +143,7 @@ app.put("/api/campaigns/:id", async (req, res) => {
 
     const [updated] = await db("SELECT * FROM campaigns WHERE id = ?", [id]);
     if (!updated) return res.status(404).json({ error: "Campaign not found" });
-    res.json({
-      id: updated.id, title: updated.title, client: updated.client, city: updated.city,
-      area: updated.area, budget: Number(updated.budget), autosCount: updated.autos_count,
-      creativeUrl: updated.creative_url, status: updated.status,
-      creativeStatus: updated.creative_status, creativeApproved: !!updated.creative_approved,
-      startDate: updated.start_date, endDate: updated.end_date,
-      kmsCovered: Number(updated.kms_covered), qrScans: updated.qr_scans,
-    });
+    res.json(mapCampaign(updated));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -1039,15 +1033,15 @@ app.get("/api/auth/setup-admin", async (req, res) => {
 
 // Advertiser self-registration
 app.post("/api/auth/register", async (req, res) => {
-  const { name, email, password, company, phone, gstin } = req.body;
+  const { name, email, password, company, phone, gstin, office } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: "Name, email and password are required" });
   try {
     const [existing] = await db("SELECT id FROM users WHERE email = ?", [email]);
     if (existing) return res.status(409).json({ error: "Email already registered" });
     const hash = await bcrypt.hash(password, 10);
     await db(
-      "INSERT INTO users (role, name, email, password_hash, company, phone, gstin) VALUES ('advertiser',?,?,?,?,?,?)",
-      [name, email, hash, company || "", phone || "", gstin || ""]
+      "INSERT INTO users (role, name, email, password_hash, company, phone, gstin, office) VALUES ('advertiser',?,?,?,?,?,?,?)",
+      [name, email, hash, company || "", phone || "", gstin || "", office || ""]
     );
     res.status(201).json({ success: true, message: "Account created. Please login." });
   } catch (err) {
@@ -1079,9 +1073,9 @@ app.post("/api/auth/login", async (req, res) => {
     if (!match) return res.status(401).json({ error: "Invalid email or password" });
     const token = jwt.sign({ id: user.id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
     res.json({
-      success: true, token, role: user.role,
+      success: true, token, role: user.role, userId: user.id,
       name: user.name, email: user.email,
-      company: user.company, phone: user.phone, gstin: user.gstin,
+      company: user.company, phone: user.phone, gstin: user.gstin, office: user.office || "",
     });
   } catch (err) {
     console.error(err);

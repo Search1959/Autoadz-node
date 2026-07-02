@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
   end_date DATE,
   kms_covered DECIMAL(10,2) DEFAULT 0,
   qr_scans INT DEFAULT 0,
+  advertiser_id INT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -120,6 +121,21 @@ CREATE TABLE IF NOT EXISTS scheduler_settings (
   interval_minutes INT DEFAULT 5,
   last_run_timestamp VARCHAR(50) DEFAULT NULL,
   driver_rate_per_km DECIMAL(8,2) DEFAULT 4.5
+);
+
+-- Brand Advertiser Accounts (multi-tenant)
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  role VARCHAR(20) DEFAULT 'advertiser',
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  company VARCHAR(255) DEFAULT '',
+  phone VARCHAR(20) DEFAULT '',
+  gstin VARCHAR(50) DEFAULT '',
+  office VARCHAR(500) DEFAULT '',
+  is_active TINYINT(1) DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Scheduler logs

@@ -41,6 +41,22 @@ export default function App() {
   const [loginError, setLoginError] = useState("");
   const [activeLoginSubTab, setActiveLoginSubTab] = useState<"advertiser" | "driver" | "admin">("advertiser");
 
+  // Advertiser multi-tenant auth
+  const [advUserId, setAdvUserId] = useState<number | null>(() => {
+    const s = localStorage.getItem("autoadz_adv_user_id");
+    return s ? Number(s) : null;
+  });
+  const [advJwt, setAdvJwt] = useState<string>(() => localStorage.getItem("autoadz_adv_jwt") || "");
+  const [advEmail, setAdvEmail] = useState(() => localStorage.getItem("autoadz_adv_email") || "");
+  const [showAdvRegister, setShowAdvRegister] = useState(false);
+  const [regName, setRegName] = useState("");
+  const [regCompany, setRegCompany] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regGstin, setRegGstin] = useState("");
+  const [regLoading, setRegLoading] = useState(false);
+
   // Advertiser Reach Calculator States
   const [calcVehicles, setCalcVehicles] = useState<number>(25);
   const [calcDays, setCalcDays] = useState<number>(30);
@@ -1223,8 +1239,10 @@ export default function App() {
     };
 
     try {
+      const advId = localStorage.getItem("autoadz_adv_user_id");
+      const campUrl = (userSession === "advertiser" && advId) ? `/api/campaigns?advertiser_id=${advId}` : "/api/campaigns";
       const [dataCamps, dataDrivers, dataProofs, dataTxs, dataNotifs, dataCities, dataBills] = await Promise.all([
-        safeFetchJson<any[]>("/api/campaigns", []),
+        safeFetchJson<any[]>(campUrl, []),
         safeFetchJson<any[]>("/api/drivers", []),
         safeFetchJson<any[]>("/api/proofs", []),
         safeFetchJson<any[]>("/api/wallet/transactions", []),
@@ -1304,12 +1322,13 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newCampTitle,
-          client: newCampClient || "My Brand Ltd",
+          client: newCampClient || advBrandName || "My Brand Ltd",
           city: newCampCity,
           area: newCampArea || "Koramangala & HSR",
           budget: newCampBudget,
           autosCount: newCampAutos,
-          creativeUrl: newCampCreative || creativeTemplates[0].url
+          creativeUrl: newCampCreative || creativeTemplates[0].url,
+          advertiser_id: advUserId || null,
         })
       });
 
@@ -2958,32 +2977,135 @@ export default function App() {
                 <p className="text-[10px] text-slate-400 mt-0.5">Secure sandbox credentials loaded automatically below for convenience</p>
               </div>
 
-              {/* ADVERTISER LOGIN FIELDS */}
+              {/* ADVERTISER LOGIN / REGISTER FIELDS */}
               {activeLoginSubTab === "advertiser" && (
                 <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Brand Corporate Email</label>
-                    <input 
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="Enter email e.g. tata@motors.in"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
-                    />
+                  {/* Toggle */}
+                  <div className="flex rounded-xl overflow-hidden border border-slate-700 text-[11px] font-mono font-bold">
+                    <button
+                      onClick={() => { setShowAdvRegister(false); setLoginError(""); }}
+                      className={`flex-1 py-1.5 transition ${!showAdvRegister ? "bg-[#FF9800] text-slate-950" : "text-slate-400 hover:text-white"}`}
+                    >LOGIN</button>
+                    <button
+                      onClick={() => { setShowAdvRegister(true); setLoginError(""); }}
+                      className={`flex-1 py-1.5 transition ${showAdvRegister ? "bg-[#FF9800] text-slate-950" : "text-slate-400 hover:text-white"}`}
+                    >REGISTER</button>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Access Password</label>
-                    <input 
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
-                    />
-                  </div>
-                  <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] p-2.5 rounded-lg font-mono">
-                    💡 <b>Sandbox Credentials</b>: tata@motors.in / password
-                  </div>
+
+                  {!showAdvRegister ? (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Brand Corporate Email</label>
+                        <input
+                          type="email"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          placeholder="brand@company.in"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Password</label>
+                        <input
+                          type="password"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Contact Person Name *</label>
+                        <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="e.g. Rahul Sharma"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Company / Brand Name *</label>
+                        <input type="text" value={regCompany} onChange={(e) => setRegCompany(e.target.value)} placeholder="e.g. Tata Motors Ltd."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Business Email *</label>
+                        <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="brand@company.in"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Password *</label>
+                        <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="Min. 6 characters"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Phone</label>
+                          <input type="text" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} placeholder="+91 9876543210"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">GSTIN</label>
+                          <input type="text" value={regGstin} onChange={(e) => setRegGstin(e.target.value)} placeholder="29AAACA1100D"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                        </div>
+                      </div>
+                      <button
+                        disabled={regLoading}
+                        onClick={async () => {
+                          if (!regName || !regEmail || !regPassword) { setLoginError("Name, email and password are required."); return; }
+                          if (regPassword.length < 6) { setLoginError("Password must be at least 6 characters."); return; }
+                          setRegLoading(true);
+                          setLoginError("");
+                          try {
+                            const res = await fetch("/api/auth/register", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ name: regName, email: regEmail, password: regPassword, company: regCompany, phone: regPhone, gstin: regGstin }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) { setLoginError(data.error || "Registration failed."); return; }
+                            // Switch to login with pre-filled email
+                            setLoginEmail(regEmail);
+                            setLoginPassword(regPassword);
+                            setShowAdvRegister(false);
+                            setLoginError("✅ Account created! Logging you in...");
+                            // Auto login
+                            const loginRes = await fetch("/api/auth/login", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ role: "advertiser", email: regEmail, password: regPassword }),
+                            });
+                            const loginData = await loginRes.json();
+                            if (loginRes.ok) {
+                              localStorage.setItem("autoadz_adv_jwt", loginData.token);
+                              localStorage.setItem("autoadz_adv_user_id", String(loginData.userId));
+                              localStorage.setItem("autoadz_adv_email", loginData.email);
+                              localStorage.setItem("autoadz_adv_brand_name", loginData.name);
+                              localStorage.setItem("autoadz_adv_brand_id", loginData.company || loginData.email.split("@")[0]);
+                              localStorage.setItem("autoadz_adv_gstin", loginData.gstin || "");
+                              localStorage.setItem("autoadz_adv_phone", loginData.phone || "");
+                              localStorage.setItem("autoadz_adv_office", loginData.office || "");
+                              setAdvJwt(loginData.token);
+                              setAdvUserId(loginData.userId);
+                              setAdvEmail(loginData.email);
+                              setAdvBrandName(loginData.name);
+                              setAdvBrandId(loginData.company || loginData.email.split("@")[0]);
+                              setAdvGstin(loginData.gstin || "");
+                              setAdvPhone(loginData.phone || "");
+                              setAdvOffice(loginData.office || "");
+                              setUserSession("advertiser");
+                              setActiveSimulator("advertiser");
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }
+                          } catch { setLoginError("Network error. Please try again."); }
+                          finally { setRegLoading(false); }
+                        }}
+                        className="w-full py-2.5 rounded-xl text-xs font-bold font-mono bg-[#FF9800] hover:bg-orange-500 text-slate-950 transition disabled:opacity-60"
+                      >
+                        {regLoading ? "CREATING ACCOUNT..." : "CREATE BRAND ACCOUNT →"}
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -3052,15 +3174,47 @@ export default function App() {
               )}
 
               {/* AUTHENTICATE SUBMIT */}
-              <button
+              {!(activeLoginSubTab === "advertiser" && showAdvRegister) && <button
                 onClick={() => {
                   if (activeLoginSubTab === "advertiser") {
-                    if (loginEmail && loginPassword) {
+                    if (!loginEmail || !loginPassword) {
+                      setLoginError("Please enter your brand email and password.");
+                      return;
+                    }
+                    try {
+                      const res = await fetch("/api/auth/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ role: "advertiser", email: loginEmail, password: loginPassword }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) {
+                        setLoginError(data.error || "Invalid credentials.");
+                        return;
+                      }
+                      // Persist session
+                      localStorage.setItem("autoadz_adv_jwt", data.token);
+                      localStorage.setItem("autoadz_adv_user_id", String(data.userId));
+                      localStorage.setItem("autoadz_adv_email", data.email);
+                      localStorage.setItem("autoadz_adv_brand_name", data.name);
+                      localStorage.setItem("autoadz_adv_brand_id", data.company || data.email.split("@")[0]);
+                      localStorage.setItem("autoadz_adv_gstin", data.gstin || "");
+                      localStorage.setItem("autoadz_adv_phone", data.phone || "");
+                      localStorage.setItem("autoadz_adv_office", data.office || "");
+                      // Update state
+                      setAdvJwt(data.token);
+                      setAdvUserId(data.userId);
+                      setAdvEmail(data.email);
+                      setAdvBrandName(data.name);
+                      setAdvBrandId(data.company || data.email.split("@")[0]);
+                      setAdvGstin(data.gstin || "");
+                      setAdvPhone(data.phone || "");
+                      setAdvOffice(data.office || "");
                       setUserSession("advertiser");
                       setActiveSimulator("advertiser");
                       window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else {
-                      setLoginError("Please enter valid brand credentials.");
+                    } catch {
+                      setLoginError("Network error. Please try again.");
                     }
                   } else if (activeLoginSubTab === "driver") {
                     const cleanPhone = loginPhone.trim().replace(/\D/g, "");
@@ -3124,7 +3278,7 @@ export default function App() {
                 }`}
               >
                 AUTHENTICATE & LOG IN
-              </button>
+              </button>}
             </div>
           </main>
         )}
@@ -3209,6 +3363,14 @@ export default function App() {
           {/* Logout Switch Portal Button */}
           <button
             onClick={() => {
+              if (userSession === "advertiser") {
+                localStorage.removeItem("autoadz_adv_jwt");
+                localStorage.removeItem("autoadz_adv_user_id");
+                localStorage.removeItem("autoadz_adv_email");
+                setAdvJwt("");
+                setAdvUserId(null);
+                setAdvEmail("");
+              }
               setUserSession(null);
               setLoginError("");
             }}
@@ -4007,13 +4169,19 @@ export default function App() {
                             </div>
 
                             <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 text-xs text-slate-700">
+                              {advEmail && (
+                                <div className="p-3 flex justify-between items-center">
+                                  <span className="text-slate-500">Login Email</span>
+                                  <span className="font-mono text-slate-800 text-[11px]">{advEmail}</span>
+                                </div>
+                              )}
                               <div className="p-3 flex justify-between items-center">
                                 <span className="text-slate-500">Business Registration</span>
-                                <span className="font-mono text-slate-800">{advGstin}</span>
+                                <span className="font-mono text-slate-800">{advGstin || "—"}</span>
                               </div>
                               <div className="p-3 flex justify-between items-center">
                                 <span className="text-slate-500">Phone Verified</span>
-                                <span className="font-medium text-green-600">{advPhone}</span>
+                                <span className="font-medium text-green-600">{advPhone || "—"}</span>
                               </div>
                               <div className="p-3 flex justify-between items-center">
                                 <span className="text-slate-500">Total Campaigns Launched</span>
