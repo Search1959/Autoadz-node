@@ -3175,7 +3175,7 @@ export default function App() {
 
               {/* AUTHENTICATE SUBMIT */}
               {!(activeLoginSubTab === "advertiser" && showAdvRegister) && <button
-                onClick={() => {
+                onClick={async () => {
                   if (activeLoginSubTab === "advertiser") {
                     if (!loginEmail || !loginPassword) {
                       setLoginError("Please enter your brand email and password.");
