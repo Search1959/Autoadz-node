@@ -6208,6 +6208,22 @@ export default function App() {
                           <div className="flex gap-2 border-t border-slate-100 pt-2">
                             <button
                               onClick={async () => {
+                                const newPwd = prompt(`Set new password for ${adv.email}:`);
+                                if (!newPwd || newPwd.length < 6) { alert("Minimum 6 characters."); return; }
+                                const res = await fetch(`/api/advertisers/${adv.id}/reset-password`, {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ newPassword: newPwd }),
+                                });
+                                const data = await res.json();
+                                alert(data.success ? `✅ Password reset to: ${newPwd}` : `❌ ${data.error}`);
+                              }}
+                              className="flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
+                            >
+                              🔑 RESET PWD
+                            </button>
+                            <button
+                              onClick={async () => {
                                 const action = adv.isActive ? "disable" : "enable";
                                 if (!confirm(`${action.toUpperCase()} account for ${adv.name}?`)) return;
                                 await fetch(`/api/advertisers/${adv.id}/status`, {

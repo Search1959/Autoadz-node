@@ -1100,6 +1100,21 @@ app.get("/api/advertisers", async (req, res) => {
   }
 });
 
+// Admin: reset advertiser password
+app.put("/api/advertisers/:id/reset-password", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+    const hash = await bcrypt.hash(newPassword, 10);
+    await db("UPDATE users SET password_hash = ? WHERE id = ? AND role = 'advertiser'", [hash, id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to reset password" });
+  }
+});
+
 // Admin: toggle advertiser active status
 app.put("/api/advertisers/:id/status", async (req, res) => {
   try {
