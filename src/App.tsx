@@ -3047,8 +3047,11 @@ export default function App() {
                         <input
                           type="email"
                           value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
+                          onChange={(e) => setLoginEmail(e.target.value.trim())}
                           placeholder="brand@company.in"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          autoComplete="email"
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
                         />
                       </div>
@@ -3059,6 +3062,9 @@ export default function App() {
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           placeholder="••••••••"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          autoComplete="current-password"
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
                         />
                       </div>
