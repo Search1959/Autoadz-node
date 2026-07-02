@@ -2951,8 +2951,8 @@ export default function App() {
               <div 
                 onClick={() => {
                   setActiveLoginSubTab("advertiser");
-                  setLoginEmail("tata@motors.in");
-                  setLoginPassword("password");
+                  setLoginEmail("");
+                  setLoginPassword("");
                   setLoginError("");
                 }}
                 className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
@@ -2994,11 +2994,11 @@ export default function App() {
               </div>
 
               {/* ADMIN PORTAL CARD */}
-              <div 
+              <div
                 onClick={() => {
                   setActiveLoginSubTab("admin");
-                  setLoginEmail("admin@autoadz.in");
-                  setLoginPassword("password");
+                  setLoginEmail("");
+                  setLoginPassword("");
                   setLoginError("");
                 }}
                 className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
