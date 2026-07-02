@@ -17,7 +17,7 @@ import {
   Smartphone, Shield, Check, RotateCcw, Camera, HelpCircle, 
   TrendingUp, Award, Navigation, RefreshCw, Eye, ThumbsUp, 
   ThumbsDown, Sparkles, MessageSquare, Activity, ShieldAlert,
-  Sun, Moon, Upload, Trash2, Layers, QrCode, Rocket, Truck
+  Sun, Moon, Upload, Trash2, Layers, QrCode, Rocket, Truck, Building
 } from "lucide-react";
 import AiAssistant from "./components/AiAssistant";
 import LegalModal from "./components/LegalModal";
@@ -1051,7 +1051,8 @@ export default function App() {
   const [advertiserTab, setAdvertiserTab] = useState<"home" | "campaigns" | "tracking" | "profile" | "billing">("home");
   const [expandedFleetCampaignId, setExpandedFleetCampaignId] = useState<string | null>(null);
   const [driverTab, setDriverTab] = useState<"dashboard" | "proof" | "tracker" | "earnings" | "profile">("dashboard");
-  const [adminTab, setAdminTab] = useState<"campaigns" | "drivers" | "proofs" | "analytics" | "cities" | "settings" | "finance_crm">("campaigns");
+  const [adminTab, setAdminTab] = useState<"campaigns" | "drivers" | "proofs" | "analytics" | "cities" | "settings" | "finance_crm" | "advertisers">("campaigns");
+  const [advertisers, setAdvertisers] = useState<any[]>([]);
 
   // Localized SEO subpage simulation states
   const [selectedSeoCity, setSelectedSeoCity] = useState<string | null>(null);
@@ -1253,7 +1254,7 @@ export default function App() {
 
     try {
       const advId = localStorage.getItem("autoadz_adv_user_id");
-      const campUrl = (userSession === "advertiser" && advId) ? `/api/campaigns?advertiser_id=${advId}` : "/api/campaigns";
+      const campUrl = advId ? `/api/campaigns?advertiser_id=${advId}` : "/api/campaigns";
       const [dataCamps, dataDrivers, dataProofs, dataTxs, dataNotifs, dataCities, dataBills] = await Promise.all([
         safeFetchJson<any[]>(campUrl, []),
         safeFetchJson<any[]>("/api/drivers", []),
@@ -1325,6 +1326,12 @@ export default function App() {
     const interval = setInterval(fetchData, 8000); // Poll every 8 seconds for dynamic simulated kms
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch advertisers list when admin opens advertisers tab
+  useEffect(() => {
+    if (userSession !== "admin" || adminTab !== "advertisers") return;
+    fetch("/api/advertisers").then(r => r.json()).then(data => { if (Array.isArray(data)) setAdvertisers(data); }).catch(() => {});
+  }, [userSession, adminTab]);
 
   // Advertiser live tracking — poll server GPS positions every 8s
   useEffect(() => {
@@ -3638,12 +3645,23 @@ export default function App() {
                               </button>
                             </div>
 
+                            {/* Brand name — readonly, from logged-in profile */}
+                            <div className="bg-[#0B1F4D]/5 border border-[#0B1F4D]/15 rounded-lg p-2 flex items-center gap-2">
+                              <div className="w-6 h-6 bg-[#0B1F4D] text-white rounded-full flex items-center justify-center text-[9px] font-bold shrink-0">
+                                {advBrandName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="text-[9px] text-slate-400 font-mono uppercase">Brand Account</p>
+                                <p className="text-xs font-bold text-[#0B1F4D]">{advBrandName}</p>
+                              </div>
+                            </div>
+
                             <div>
                               <label className="text-[10px] text-slate-500 block font-medium">Campaign Name</label>
-                              <input 
+                              <input
                                 type="text"
                                 required
-                                placeholder="e.g. Swiggy Free Delivery"
+                                placeholder="e.g. Summer Sale Campaign"
                                 value={newCampTitle}
                                 onChange={(e) => setNewCampTitle(e.target.value)}
                                 className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#0B1F4D]"
@@ -5364,6 +5382,7 @@ export default function App() {
                       { key: "campaigns",   icon: <Rocket size={13} />,    label: "Campaigns",    count: campaigns.length },
                       { key: "drivers",     icon: <Truck size={13} />,     label: "Drivers KYC",  count: drivers.length },
                       { key: "proofs",      icon: <Camera size={13} />,    label: "Audit Proofs", count: proofs.length },
+                      { key: "advertisers", icon: <Building size={13} />,  label: "Advertisers",  count: advertisers.length },
                       { key: "cities",      icon: <MapPin size={13} />,    label: "Cities",       count: cities.length },
                       { key: "finance_crm", icon: <DollarSign size={13} />,label: "Finance & CRM",count: bills.length },
                       { key: "settings",    icon: <Settings size={13} />,  label: "Gateway",      count: null },
@@ -6135,6 +6154,61 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* ADMIN ADVERTISERS TAB */}
+            {adminTab === "advertisers" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-800">Brand Advertiser Accounts</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{advertisers.length} registered brands</p>
+                  </div>
+                </div>
+                {advertisers.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 text-xs">
+                    <Building size={32} className="mx-auto mb-2 opacity-30" />
+                    <p>No brand accounts registered yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {advertisers.map((adv: any) => {
+                      const advCamps = campaigns.filter(c => c.advertiserId === adv.id);
+                      return (
+                        <div key={adv.id} className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-[#0B1F4D] text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0">
+                              {adv.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-xs text-slate-800 truncate">{adv.name}</p>
+                              <p className="text-[10px] text-slate-500 truncate">{adv.company || "—"}</p>
+                            </div>
+                            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${adv.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                              {adv.isActive ? "ACTIVE" : "DISABLED"}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-600 border-t border-slate-100 pt-2">
+                            <span className="truncate">📧 {adv.email}</span>
+                            <span>📱 {adv.phone || "—"}</span>
+                            <span>🏢 GSTIN: {adv.gstin || "—"}</span>
+                            <span>📋 Campaigns: <b>{advCamps.length}</b></span>
+                          </div>
+                          {advCamps.length > 0 && (
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              {advCamps.map(c => (
+                                <span key={c.id} className="text-[9px] bg-[#FF9800]/10 text-[#FF9800] border border-[#FF9800]/20 px-2 py-0.5 rounded-full font-mono">
+                                  {c.title}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

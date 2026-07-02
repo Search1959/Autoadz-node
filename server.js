@@ -1085,6 +1085,21 @@ app.get("/api/auth/setup-admin", async (req, res) => {
   }
 });
 
+// List all brand advertisers (admin use)
+app.get("/api/advertisers", async (req, res) => {
+  try {
+    const rows = await db("SELECT id, name, email, company, phone, gstin, office, is_active, created_at FROM users WHERE role = 'advertiser' ORDER BY created_at DESC");
+    res.json(rows.map(r => ({
+      id: r.id, name: r.name, email: r.email,
+      company: r.company, phone: r.phone, gstin: r.gstin, office: r.office,
+      isActive: !!r.is_active, createdAt: r.created_at,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch advertisers" });
+  }
+});
+
 // Advertiser self-registration
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password, company, phone, gstin, office } = req.body;
