@@ -3259,7 +3259,7 @@ export default function App() {
                       });
                       const data = await res.json();
                       if (!res.ok) {
-                        setLoginError(`${data.error || "Invalid credentials."} [${trimEmail}]`);
+                        setLoginError(data.error || "Invalid credentials.");
                         return;
                       }
                       // Persist session
@@ -3338,7 +3338,7 @@ export default function App() {
                       setUserSession("admin");
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     } else {
-                      setLoginError(`Invalid admin credentials. [${adminEmail}]`);
+                      setLoginError("Invalid admin credentials.");
                     }
                   }
                 }}
