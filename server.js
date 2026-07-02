@@ -181,8 +181,62 @@ function mapDriver(r) {
     currentSessionKms: Number(r.current_session_kms || 0),
     currentSessionSeconds: Number(r.current_session_seconds || 0),
     trackingStartTime: r.tracking_start_time,
+    lat: r.lat ? Number(r.lat) : null,
+    lng: r.lng ? Number(r.lng) : null,
+    locationUpdatedAt: r.location_updated_at || null,
   };
 }
+
+// ─── LIVE LOCATION ENDPOINTS ──────────────────────────────────────────────────
+
+// Driver pushes its GPS coordinates
+app.post("/api/drivers/:id/location", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lat, lng } = req.body;
+    if (!lat || !lng) return res.status(400).json({ error: "lat and lng required" });
+    await db(
+      "UPDATE drivers SET lat = ?, lng = ?, location_updated_at = ? WHERE id = ?",
+      [Number(lat), Number(lng), ts(), id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update location" });
+  }
+});
+
+// Advertiser polls this — returns drivers active on given campaign IDs with recent GPS
+app.get("/api/drivers/live-locations", async (req, res) => {
+  try {
+    const { campaign_ids } = req.query;
+    let rows;
+    if (campaign_ids) {
+      const ids = String(campaign_ids).split(",").filter(Boolean);
+      if (ids.length === 0) return res.json([]);
+      const placeholders = ids.map(() => "?").join(",");
+      rows = await db(
+        `SELECT id, name, auto_number, state, lat, lng, location_updated_at, current_campaign_id
+         FROM drivers
+         WHERE current_campaign_id IN (${placeholders}) AND lat IS NOT NULL AND lng IS NOT NULL`,
+        ids
+      );
+    } else {
+      rows = await db(
+        "SELECT id, name, auto_number, state, lat, lng, location_updated_at, current_campaign_id FROM drivers WHERE lat IS NOT NULL AND lng IS NOT NULL"
+      );
+    }
+    res.json(rows.map(r => ({
+      id: r.id, name: r.name, autoNumber: r.auto_number,
+      state: r.state, lat: Number(r.lat), lng: Number(r.lng),
+      locationUpdatedAt: r.location_updated_at,
+      currentCampaignId: r.current_campaign_id,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch live locations" });
+  }
+});
 
 app.get("/api/drivers", async (req, res) => {
   try {

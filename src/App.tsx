@@ -530,6 +530,7 @@ export default function App() {
   const previousStateRef = useRef<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastCoordsRef = useRef<{ lat: number; lng: number; timestamp: number } | null>(null);
+  const lastLocationSentRef = useRef<number>(0);
   const qrVideoRef = useRef<HTMLVideoElement | null>(null);
   const qrCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -775,7 +776,19 @@ export default function App() {
               const accuracy = position.coords.accuracy || 0;
               
               setLastCoords({ lat: latitude, lng: longitude });
-              if (loggedInDriver) setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], lat: latitude, lng: longitude, state: "tracking" } }));
+              if (loggedInDriver) {
+                setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], lat: latitude, lng: longitude, state: "tracking" } }));
+                // Push real GPS to server every 10s so advertiser map updates
+                const nowMs = Date.now();
+                if (nowMs - lastLocationSentRef.current > 10000) {
+                  lastLocationSentRef.current = nowMs;
+                  fetch(`/api/drivers/${loggedInDriver.id}/location`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ lat: latitude, lng: longitude }),
+                  }).catch(() => {});
+                }
+              }
 
               if (lastCoordsRef.current === null) {
                 // First coordinate acquired!
@@ -1312,6 +1325,34 @@ export default function App() {
     const interval = setInterval(fetchData, 8000); // Poll every 8 seconds for dynamic simulated kms
     return () => clearInterval(interval);
   }, []);
+
+  // Advertiser live tracking — poll server GPS positions every 8s
+  useEffect(() => {
+    if (userSession !== "advertiser" || advertiserTab !== "tracking") return;
+    const pollLiveLocations = async () => {
+      try {
+        const campIds = campaigns.filter(c => c.status === "active").map(c => c.id);
+        if (campIds.length === 0) return;
+        const res = await fetch(`/api/drivers/live-locations?campaign_ids=${campIds.join(",")}`);
+        if (!res.ok) return;
+        const liveDrivers: any[] = await res.json();
+        if (liveDrivers.length > 0) {
+          setDriverPositions(prev => {
+            const next = { ...prev };
+            liveDrivers.forEach(d => {
+              if (d.lat && d.lng) {
+                next[d.id] = { ...next[d.id], lat: d.lat, lng: d.lng, name: d.name, autoNumber: d.autoNumber, state: d.state };
+              }
+            });
+            return next;
+          });
+        }
+      } catch {}
+    };
+    pollLiveLocations();
+    const interval = setInterval(pollLiveLocations, 8000);
+    return () => clearInterval(interval);
+  }, [userSession, advertiserTab, campaigns]);
 
   // Post campaign
   const handleCreateCampaign = async (e: React.FormEvent) => {
@@ -3946,7 +3987,7 @@ export default function App() {
                           <h5 className="font-bold text-xs text-[#0B1F4D] flex items-center gap-1">
                             <MapPin size={12} className="text-[#FF9800]" /> Real-time Transit Tracking
                           </h5>
-                          <p className="text-[10px] text-slate-400 mt-1">Live simulation map matches drivers checked-in in Bangalore/Kolkata.</p>
+                          <p className="text-[10px] text-slate-400 mt-1">Live GPS positions from drivers assigned to your campaigns. Updates every 8 seconds.</p>
                         </div>
 
                         {/* Visual route summary for active campaign */}
@@ -3968,7 +4009,7 @@ export default function App() {
                               <p className="font-mono flex items-center gap-1 text-slate-700">
                                 <Navigation size={10} className="text-[#FF9800]" /> Active Area: <span className="font-sans text-slate-800 font-medium">{camp.area}</span>
                               </p>
-                              <p>Drivers send telemetry packets every 30 seconds via the AutoAdz Mobile GPS ping system.</p>
+                              <p>Driver GPS coordinates are pushed to the server every 10 seconds and displayed here live.</p>
                             </div>
                           </div>
                         ))}
@@ -4539,7 +4580,10 @@ export default function App() {
                                           // Trigger a fake coordinates update (Kolkata)
                                           const simCoords1 = { lat: 22.5726 + (Math.random() - 0.5) * 0.02, lng: 88.3639 + (Math.random() - 0.5) * 0.02 };
                                           setLastCoords(simCoords1);
-                                          if (loggedInDriver) setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], ...simCoords1, state: "tracking" } }));
+                                          if (loggedInDriver) {
+                                            setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], ...simCoords1, state: "tracking" } }));
+                                            fetch(`/api/drivers/${loggedInDriver.id}/location`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(simCoords1) }).catch(() => {});
+                                          }
                                         }}
                                         className="py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 font-mono transition cursor-pointer"
                                       >
@@ -4558,7 +4602,10 @@ export default function App() {
                                           // Trigger a fake coordinates update (Kolkata)
                                           const simCoords2 = { lat: 22.5726 + (Math.random() - 0.5) * 0.02, lng: 88.3639 + (Math.random() - 0.5) * 0.02 };
                                           setLastCoords(simCoords2);
-                                          if (loggedInDriver) setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], ...simCoords2, state: "tracking" } }));
+                                          if (loggedInDriver) {
+                                            setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], ...simCoords2, state: "tracking" } }));
+                                            fetch(`/api/drivers/${loggedInDriver.id}/location`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(simCoords2) }).catch(() => {});
+                                          }
                                         }}
                                         className="py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 font-mono transition cursor-pointer"
                                       >

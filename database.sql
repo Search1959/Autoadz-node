@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS drivers (
   current_session_kms DECIMAL(10,4) DEFAULT 0,
   current_session_seconds INT DEFAULT 0,
   tracking_start_time VARCHAR(50) DEFAULT NULL,
+  lat DECIMAL(10,7) DEFAULT NULL,
+  lng DECIMAL(10,7) DEFAULT NULL,
+  location_updated_at VARCHAR(50) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
