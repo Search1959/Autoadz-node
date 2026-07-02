@@ -3250,14 +3250,16 @@ export default function App() {
                       return;
                     }
                     try {
+                      const trimEmail = loginEmail.trim().toLowerCase();
+                      const trimPass = loginPassword.trim();
                       const res = await fetch("/api/auth/login", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ role: "advertiser", email: loginEmail, password: loginPassword }),
+                        body: JSON.stringify({ role: "advertiser", email: trimEmail, password: trimPass }),
                       });
                       const data = await res.json();
                       if (!res.ok) {
-                        setLoginError(data.error || "Invalid credentials.");
+                        setLoginError(`${data.error || "Invalid credentials."} [${trimEmail}]`);
                         return;
                       }
                       // Persist session
