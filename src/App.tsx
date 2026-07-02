@@ -3330,11 +3330,13 @@ export default function App() {
                       });
                     }
                   } else if (activeLoginSubTab === "admin") {
-                    if (loginEmail === "apex7tech@gmail.com" && loginPassword === "Search@1959") {
+                    const adminEmail = loginEmail.trim().toLowerCase();
+                    const adminPass = loginPassword.trim();
+                    if (adminEmail === "apex7tech@gmail.com" && adminPass === "Search@1959") {
                       setUserSession("admin");
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     } else {
-                      setLoginError("Invalid admin credentials.");
+                      setLoginError(`Invalid admin credentials. [${adminEmail}]`);
                     }
                   }
                 }}
