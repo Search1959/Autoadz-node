@@ -2999,110 +2999,107 @@ export default function App() {
           </main>
         )}
 
-        {/* SECURE MEMBER LOGIN PANEL (PRESERVED WORKFLOWS) */}
+        {/* SECURE MEMBER LOGIN PANEL */}
         {landingSection === "login" && (
-          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-4xl mx-auto z-10 w-full">
-            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-sans">
-              {/* ADVERTISER PORTAL CARD */}
-              <div 
-                onClick={() => {
-                  setActiveLoginSubTab("advertiser");
-                  setLoginEmail("");
-                  setLoginPassword("");
-                  setLoginError("");
-                }}
-                className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
-                  activeLoginSubTab === "advertiser"
-                    ? "bg-slate-900 border-[#FF9800] ring-1 ring-[#FF9800]/30 shadow-xl"
-                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 shadow hover:bg-slate-900/70"
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-[#FF9800] flex items-center justify-center mb-3">
-                  <TrendingUp size={18} />
-                </div>
-                <h3 className="font-display font-extrabold text-sm text-white">Brand / Advertiser Portal</h3>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                  Track active campaigns, monitor kilometers, fund wallets, and audit live reach metrics.
-                </p>
-              </div>
+          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-2xl mx-auto z-10 w-full">
 
-              {/* DRIVER PORTAL CARD */}
-              <div 
-                onClick={() => {
-                  setActiveLoginSubTab("driver");
-                  setLoginPhone("9876543210");
-                  setLoginOtp("4921");
-                  setLoginError("");
-                }}
-                className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
-                  activeLoginSubTab === "driver"
-                    ? "bg-slate-900 border-teal-500 ring-1 ring-teal-500/30 shadow-xl"
-                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 shadow hover:bg-slate-900/70"
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-3">
-                  <Smartphone size={18} />
-                </div>
-                <h3 className="font-display font-extrabold text-sm text-white">Driver Partner App</h3>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                  Log driving runs, upload morning checklist photo proofs, and withdraw cash.
-                </p>
-              </div>
-
-              {/* ADMIN PORTAL CARD */}
-              <div
-                onClick={() => {
-                  setActiveLoginSubTab("admin");
-                  setLoginEmail("");
-                  setLoginPassword("");
-                  setLoginError("");
-                }}
-                className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 ${
-                  activeLoginSubTab === "admin"
-                    ? "bg-slate-900 border-indigo-500 ring-1 ring-indigo-500/30 shadow-xl"
-                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 shadow hover:bg-slate-900/70"
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-3">
-                  <Shield size={18} />
-                </div>
-                <h3 className="font-display font-extrabold text-sm text-white">Operations Admin</h3>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                  Approve auto drivers, audit checklists, allocate campaigns, and release payouts.
-                </p>
+            {/* Page header */}
+            <div className="w-full bg-gradient-to-r from-[#0B1F4D] to-[#1a3a7a] rounded-2xl p-6 mb-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl shrink-0">🔐</div>
+              <div>
+                <div className="text-[10px] font-mono text-blue-200 font-bold uppercase tracking-widest mb-0.5">Portal Login</div>
+                <h3 className="text-2xl font-display font-black text-white leading-tight">Welcome Back</h3>
+                <p className="text-sm text-blue-200 mt-0.5">Select your role and log in below</p>
               </div>
             </div>
 
-            {/* LOGIN PANEL CONTAINER */}
-            <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 text-left">
-              <div className="text-center pb-2 border-b border-slate-800">
-                <h4 className="font-display font-extrabold text-sm text-white">
-                  {activeLoginSubTab === "advertiser" && "Brand Advertiser Gateway"}
-                  {activeLoginSubTab === "driver" && "Driver OTP Gateway"}
-                  {activeLoginSubTab === "admin" && "Operations Control Panel"}
+            {/* Role selector tabs */}
+            <div className="w-full grid grid-cols-3 gap-3 mb-5">
+              {/* Advertiser */}
+              <button
+                onClick={() => { setActiveLoginSubTab("advertiser"); setLoginEmail(""); setLoginPassword(""); setLoginError(""); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  activeLoginSubTab === "advertiser"
+                    ? "border-[#FF9800] bg-orange-50 shadow-lg"
+                    : "border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${activeLoginSubTab === "advertiser" ? "bg-[#FF9800] text-white" : "bg-orange-100 text-[#FF9800]"}`}>
+                  <TrendingUp size={18} />
+                </div>
+                <p className={`font-bold text-sm ${activeLoginSubTab === "advertiser" ? "text-[#FF9800]" : "text-slate-700"}`}>Brand / Advertiser</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Campaign dashboard & live tracking</p>
+              </button>
+
+              {/* Driver */}
+              <button
+                onClick={() => { setActiveLoginSubTab("driver"); setLoginPhone("9876543210"); setLoginOtp("4921"); setLoginError(""); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  activeLoginSubTab === "driver"
+                    ? "border-teal-500 bg-teal-50 shadow-lg"
+                    : "border-slate-200 bg-white hover:border-teal-200 hover:bg-teal-50/50"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${activeLoginSubTab === "driver" ? "bg-teal-600 text-white" : "bg-teal-100 text-teal-600"}`}>
+                  <Smartphone size={18} />
+                </div>
+                <p className={`font-bold text-sm ${activeLoginSubTab === "driver" ? "text-teal-700" : "text-slate-700"}`}>Driver Partner</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">GPS tracking & daily check-ins</p>
+              </button>
+
+              {/* Admin */}
+              <button
+                onClick={() => { setActiveLoginSubTab("admin"); setLoginEmail(""); setLoginPassword(""); setLoginError(""); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  activeLoginSubTab === "admin"
+                    ? "border-indigo-500 bg-indigo-50 shadow-lg"
+                    : "border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/50"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${activeLoginSubTab === "admin" ? "bg-indigo-600 text-white" : "bg-indigo-100 text-indigo-600"}`}>
+                  <Shield size={18} />
+                </div>
+                <p className={`font-bold text-sm ${activeLoginSubTab === "admin" ? "text-indigo-700" : "text-slate-700"}`}>Operations Admin</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Approve drivers & manage campaigns</p>
+              </button>
+            </div>
+
+            {/* Login form card */}
+            <div className="w-full bg-white rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
+
+              {/* Form title */}
+              <div className="pb-3 border-b border-slate-100">
+                <h4 className="font-bold text-base text-[#0B1F4D]">
+                  {activeLoginSubTab === "advertiser" && "Brand Advertiser Login"}
+                  {activeLoginSubTab === "driver" && "Driver Partner Login"}
+                  {activeLoginSubTab === "admin" && "Operations Admin Login"}
                 </h4>
-                <p className="text-[10px] text-slate-400 mt-0.5">Secure multi-tenant portal — login with your registered brand account</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {activeLoginSubTab === "advertiser" && "Access your campaign dashboard"}
+                  {activeLoginSubTab === "driver" && "Start your GPS session and check in"}
+                  {activeLoginSubTab === "admin" && "Manage the full AutoAdz platform"}
+                </p>
               </div>
 
               {/* ADVERTISER LOGIN / REGISTER FIELDS */}
               {activeLoginSubTab === "advertiser" && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Toggle */}
-                  <div className="flex rounded-xl overflow-hidden border border-slate-700 text-[11px] font-mono font-bold">
+                  <div className="flex rounded-xl overflow-hidden border-2 border-slate-100 text-xs font-bold">
                     <button
                       onClick={() => { setShowAdvRegister(false); setLoginError(""); }}
-                      className={`flex-1 py-1.5 transition ${!showAdvRegister ? "bg-[#FF9800] text-slate-950" : "text-slate-400 hover:text-white"}`}
-                    >LOGIN</button>
+                      className={`flex-1 py-2.5 transition ${!showAdvRegister ? "bg-[#FF9800] text-white" : "text-slate-400 hover:text-slate-600 bg-slate-50"}`}
+                    >Login</button>
                     <button
                       onClick={() => { setShowAdvRegister(true); setLoginError(""); }}
-                      className={`flex-1 py-1.5 transition ${showAdvRegister ? "bg-[#FF9800] text-slate-950" : "text-slate-400 hover:text-white"}`}
-                    >REGISTER</button>
+                      className={`flex-1 py-2.5 transition ${showAdvRegister ? "bg-[#FF9800] text-white" : "text-slate-400 hover:text-slate-600 bg-slate-50"}`}
+                    >Register</button>
                   </div>
 
                   {!showAdvRegister ? (
                     <>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Brand Corporate Email</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Corporate Email</label>
                         <input
                           type="email"
                           value={loginEmail}
@@ -3111,11 +3108,11 @@ export default function App() {
                           autoCapitalize="none"
                           autoCorrect="off"
                           autoComplete="email"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Password</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
                         <div className="relative">
                           <input
                             type={showAdvPassword ? "text" : "password"}
@@ -3125,47 +3122,47 @@ export default function App() {
                             autoCapitalize="none"
                             autoCorrect="off"
                             autoComplete="off"
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 pr-10 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 pr-16 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none"
                           />
                           <button type="button" onClick={() => setShowAdvPassword(p => !p)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-[10px]">
-                            {showAdvPassword ? "HIDE" : "SHOW"}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold">
+                            {showAdvPassword ? "Hide" : "Show"}
                           </button>
                         </div>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Contact Person Name *</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Contact Name *</label>
                         <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="e.g. Rahul Sharma"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Company / Brand Name *</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Company / Brand Name *</label>
                         <input type="text" value={regCompany} onChange={(e) => setRegCompany(e.target.value)} placeholder="e.g. Tata Motors Ltd."
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Business Email *</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Business Email *</label>
                         <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="brand@company.in"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Password *</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password *</label>
                         <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="Min. 6 characters"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Phone</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Phone</label>
                           <input type="text" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} placeholder="+91 9876543210"
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">GSTIN</label>
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">GSTIN</label>
                           <input type="text" value={regGstin} onChange={(e) => setRegGstin(e.target.value)} placeholder="29AAACA1100D"
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none" />
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
                         </div>
                       </div>
                       <button
@@ -3183,12 +3180,10 @@ export default function App() {
                             });
                             const data = await res.json();
                             if (!res.ok) { setLoginError(data.error || "Registration failed."); return; }
-                            // Switch to login with pre-filled email
                             setLoginEmail(regEmail);
                             setLoginPassword(regPassword);
                             setShowAdvRegister(false);
                             setLoginError("✅ Account created! Logging you in...");
-                            // Auto login
                             const loginRes = await fetch("/api/auth/login", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
@@ -3219,9 +3214,9 @@ export default function App() {
                           } catch { setLoginError("Network error. Please try again."); }
                           finally { setRegLoading(false); }
                         }}
-                        className="w-full py-2.5 rounded-xl text-xs font-bold font-mono bg-[#FF9800] hover:bg-orange-500 text-slate-950 transition disabled:opacity-60"
+                        className="w-full py-3.5 rounded-xl text-sm font-bold bg-[#FF9800] hover:bg-orange-500 text-white transition disabled:opacity-60 shadow shadow-orange-200"
                       >
-                        {regLoading ? "CREATING ACCOUNT..." : "CREATE BRAND ACCOUNT →"}
+                        {regLoading ? "Creating Account..." : "Create Brand Account →"}
                       </button>
                     </>
                   )}
@@ -3230,182 +3225,147 @@ export default function App() {
 
               {/* DRIVER LOGIN FIELDS */}
               {activeLoginSubTab === "driver" && (
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Driver Phone Number</label>
-                    <input 
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Registered Mobile Number</label>
+                    <input
                       type="text"
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(e.target.value)}
-                      placeholder="9876543210"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-teal-500 focus:outline-none"
+                      placeholder="e.g. 9876543210"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-mono"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">4-Digit Security OTP</label>
-                    <input 
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">4-Digit Security PIN</label>
+                    <input
                       type="text"
                       value={loginOtp}
                       onChange={(e) => setLoginOtp(e.target.value)}
-                      placeholder="4921"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white tracking-widest text-center text-lg font-mono focus:border-teal-500 focus:outline-none"
+                      placeholder="• • • •"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg text-slate-800 tracking-[0.5em] text-center font-mono focus:border-teal-500 focus:outline-none"
                     />
                   </div>
-                  <div className="bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] p-2.5 rounded-lg font-mono">
-                    💡 <b>Sandbox Driver</b>: +91 9876543210 (Rajesh Kumar) / OTP: 4921
+                  <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 flex gap-2 items-start">
+                    <span>💡</span>
+                    <p className="text-xs text-teal-700"><strong>Demo driver:</strong> Phone 9876543210 · PIN 4921</p>
                   </div>
                 </div>
               )}
 
               {/* ADMIN LOGIN FIELDS */}
               {activeLoginSubTab === "admin" && (
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Admin Email</label>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Admin Email</label>
                     <input
                       type="text"
                       inputMode="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value.trim())}
-                      placeholder="Enter admin email"
+                      placeholder="admin@autoadz.in"
                       autoCapitalize="none"
                       autoCorrect="off"
                       autoComplete="off"
                       spellCheck={false}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 block uppercase font-mono font-bold">Master Security Pin</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Admin Password</label>
                     <input
                       type="password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="Enter password"
+                      placeholder="••••••••"
                       autoCapitalize="none"
                       autoCorrect="off"
                       autoComplete="off"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
                 </div>
               )}
 
+              {/* Error message */}
               {loginError && (
-                <div className="text-red-400 text-xs text-center font-medium bg-red-950/40 border border-red-500/20 p-2 rounded-lg font-mono">
-                  ⚠️ {loginError}
+                <div className={`text-sm text-center font-medium p-3 rounded-xl border ${loginError.startsWith("✅") ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-50 border-red-200"}`}>
+                  {loginError}
                 </div>
               )}
 
-              {/* AUTHENTICATE SUBMIT */}
-              {!(activeLoginSubTab === "advertiser" && showAdvRegister) && <button
-                onClick={async () => {
-                  if (activeLoginSubTab === "advertiser") {
-                    if (!loginEmail || !loginPassword) {
-                      setLoginError("Please enter your brand email and password.");
-                      return;
-                    }
-                    try {
-                      const trimEmail = loginEmail.trim().toLowerCase();
-                      const trimPass = loginPassword.trim();
-                      const res = await fetch("/api/auth/login", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ role: "advertiser", email: trimEmail, password: trimPass }),
-                      });
-                      const data = await res.json();
-                      if (!res.ok) {
-                        setLoginError(data.error || "Invalid credentials.");
-                        return;
-                      }
-                      // Persist session
-                      localStorage.setItem("autoadz_adv_jwt", data.token);
-                      localStorage.setItem("autoadz_adv_user_id", String(data.userId));
-                      localStorage.setItem("autoadz_adv_email", data.email);
-                      localStorage.setItem("autoadz_adv_brand_name", data.name);
-                      localStorage.setItem("autoadz_adv_brand_id", data.company || data.email.split("@")[0]);
-                      localStorage.setItem("autoadz_adv_gstin", data.gstin || "");
-                      localStorage.setItem("autoadz_adv_phone", data.phone || "");
-                      localStorage.setItem("autoadz_adv_office", data.office || "");
-                      // Update state
-                      setAdvJwt(data.token);
-                      setAdvUserId(data.userId);
-                      setAdvEmail(data.email);
-                      setAdvBrandName(data.name);
-                      setAdvBrandId(data.company || data.email.split("@")[0]);
-                      setAdvGstin(data.gstin || "");
-                      setAdvPhone(data.phone || "");
-                      setAdvOffice(data.office || "");
-                      setUserSession("advertiser");
-                      setActiveSimulator("advertiser");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    } catch (err: any) {
-                      setLoginError(`Error: ${err?.message || "Network failure — check internet connection."}`);
-                    }
-                  } else if (activeLoginSubTab === "driver") {
-                    const cleanPhone = loginPhone.trim().replace(/\D/g, "");
-                    if (!cleanPhone) {
-                      setLoginError("Please enter your registered phone number.");
-                      return;
-                    }
-                    const matchedDriver = drivers.find(d => {
-                      const dPhone = d.phone.trim().replace(/\D/g, "");
-                      return dPhone === cleanPhone || d.phone.trim() === loginPhone.trim();
-                    });
-                    if (matchedDriver) {
-                      setLoggedInDriverId(matchedDriver.id);
-                      setUserSession("driver");
-                      setActiveSimulator("driver");
-                      setLoginError("");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else {
-                      // Auto-register driver on-the-fly to guarantee absolute seamless login
-                      const nameToCreate = cleanPhone === "9836130393" ? "Delip" : `Driver ${loginPhone}`;
-                      fetch("/api/drivers", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          name: nameToCreate,
-                          phone: loginPhone,
-                          autoNumber: "WB-01-EX-" + Math.floor(1000 + Math.random() * 9000),
-                          location: "Kolkata - Gariahat"
-                        })
-                      })
-                      .then(res => res.json())
-                      .then(newDriver => {
-                        fetchData().then(() => {
-                          setLoggedInDriverId(newDriver.id || "driver_delip");
-                          setUserSession("driver");
-                          setActiveSimulator("driver");
-                          setLoginError("");
+              {/* Submit button */}
+              {!(activeLoginSubTab === "advertiser" && showAdvRegister) && (
+                <button
+                  onClick={async () => {
+                    if (activeLoginSubTab === "advertiser") {
+                      if (!loginEmail || !loginPassword) { setLoginError("Please enter your email and password."); return; }
+                      try {
+                        const trimEmail = loginEmail.trim().toLowerCase();
+                        const trimPass = loginPassword.trim();
+                        const res = await fetch("/api/auth/login", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ role: "advertiser", email: trimEmail, password: trimPass }),
                         });
-                      })
-                      .catch(err => {
-                        console.error(err);
-                        setLoggedInDriverId("driver_delip");
-                        setUserSession("driver");
-                        setActiveSimulator("driver");
+                        const data = await res.json();
+                        if (!res.ok) { setLoginError(data.error || "Invalid credentials."); return; }
+                        localStorage.setItem("autoadz_adv_jwt", data.token);
+                        localStorage.setItem("autoadz_adv_user_id", String(data.userId));
+                        localStorage.setItem("autoadz_adv_email", data.email);
+                        localStorage.setItem("autoadz_adv_brand_name", data.name);
+                        localStorage.setItem("autoadz_adv_brand_id", data.company || data.email.split("@")[0]);
+                        localStorage.setItem("autoadz_adv_gstin", data.gstin || "");
+                        localStorage.setItem("autoadz_adv_phone", data.phone || "");
+                        localStorage.setItem("autoadz_adv_office", data.office || "");
+                        setAdvJwt(data.token); setAdvUserId(data.userId); setAdvEmail(data.email);
+                        setAdvBrandName(data.name); setAdvBrandId(data.company || data.email.split("@")[0]);
+                        setAdvGstin(data.gstin || ""); setAdvPhone(data.phone || ""); setAdvOffice(data.office || "");
+                        setUserSession("advertiser"); setActiveSimulator("advertiser");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } catch (err: any) { setLoginError(`Error: ${err?.message || "Network failure."}`); }
+                    } else if (activeLoginSubTab === "driver") {
+                      const cleanPhone = loginPhone.trim().replace(/\D/g, "");
+                      if (!cleanPhone) { setLoginError("Please enter your registered phone number."); return; }
+                      const matchedDriver = drivers.find(d => {
+                        const dPhone = d.phone.trim().replace(/\D/g, "");
+                        return dPhone === cleanPhone || d.phone.trim() === loginPhone.trim();
                       });
+                      if (matchedDriver) {
+                        setLoggedInDriverId(matchedDriver.id); setUserSession("driver");
+                        setActiveSimulator("driver"); setLoginError("");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else {
+                        const nameToCreate = cleanPhone === "9836130393" ? "Delip" : `Driver ${loginPhone}`;
+                        fetch("/api/drivers", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ name: nameToCreate, phone: loginPhone, autoNumber: "WB-01-EX-" + Math.floor(1000 + Math.random() * 9000), location: "Kolkata - Gariahat" })
+                        })
+                        .then(res => res.json())
+                        .then(newDriver => { fetchData().then(() => { setLoggedInDriverId(newDriver.id || "driver_delip"); setUserSession("driver"); setActiveSimulator("driver"); setLoginError(""); }); })
+                        .catch(() => { setLoggedInDriverId("driver_delip"); setUserSession("driver"); setActiveSimulator("driver"); });
+                      }
+                    } else if (activeLoginSubTab === "admin") {
+                      const adminEmail = loginEmail.trim().toLowerCase();
+                      const adminPass = loginPassword.trim();
+                      if (adminEmail === "apex7tech@gmail.com" && adminPass === "Search@1959") {
+                        setUserSession("admin");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else { setLoginError("Invalid admin credentials."); }
                     }
-                  } else if (activeLoginSubTab === "admin") {
-                    const adminEmail = loginEmail.trim().toLowerCase();
-                    const adminPass = loginPassword.trim();
-                    if (adminEmail === "apex7tech@gmail.com" && adminPass === "Search@1959") {
-                      setUserSession("admin");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else {
-                      setLoginError("Invalid admin credentials.");
-                    }
-                  }
-                }}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold font-mono transition shadow-lg ${
-                  activeLoginSubTab === "advertiser" ? "bg-[#FF9800] hover:bg-orange-500 text-slate-950 shadow-orange-500/10" :
-                  activeLoginSubTab === "driver" ? "bg-teal-500 hover:bg-teal-600 text-slate-950 shadow-teal-500/10" :
-                  "bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/10"
-                }`}
-              >
-                AUTHENTICATE & LOG IN
-              </button>}
+                  }}
+                  className={`w-full py-4 rounded-xl text-sm font-black transition shadow-lg tracking-wide ${
+                    activeLoginSubTab === "advertiser" ? "bg-[#FF9800] hover:bg-orange-500 text-white shadow-orange-200" :
+                    activeLoginSubTab === "driver" ? "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-200" :
+                    "bg-[#0B1F4D] hover:bg-[#1a3a7a] text-white shadow-slate-200"
+                  }`}
+                >
+                  {activeLoginSubTab === "advertiser" ? "🚀 Log In to Dashboard" :
+                   activeLoginSubTab === "driver" ? "🛺 Start My GPS Session" :
+                   "🔐 Access Admin Panel"}
+                </button>
+              )}
             </div>
           </main>
         )}
