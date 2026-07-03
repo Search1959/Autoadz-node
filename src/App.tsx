@@ -2229,14 +2229,14 @@ export default function App() {
                   </div>
 
                   <div className={`rounded-2xl overflow-hidden relative border ${darkMode ? "border-white/10" : "border-slate-200"} mb-4 shadow-sm`}>
-                    <img 
-                      src="https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&q=80&w=800"
-                      alt="Auto Rickshaw Media" 
+                    <img
+                      src={campaigns.find(c => c.status === "active")?.creativeUrl || campaigns[0]?.creativeUrl || "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&q=80&w=800"}
+                      alt="Campaign Creative"
                       className="w-full h-44 object-cover brightness-95"
                       referrerPolicy="no-referrer"
                     />
                     <div className={`absolute bottom-3 left-3 ${darkMode ? "bg-slate-900/90 text-white border-white/15" : "bg-white/95 text-[#0B1F4D] border-slate-150"} text-[9px] font-mono font-bold px-2.5 py-1 rounded-lg border shadow-xs`}>
-                      📍 DIGITAL-READY BANNER
+                      📍 {campaigns.find(c => c.status === "active")?.title || "DIGITAL-READY BANNER"}
                     </div>
                   </div>
 
