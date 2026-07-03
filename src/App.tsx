@@ -1143,10 +1143,10 @@ export default function App() {
   const [adminCityAutos, setAdminCityAutos] = useState("100");
 
   // Admin System integration placeholder credentials
-  const [systemWhatsAppToken, setSystemWhatsAppToken] = useState(() => localStorage.getItem("sys_whatsapp_token") || "EAAG3yH8V9G0BAOBF90h3yPsd88...");
-  const [systemWhatsAppPhoneId, setSystemWhatsAppPhoneId] = useState(() => localStorage.getItem("sys_whatsapp_phone_id") || "109825420194852");
+  const [systemWhatsAppToken, setSystemWhatsAppToken] = useState(() => localStorage.getItem("sys_whatsapp_token") || "");
+  const [systemWhatsAppPhoneId, setSystemWhatsAppPhoneId] = useState(() => localStorage.getItem("sys_whatsapp_phone_id") || "");
   const [systemAdminWhatsAppPhone, setSystemAdminWhatsAppPhone] = useState(() => localStorage.getItem("sys_admin_whatsapp_phone") || "9836130393");
-  const [systemSmsApiKey, setSystemSmsApiKey] = useState(() => localStorage.getItem("sys_sms_api_key") || "api_key_84a92f029a1b8c73");
+  const [systemSmsApiKey, setSystemSmsApiKey] = useState(() => localStorage.getItem("sys_sms_api_key") || "");
   const [systemSmsSenderId, setSystemSmsSenderId] = useState(() => localStorage.getItem("sys_sms_sender_id") || "AUTADZ");
   const [systemSettingsSuccessMsg, setSystemSettingsSuccessMsg] = useState("");
 
@@ -6429,6 +6429,19 @@ export default function App() {
                           />
                         </div>
                       </div>
+                      {/* Setup guide */}
+                      {(!systemWhatsAppToken || !systemWhatsAppPhoneId) && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+                          <p className="text-xs font-bold text-amber-800">⚠️ Setup Required — WhatsApp API not yet configured</p>
+                          <ol className="text-xs text-amber-700 space-y-1 list-decimal list-inside leading-relaxed">
+                            <li>Go to <strong>developers.facebook.com</strong> → My Apps → Create App → Business</li>
+                            <li>Add <strong>WhatsApp</strong> product → Set up WhatsApp Business API</li>
+                            <li>Copy your <strong>Phone Number ID</strong> and <strong>Permanent Access Token</strong></li>
+                            <li>Paste both above and click Save, then Send Test Message</li>
+                          </ol>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
                         <p className="text-xs text-slate-400 leading-relaxed">
                           Sends automated alerts when a new driver registers or a campaign is submitted.
@@ -6436,20 +6449,21 @@ export default function App() {
                         <button
                           type="button"
                           onClick={async () => {
+                            if (!systemWhatsAppToken || !systemWhatsAppPhoneId) { alert("Please enter your WhatsApp Access Token and Phone Number ID first."); return; }
                             if (!systemAdminWhatsAppPhone) { alert("Please enter your Admin WhatsApp number first."); return; }
-                            const confirmTest = confirm(`Send a test WhatsApp message to ${systemAdminWhatsAppPhone}?`);
+                            const confirmTest = confirm(`Send a test WhatsApp message to +91${systemAdminWhatsAppPhone}?`);
                             if (confirmTest) {
                               try {
                                 const res = await fetch("/api/whatsapp/send", {
                                   method: "POST",
                                   headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ token: systemWhatsAppToken, phoneId: systemWhatsAppPhoneId, recipient: systemAdminWhatsAppPhone, message: "🔔 *AutoAdz Integration Test!* Your WhatsApp API is connected successfully." })
+                                  body: JSON.stringify({ token: systemWhatsAppToken, phoneId: systemWhatsAppPhoneId, recipient: systemAdminWhatsAppPhone, message: "🔔 *AutoAdz Integration Test!* Your WhatsApp API is connected successfully to AutoAdz platform." })
                                 });
                                 const data = await res.json();
                                 if (res.ok) { alert(`✅ Test message sent to ${systemAdminWhatsAppPhone}! Check your WhatsApp.`); }
                                 else {
-                                  const errorMsg = typeof data.error === "object" ? (data.error.message || JSON.stringify(data.error)) : (data.error || "Check your token or Phone ID.");
-                                  alert(`❌ Failed: ${errorMsg}`);
+                                  const errorMsg = typeof data.error === "object" ? (data.error.message || JSON.stringify(data.error)) : (data.error || "Check your token or Phone Number ID.");
+                                  alert(`❌ Failed: ${errorMsg}\n\nTip: Make sure you are using a Permanent Token (not a temporary one) from Meta Developers.`);
                                 }
                               } catch (err: any) { alert(`Error: ${err.message}`); }
                             }
