@@ -2084,7 +2084,7 @@ export default function App() {
 
           <div className={`hidden md:flex items-center gap-6 text-xs font-bold ${darkMode ? "text-slate-300" : "text-slate-600"} uppercase font-mono tracking-wider`}>
             <button onClick={() => setLandingSection("hero")} className={`transition hover:text-[#10B981] ${landingSection === "hero" ? "text-[#10B981]" : ""}`}>Platform Info</button>
-            <button onClick={() => setLandingSection("register-campaign")} className={`transition hover:text-[#10B981] ${landingSection === "register-campaign" ? "text-[#10B981]" : ""}`}>Launch Campaign</button>
+            <button onClick={() => setLandingSection("register-campaign")} className={`transition hover:text-[#10B981] ${landingSection === "register-campaign" ? "text-[#10B981]" : ""}`}>Start a Campaign</button>
             <button onClick={() => setLandingSection("register-driver")} className={`transition hover:text-[#10B981] ${landingSection === "register-driver" ? "text-[#10B981]" : ""}`}>Become a Driver Partner</button>
             <button onClick={() => setLandingSection("login")} className={`transition hover:text-[#10B981] ${landingSection === "login" ? "text-[#10B981]" : ""}`}>Portal Login</button>
           </div>
@@ -2632,127 +2632,142 @@ export default function App() {
           </div>
         )}
 
-        {/* REGISTER NEW CAMPAIGN SECTION (Adversiter self-sign up) */}
+        {/* REGISTER NEW CAMPAIGN SECTION (Advertiser self-sign up) */}
         {landingSection === "register-campaign" && (
-          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-xl mx-auto z-10 w-full text-left">
-            <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl space-y-6 w-full">
-              <div className="pb-3 border-b border-slate-800">
-                <span className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-widest">Brand Self Service</span>
-                <h3 className="text-xl font-display font-black text-white mt-1">Submit New Campaign Proposal</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Define your brand's auto advertising specifications. Proposal is live immediately in database.</p>
+          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-2xl mx-auto z-10 w-full text-left">
+            {/* Header banner */}
+            <div className="w-full bg-gradient-to-r from-[#0B1F4D] to-[#1a3a7a] rounded-2xl p-6 mb-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[#FF9800] flex items-center justify-center text-2xl shrink-0">📣</div>
+              <div>
+                <div className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-widest mb-0.5">Brand Self Service</div>
+                <h3 className="text-2xl font-display font-black text-white leading-tight">Start a Campaign</h3>
+                <p className="text-sm text-blue-200 mt-0.5">Tell us about your brand. Our team contacts you within 24 hours to confirm.</p>
               </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-5 w-full border border-slate-100">
 
               <form onSubmit={async (e) => {
                 await handleCreateCampaign(e);
                 setLandingSection("login");
                 setActiveLoginSubTab("advertiser");
-              }} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Brand Name</label>
-                    <input 
-                      type="text" 
+              }} className="space-y-5">
+
+                {/* Row 1 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Brand / Company Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
                       required
                       placeholder="e.g. Tata Motors"
                       value={newCampClient}
                       onChange={(e) => setNewCampClient(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Target City</label>
-                    <select 
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Target City <span className="text-red-500">*</span></label>
+                    <select
                       value={newCampCity}
                       onChange={(e) => setNewCampCity(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none font-medium"
                     >
-                      <option value="Bangalore">Bangalore</option>
                       <option value="Kolkata">Kolkata</option>
+                      <option value="Bangalore">Bangalore</option>
                       <option value="Mumbai">Mumbai</option>
                       <option value="Delhi">Delhi</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Campaign Title</label>
-                  <input 
-                    type="text" 
+                {/* Row 2 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Campaign Title <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
                     required
-                    placeholder="e.g. Swiggy Instamart Morning Delivery"
+                    placeholder="e.g. Summer Sale — North Kolkata Push"
                     value={newCampTitle}
                     onChange={(e) => setNewCampTitle(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Localities / Areas</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Indiranagar, Whitefield, Koramangala"
+                {/* Row 3 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Target Localities / Areas</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Shyambazar, Gariahat, Salt Lake, Howrah"
                     value={newCampArea}
                     onChange={(e) => setNewCampArea(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none"
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Campaign Budget (₹)</label>
-                    <input 
-                      type="number" 
+                {/* Row 4 — Budget + Autos */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Estimated Budget (₹) <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
                       required
                       min={10000}
                       step={5000}
                       value={newCampBudget}
                       onChange={(e) => setNewCampBudget(Number(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none font-mono"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none font-mono font-medium"
                     />
+                    <p className="text-[11px] text-slate-400">Minimum ₹10,000 · Packages from ₹45,000/mo</p>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Desired Autos Count</label>
-                    <input 
-                      type="number" 
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Number of Autos Needed <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
                       required
                       min={1}
                       max={200}
                       value={newCampAutos}
                       onChange={(e) => setNewCampAutos(Number(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FF9800] focus:outline-none font-mono"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none font-mono font-medium"
                     />
+                    <p className="text-[11px] text-slate-400">Starter pack: 10 autos · Max: 200 autos</p>
                   </div>
                 </div>
 
-                 {/* Creative Template Selector */}
-                <div className="space-y-2.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Ad Creative Graphic Template</label>
+                {/* Creative Template Selector */}
+                <div className="space-y-3">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Ad Creative Template <span className="text-slate-400 font-normal normal-case">(choose one or upload your own)</span></label>
                   <div className="grid grid-cols-2 gap-2">
                     {creativeTemplates.map((template) => (
                       <button
                         key={template.name}
                         type="button"
                         onClick={() => setNewCampCreative(template.url)}
-                        className={`p-2 rounded-xl border text-[10px] text-left transition truncate ${
-                          newCampCreative === template.url ? "border-[#FF9800] bg-orange-500/10 text-white font-bold" : "border-slate-800 bg-slate-950 text-slate-400"
+                        className={`p-3 rounded-xl border-2 text-sm text-left transition font-medium ${
+                          newCampCreative === template.url
+                            ? "border-[#FF9800] bg-orange-50 text-[#FF9800]"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
                         }`}
                       >
-                        {template.name} Graphic
+                        🎨 {template.name}
                       </button>
                     ))}
                   </div>
 
-                  {/* Option to upload / add custom creative */}
-                  <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
-                    <span className="text-[9px] text-slate-400 uppercase font-mono block">Or add your custom creative:</span>
-                    <div className="flex gap-2">
-                      <label className="flex-1 cursor-pointer flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-lg p-2 bg-slate-900 hover:bg-slate-850 transition duration-200">
-                        <Upload size={12} className="text-[#FF9800] mb-0.5" />
-                        <span className="text-[9px] text-slate-300 font-bold">Upload Custom Banner</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
+                  {/* Custom creative upload */}
+                  <div className="bg-slate-50 p-4 rounded-xl border-2 border-dashed border-slate-200 space-y-3">
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wide block">Or use your own creative:</span>
+                    <div className="flex gap-3">
+                      <label className="flex-1 cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-3 bg-white hover:border-[#FF9800] hover:bg-orange-50 transition">
+                        <Upload size={16} className="text-[#FF9800] mb-1" />
+                        <span className="text-xs text-slate-600 font-bold">Upload Banner Image</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, GIF</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
@@ -2766,12 +2781,13 @@ export default function App() {
                           }}
                         />
                       </label>
-                      
-                      <div className="w-[120px] flex flex-col justify-center">
-                        <input 
-                          type="text" 
-                          placeholder="Or paste image URL"
-                          className="w-full text-[9px] border border-slate-800 rounded p-1 bg-slate-900 text-white focus:outline-none"
+
+                      <div className="flex-1 flex flex-col justify-center gap-1">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Or paste image URL</span>
+                        <input
+                          type="text"
+                          placeholder="https://example.com/banner.jpg"
+                          className="w-full text-xs border-2 border-slate-200 rounded-lg p-2 bg-white text-slate-700 focus:outline-none focus:border-[#FF9800] placeholder-slate-400"
                           onChange={(e) => {
                             setNewCampCreative(e.target.value);
                           }}
@@ -2782,12 +2798,20 @@ export default function App() {
                   </div>
                 </div>
 
-                <button 
+                {/* Info note */}
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 items-start">
+                  <span className="text-lg">ℹ️</span>
+                  <p className="text-xs text-blue-700 leading-relaxed">Our team will review your proposal and <strong>contact you within 24 hours</strong> to confirm pricing, zone maps, and creative details. You'll then get login credentials to track your live campaign.</p>
+                </div>
+
+                <button
                   type="submit"
-                  className="w-full py-3 bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-bold font-mono text-xs rounded-xl transition shadow-lg shadow-orange-500/10"
+                  className="w-full py-4 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-base rounded-xl transition shadow-lg shadow-orange-200 tracking-wide"
                 >
-                  🚀 SUBMIT CAMPAIGN & PROCEED TO LOGIN
+                  🚀 Submit Campaign Request
                 </button>
+
+                <p className="text-center text-xs text-slate-400">Already have an account? <button type="button" onClick={() => { setLandingSection("login"); setActiveLoginSubTab("advertiser"); }} className="text-[#FF9800] font-bold hover:underline">Login here →</button></p>
               </form>
             </div>
           </main>
