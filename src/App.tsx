@@ -1182,7 +1182,7 @@ export default function App() {
   const [selectedCampaignForProof, setSelectedCampaignForProof] = useState("");
   const [selectedProofType, setSelectedProofType] = useState<"installation" | "morning" | "evening">("morning");
   const [customProofImg, setCustomProofImg] = useState("");
-  const [proofLocation, setProofLocation] = useState("Indiranagar Metro Station, Bangalore");
+  const [proofLocation, setProofLocation] = useState("Shyambazar, North Kolkata");
   const [driverCheckInMsg, setDriverCheckInMsg] = useState("");
 
   // Driver Registration Form
@@ -4912,39 +4912,23 @@ export default function App() {
                           </div>
 
                           <div>
-                            <label className="text-[10px] text-slate-500 block font-medium">Simulation Photo Template</label>
-                            <div className="grid grid-cols-2 gap-2 mt-1">
-                              <button
-                                type="button"
-                                onClick={() => setCustomProofImg("https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800")}
-                                className={`p-1 rounded border text-left flex items-center gap-1 transition ${
-                                  customProofImg.includes("558981806") ? "border-[#FF9800]" : "border-slate-200"
-                                }`}
-                              >
-                                <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800" className="w-8 h-8 rounded object-cover" alt="" referrerPolicy="no-referrer" />
-                                <span className="text-[8px] text-slate-600 font-mono">Auto Side Banner</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setCustomProofImg("https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800")}
-                                className={`p-1 rounded border text-left flex items-center gap-1 transition ${
-                                  customProofImg.includes("568605117") ? "border-[#FF9800]" : "border-slate-200"
-                                }`}
-                              >
-                                <img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800" className="w-8 h-8 rounded object-cover" alt="" referrerPolicy="no-referrer" />
-                                <span className="text-[8px] text-slate-600 font-mono">Auto Rear Hood</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="text-[10px] text-slate-500 block font-medium font-mono">Simulated GPS Coordinates Pin</label>
-                            <input 
-                              type="text"
+                            <label className="text-[10px] text-slate-500 block font-medium">Current Location</label>
+                            <select
                               value={proofLocation}
                               onChange={(e) => setProofLocation(e.target.value)}
-                              className="w-full text-[11px] border border-slate-200 rounded p-1.5 focus:outline-none"
-                            />
+                              className="w-full text-[11px] border border-slate-200 rounded p-1.5 focus:outline-none bg-white mt-1"
+                            >
+                              <option>Shyambazar, North Kolkata</option>
+                              <option>Ultadanga, North Kolkata</option>
+                              <option>Salt Lake, Sector V</option>
+                              <option>New Town, Rajarhat</option>
+                              <option>Gariahat, South Kolkata</option>
+                              <option>Jadavpur, South Kolkata</option>
+                              <option>Park Street, Central Kolkata</option>
+                              <option>Esplanade, Central Kolkata</option>
+                              <option>Howrah Station Area</option>
+                              <option>Lake Market, Kolkata</option>
+                            </select>
                           </div>
 
                           <button 
