@@ -126,7 +126,7 @@ export default function App() {
   const [isSimulatingDrive, setIsSimulatingDrive] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [faqSearchQuery, setFaqSearchQuery] = useState("");
-  const [faqActiveTab, setFaqActiveTab] = useState<"All" | "Advertisers" | "Drivers" | "General">("All");
+  const [faqActiveTab, setFaqActiveTab] = useState<"All" | "Advertisers" | "Drivers" | "General" | "Platform">("All");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   // QR Verification Modal Overlay
@@ -263,41 +263,133 @@ export default function App() {
     if (!showHelpModal) return null;
 
     const faqItems = [
+      // ── GENERAL ──────────────────────────────────────────────────────────
       {
         category: "General",
         question: "What is AutoAdz.in?",
-        answer: "AutoAdz.in is India's leading database-driven, GPS-tracked auto-rickshaw out-of-home (OOH) transit advertising platform. We turn thousands of high-mileage auto-rickshaws into moving smart billboards, allowing brands to broadcast their messages with full geographic tracking and verified visual campaign proof."
-      },
-      {
-        category: "Advertisers",
-        question: "How do we track our campaign performance in real-time?",
-        answer: "Unlike traditional static billboards, AutoAdz.in offers a dynamic advertiser dashboard with actual telemetry tracking. Every driver is linked to our real-time GPS tracking application. You can view live active drivers, route maps, total kilometers travelled, calculated local ad impressions, heatmaps of high-reach areas, and historic daily check-in logs with verified photos."
-      },
-      {
-        category: "Advertisers",
-        question: "Can I upload custom brand creatives?",
-        answer: "Yes! While launching a campaign, you can select from our professionally curated, high-conversion graphic templates (like Edge Fashion or Vogue Essentials) or easily upload your own custom banner artwork (via direct image file upload or by pasting a public image URL) to fit our premium auto hood dimension standards."
-      },
-      {
-        category: "Advertisers",
-        question: "What areas and cities can I target?",
-        answer: "We cover major metros including Bangalore, Mumbai, Delhi NCR, and Hyderabad. During campaign registration, you can specify your city and target high-density business/residential areas (e.g., Koramangala, Indiranagar, HSR Layout, or Whitefield in Bangalore) for hyper-local impact."
-      },
-      {
-        category: "Drivers",
-        question: "How do auto-rickshaw drivers register and earn?",
-        answer: "Drivers can register directly via the 'Become a Driver Partner' section by providing their phone number, auto rickshaw vehicle number, and preferred driving region. They log in to their driver partner portal, start live GPS sessions during hours of operation, and earn direct payouts calculated based on verified kilometers driven, daily campaign photo check-ins, and consistent uptime."
-      },
-      {
-        category: "Drivers",
-        question: "How is visual display verification managed?",
-        answer: "To keep campaigns fully transparent, drivers are required to submit live photos showing the correct brand graphic clearly mounted on the back or hood of their auto-rickshaw (e.g., Morning and Evening Installation check-ins). These uploads are cross-referenced with date-stamps and geofencing to protect brand integrity."
+        answer: "AutoAdz.in is India's first GPS-tracked auto-rickshaw advertising platform, built by Deinrim Solutionss (P) Ltd., Kolkata. We turn auto-rickshaws into moving smart billboards — every campaign is tracked by GPS, verified by daily photo proofs, and reported on a live dashboard. Unlike static hoardings, you know exactly where your ad travelled and how many kilometres it covered."
       },
       {
         category: "General",
-        question: "What is the Campaign Simulator?",
-        answer: "The built-in sandbox simulator allows you to experience both sides of our ecosystem! You can toggle between being an 'Advertiser' (launching campaigns, visualizing telemetry maps, verifying driver proofs) and a 'Driver' (simulating active driving sessions, mock-generating GPS coordinates, and uploading daily installation check-in proof photos)."
-      }
+        question: "Where does AutoAdz currently operate?",
+        answer: "Our active pilot launch is in Kolkata, covering all major zones — North (Shyambazar, Ultadanga), South (Gariahat, Jadavpur), East (Salt Lake, New Town), Central (Esplanade, Park Street), and Howrah. We are expanding to Mumbai, Delhi, and Bangalore. Contact us to check availability in your city."
+      },
+      {
+        category: "General",
+        question: "What makes AutoAdz different from hoardings or bus advertising?",
+        answer: "Three things: (1) GPS accountability — you pay only for verified kilometres driven with your creative displayed, not estimated impressions. (2) Hyperlocal reach — autos go into lanes, markets, and residential areas that hoardings and buses cannot enter. (3) Live tracking — log into your dashboard at any time and see exactly where your autos are on a real-time map."
+      },
+      {
+        category: "General",
+        question: "Who is behind AutoAdz?",
+        answer: "AutoAdz is an initiative of Deinrim Solutionss (P) Ltd., a Kolkata-based digital technology company led by Director Rimjhim Jaiswal. The platform is built on GPS technology, live database tracking, and mobile-first design. Contact: +91 98361-30393 | deinrimsolutionss@gmail.com | 27/3B Jugal Kishor Das Lane, Kolkata – 700 006."
+      },
+      {
+        category: "General",
+        question: "How do I contact AutoAdz support?",
+        answer: "📞 Call / WhatsApp: +91 98361-30393 or +91 74392-65589\n✉️ Email: deinrimsolutionss@gmail.com\n🌐 Website: autoadz.in\n📍 Office: 27/3B Jugal Kishor Das Lane, Kolkata – 700 006\nSupport hours: Monday–Saturday, 10 AM – 7 PM."
+      },
+
+      // ── ADVERTISERS ──────────────────────────────────────────────────────
+      {
+        category: "Advertisers",
+        question: "How do I start a campaign on AutoAdz?",
+        answer: "It's simple: (1) Click 'Start a Campaign' in the top menu and fill in your brand name, city, target areas, budget, and contact number. (2) Our team calls you within 24 hours to confirm details and send a formal quote. (3) Once approved, we design your creative banner, print it, and mount it on your assigned autos. (4) Your login credentials are sent so you can track your campaign live from Day 1."
+      },
+      {
+        category: "Advertisers",
+        question: "What are the campaign packages and pricing?",
+        answer: "Starter Pack: 10 autos × ₹4,500/auto/month = ₹45,000/month. Growth Pack: 25 autos × ₹4,200/auto = ₹1,05,000/month. Brand Blitz: 50 autos × ₹4,000/auto = ₹2,00,000/month. City Dominator: 100+ autos — custom pricing. All packages include: creative design, GPS tracking dashboard, daily photo proof reports, and a dedicated account manager. Pilot launch offer: 20% discount + free creative design for your first campaign."
+      },
+      {
+        category: "Advertisers",
+        question: "What do I get in my advertiser dashboard?",
+        answer: "Your dashboard shows: (1) Live GPS map — see all your active autos moving in real time. (2) Total kilometres covered by your campaign today and overall. (3) Estimated impressions based on GPS-verified routes. (4) Daily photo audit proofs — morning check-in photos of your banner on each auto. (5) Campaign status, budget utilisation, and auto count. (6) QR scan data if your creative includes a QR code."
+      },
+      {
+        category: "Advertisers",
+        question: "Can I choose which areas / zones my autos cover?",
+        answer: "Yes. When submitting your campaign, specify your target localities (e.g., Gariahat, Lake Market, Jadavpur for South Kolkata). We assign drivers whose regular routes cover those areas. If you want zone-specific coverage, our team shares a route map before campaign activation so you can approve it."
+      },
+      {
+        category: "Advertisers",
+        question: "How is my ad creative designed and printed?",
+        answer: "Once your campaign is confirmed, our in-house design team creates your banner artwork based on your brand guidelines, logo, and campaign message — at no extra charge for pilot campaign clients. The creative is then printed on weatherproof vinyl and professionally mounted on the assigned auto hoods. You approve the design before printing."
+      },
+      {
+        category: "Advertisers",
+        question: "Can I update or change my creative mid-campaign?",
+        answer: "Yes. Log into your advertiser portal and use the 'Edit Creative' button on your campaign card to update the banner image URL. For a physical reprint of the auto banner, contact your account manager — there may be a nominal reprinting charge depending on the number of autos."
+      },
+      {
+        category: "Advertisers",
+        question: "What is the minimum campaign duration?",
+        answer: "The minimum campaign duration is 1 month. We recommend 3 months for optimal brand recall. Longer campaigns get better per-month rates. You can pause or extend your campaign by contacting your account manager."
+      },
+      {
+        category: "Advertisers",
+        question: "How do I pay for my campaign?",
+        answer: "Payment is made in advance before campaign activation. We accept bank transfer (NEFT/RTGS), UPI (PhonePe / Google Pay / Paytm), and cheque in favour of 'Deinrim Solutionss (P) Ltd.' A formal invoice is issued within 24 hours of payment. GST @18% is applicable. Our GSTIN is 19AAECD1234M1Z5 (sample — confirm with your invoice)."
+      },
+
+      // ── DRIVERS ──────────────────────────────────────────────────────────
+      {
+        category: "Drivers",
+        question: "How do I register as a driver partner?",
+        answer: "Click 'Become a Driver Partner' in the top menu. Fill in: your full name, mobile number, auto RC plate number, operating area, driving licence number, and Aadhaar number, and upload photos of your DL and Aadhaar card. Our operations team will verify your KYC and call you within 48 hours. Once approved, you receive your Driver App login and your first campaign assignment."
+      },
+      {
+        category: "Drivers",
+        question: "How much can I earn as a driver partner?",
+        answer: "Drivers earn ₹4–6 per kilometre driven with the ad banner displayed. Based on an average of 80–100 km/day for 25 working days, you can earn ₹8,000–15,000 per month extra income — on top of your regular auto fare earnings. Payouts are made monthly, directly to your bank account or UPI."
+      },
+      {
+        category: "Drivers",
+        question: "What do I need to do every day as a driver partner?",
+        answer: "Daily routine: (1) Morning Check-in — open the Driver App, take a photo of your auto with the ad banner clearly visible, and upload it. (2) Start GPS — tap 'Start Driving Session' in the app so your route is tracked. (3) Drive your normal routes — no change to your regular schedule needed. (4) Evening Check-out — tap 'Stop Session' when done. That's it. The app does the rest."
+      },
+      {
+        category: "Drivers",
+        question: "Is there any cost for me to join as a driver?",
+        answer: "Absolutely zero cost. Joining AutoAdz as a driver partner is completely free. We print and mount your ad banner at our expense. You just need to keep it clean and undamaged. If the banner gets torn or damaged due to accidents, inform your coordinator — replacement is handled case by case."
+      },
+      {
+        category: "Drivers",
+        question: "What if my mobile internet is slow or disconnects while driving?",
+        answer: "The Driver App saves your GPS track locally and syncs it when connectivity returns. You don't need a constant internet connection. A basic 2G/3G data connection is sufficient. Make sure to keep the app running in the background while driving — do not close it manually."
+      },
+      {
+        category: "Drivers",
+        question: "How do I log into the Driver App?",
+        answer: "Use your registered mobile number and the 4-digit OTP (one-time PIN) assigned during onboarding. If you forget your PIN, call your AutoAdz coordinator or WhatsApp +91 98361-30393. We'll reset it immediately. Your phone number is your unique driver ID in our system."
+      },
+      {
+        category: "Drivers",
+        question: "When and how are driver payments made?",
+        answer: "Payments are calculated on the 1st of each month based on your total GPS-verified kilometres for the previous month. You'll receive a breakdown via WhatsApp showing km driven, photo proofs submitted, and amount payable. Payment is credited to your bank account or UPI within 5 working days after calculation. Minimum payout threshold is ₹500."
+      },
+
+      // ── PLATFORM ─────────────────────────────────────────────────────────
+      {
+        category: "Platform",
+        question: "Is there a mobile app for advertisers or drivers?",
+        answer: "Yes. AutoAdz.in is fully mobile-optimised — open autoadz.in on any smartphone browser and it works like a native app (you can also 'Add to Home Screen' for quick access). A dedicated Android app for drivers is in development. Advertisers manage everything from the web portal."
+      },
+      {
+        category: "Platform",
+        question: "How does the GPS tracking actually work?",
+        answer: "Each driver opens the AutoAdz Driver App on their smartphone and taps 'Start Driving Session.' The app reads the phone's GPS coordinates every few seconds and sends them to our server. Those coordinates appear on the advertiser's live map in real time. The total distance is calculated from the GPS track and used to compute both driver earnings and campaign kilometre reports."
+      },
+      {
+        category: "Platform",
+        question: "Is my campaign data secure and private?",
+        answer: "Yes. All data is stored on secure servers. Advertiser dashboards are protected by email and password login with JWT tokens. Drivers log in via phone number and unique PIN. No campaign data is shared between different advertiser accounts. Admin access requires separate credentials known only to AutoAdz operations."
+      },
+      {
+        category: "Platform",
+        question: "What browsers and devices does the platform support?",
+        answer: "AutoAdz.in works on all modern browsers — Chrome, Firefox, Safari, Edge — on both mobile and desktop. For the best driver experience, we recommend Chrome on Android. For advertisers, the dashboard works equally well on desktop and mobile. No software installation is needed."
+      },
     ];
 
     const filteredFaqs = faqItems.filter(item => {
@@ -363,7 +455,7 @@ export default function App() {
 
             {/* Category Filter Tabs */}
             <div className="flex gap-2 border-b border-slate-850 pb-2 overflow-x-auto scrollbar-none">
-              {(["All", "Advertisers", "Drivers", "General"] as const).map((tab) => (
+              {(["All", "Advertisers", "Drivers", "General", "Platform"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => {
@@ -376,7 +468,7 @@ export default function App() {
                       : "bg-slate-950/40 text-slate-400 border border-slate-800/60 hover:text-white hover:border-slate-700"
                   }`}
                 >
-                  {tab === "All" ? "⭐ ALL QUESTIONS" : tab === "Advertisers" ? "💼 FOR ADVERTISERS" : tab === "Drivers" ? "🛺 FOR DRIVERS" : "🌐 GENERAL INFO"}
+                  {tab === "All" ? "⭐ All" : tab === "Advertisers" ? "💼 Advertisers" : tab === "Drivers" ? "🛺 Drivers" : tab === "General" ? "🌐 General" : "⚙️ Platform"}
                 </button>
               ))}
             </div>
@@ -406,6 +498,7 @@ export default function App() {
                         <span className={`text-[8px] font-mono font-black uppercase px-2 py-0.5 rounded ${
                           item.category === "Advertisers" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
                           item.category === "Drivers" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
+                          item.category === "Platform" ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" :
                           "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                         }`}>
                           {item.category}
