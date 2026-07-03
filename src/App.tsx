@@ -3331,21 +3331,19 @@ export default function App() {
                         const dPhone = d.phone.trim().replace(/\D/g, "");
                         return dPhone === cleanPhone || d.phone.trim() === loginPhone.trim();
                       });
-                      if (matchedDriver) {
-                        setLoggedInDriverId(matchedDriver.id); setUserSession("driver");
-                        setActiveSimulator("driver"); setLoginError("");
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      } else {
-                        const nameToCreate = cleanPhone === "9836130393" ? "Delip" : `Driver ${loginPhone}`;
-                        fetch("/api/drivers", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ name: nameToCreate, phone: loginPhone, autoNumber: "WB-01-EX-" + Math.floor(1000 + Math.random() * 9000), location: "Kolkata - Gariahat" })
-                        })
-                        .then(res => res.json())
-                        .then(newDriver => { fetchData().then(() => { setLoggedInDriverId(newDriver.id || "driver_delip"); setUserSession("driver"); setActiveSimulator("driver"); setLoginError(""); }); })
-                        .catch(() => { setLoggedInDriverId("driver_delip"); setUserSession("driver"); setActiveSimulator("driver"); });
+                      if (!matchedDriver) {
+                        setLoginError("This number is not registered. Please apply via 'Become a Driver Partner' first.");
+                        return;
                       }
+                      if (matchedDriver.status !== "active") {
+                        setLoginError("Your application is pending admin approval. Please wait for confirmation.");
+                        return;
+                      }
+                      setLoggedInDriverId(matchedDriver.id);
+                      setUserSession("driver");
+                      setActiveSimulator("driver");
+                      setLoginError("");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     } else if (activeLoginSubTab === "admin") {
                       const adminEmail = loginEmail.trim().toLowerCase();
                       const adminPass = loginPassword.trim();
