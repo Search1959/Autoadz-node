@@ -6368,167 +6368,181 @@ export default function App() {
 
             {/* ADMIN SETTINGS SUB-TAB */}
             {adminTab === "settings" && (
-              <div className="space-y-4 flex-1 flex flex-col text-left">
-                <div>
-                  <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Operations & SaaS Integration Gateways</h4>
-                  <span className="text-xs text-slate-400">Manage real-world WhatsApp broadcast configurations & SMS alerts</span>
+              <div className="space-y-5 flex-1 flex flex-col text-left">
+
+                {/* Section header */}
+                <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-[#0B1F4D] flex items-center justify-center text-white text-lg shrink-0">⚙️</div>
+                  <div>
+                    <h4 className="font-bold text-base text-[#0B1F4D]">Platform Settings</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">Configure integrations, payout rates and gateway connections</p>
+                  </div>
                 </div>
 
                 {systemSettingsSuccessMsg && (
-                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-bold font-mono">
-                    ✓ {systemSettingsSuccessMsg}
+                  <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl text-sm font-medium flex items-center gap-2">
+                    <span>✅</span> {systemSettingsSuccessMsg}
                   </div>
                 )}
 
                 <form onSubmit={handleSaveSystemSettings} className="space-y-4">
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
-                    <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1">
-                      🟢 WhatsApp Business API Integration
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">WhatsApp Cloud Access Token</label>
-                        <input
-                          type="password"
-                          value={systemWhatsAppToken}
-                          onChange={(e) => setSystemWhatsAppToken(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
+
+                  {/* WhatsApp card */}
+                  <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-green-50 border-b border-green-100 px-5 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
+                        <span className="font-bold text-sm text-green-800">WhatsApp Business API</span>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Phone Number ID</label>
-                        <input
-                          type="text"
-                          value={systemWhatsAppPhoneId}
-                          onChange={(e) => setSystemWhatsAppPhoneId(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Admin WhatsApp Phone Number</label>
-                        <input
-                          type="text"
-                          value={systemAdminWhatsAppPhone}
-                          onChange={(e) => setSystemAdminWhatsAppPhone(e.target.value)}
-                          placeholder="e.g. 9836130393"
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
-                      </div>
+                      <span className="text-[10px] text-green-600 bg-green-100 px-2 py-0.5 rounded-full font-bold">META CLOUD</span>
                     </div>
-                    
-                    <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-200">
-                      <p className="text-[9px] text-slate-400 italic font-mono leading-none">
-                        Sends automated WhatsApp notifications to the admin when a new driver registers or when a new campaign is created.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!systemAdminWhatsAppPhone) {
-                            alert("Please enter your Admin WhatsApp phone number first.");
-                            return;
-                          }
-                          const confirmTest = confirm(`Send a test WhatsApp notification to ${systemAdminWhatsAppPhone}?`);
-                          if (confirmTest) {
-                            try {
-                              const res = await fetch("/api/whatsapp/send", {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({
-                                  token: systemWhatsAppToken,
-                                  phoneId: systemWhatsAppPhoneId,
-                                  recipient: systemAdminWhatsAppPhone,
-                                  message: "🔔 *AutoAdz Integration Test!* Your WhatsApp API channel is now successfully connected to AutoAdz platform."
-                                })
-                              });
-                              const data = await res.json();
-                              if (res.ok) {
-                                alert(`✓ Test message successfully queued for transmission to ${systemAdminWhatsAppPhone}! Please check your WhatsApp.`);
-                              } else {
-                                const errorMsg = typeof data.error === "object" && data.error !== null
-                                  ? (data.error.message || JSON.stringify(data.error))
-                                  : (data.error || "Please check your credentials token or Phone ID.");
-                                alert(`✗ Failed: ${errorMsg}`);
-                              }
-                            } catch (err: any) {
-                              alert(`Error sending test message: ${err.message}`);
+                    <div className="p-5 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Cloud Access Token</label>
+                          <input
+                            type="password"
+                            value={systemWhatsAppToken}
+                            onChange={(e) => setSystemWhatsAppToken(e.target.value)}
+                            placeholder="EAAxxxxxxxxxxxxxxx"
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-green-400 font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Phone Number ID</label>
+                          <input
+                            type="text"
+                            value={systemWhatsAppPhoneId}
+                            onChange={(e) => setSystemWhatsAppPhoneId(e.target.value)}
+                            placeholder="109825420194852"
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-green-400 font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Admin WhatsApp Number</label>
+                          <input
+                            type="text"
+                            value={systemAdminWhatsAppPhone}
+                            onChange={(e) => setSystemAdminWhatsAppPhone(e.target.value)}
+                            placeholder="9836130393"
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-green-400 font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Sends automated alerts when a new driver registers or a campaign is submitted.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!systemAdminWhatsAppPhone) { alert("Please enter your Admin WhatsApp number first."); return; }
+                            const confirmTest = confirm(`Send a test WhatsApp message to ${systemAdminWhatsAppPhone}?`);
+                            if (confirmTest) {
+                              try {
+                                const res = await fetch("/api/whatsapp/send", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ token: systemWhatsAppToken, phoneId: systemWhatsAppPhoneId, recipient: systemAdminWhatsAppPhone, message: "🔔 *AutoAdz Integration Test!* Your WhatsApp API is connected successfully." })
+                                });
+                                const data = await res.json();
+                                if (res.ok) { alert(`✅ Test message sent to ${systemAdminWhatsAppPhone}! Check your WhatsApp.`); }
+                                else {
+                                  const errorMsg = typeof data.error === "object" ? (data.error.message || JSON.stringify(data.error)) : (data.error || "Check your token or Phone ID.");
+                                  alert(`❌ Failed: ${errorMsg}`);
+                                }
+                              } catch (err: any) { alert(`Error: ${err.message}`); }
                             }
-                          }
-                        }}
-                        className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide transition uppercase flex items-center gap-1.5 shadow-2xs hover:shadow-sm cursor-pointer"
-                      >
-                        ⚡ Send Test Alert
-                      </button>
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+                        >
+                          ⚡ Send Test Message
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
-                    <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1">
-                      📱 SMS Alert & OTP Gateway (Twilio/Kookoo)
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Gateway API Key</label>
-                        <input
-                          type="password"
-                          value={systemSmsApiKey}
-                          onChange={(e) => setSystemSmsApiKey(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
+                  {/* SMS card */}
+                  <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-blue-50 border-b border-blue-100 px-5 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-blue-500">📱</span>
+                        <span className="font-bold text-sm text-blue-800">SMS & OTP Gateway</span>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">SMS Sender Header (Sender ID)</label>
-                        <input
-                          type="text"
-                          value={systemSmsSenderId}
-                          onChange={(e) => setSystemSmsSenderId(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
-                      </div>
+                      <span className="text-[10px] text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full font-bold">TWILIO / KOOKOO</span>
                     </div>
-                    <p className="text-[9px] text-slate-400 italic font-mono leading-none">
-                      Provides transaction validation OTPs and onboarding text confirmation receipts directly to rickshaw drivers.
-                    </p>
+                    <div className="p-5 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Gateway API Key</label>
+                          <input
+                            type="password"
+                            value={systemSmsApiKey}
+                            onChange={(e) => setSystemSmsApiKey(e.target.value)}
+                            placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Sender ID</label>
+                          <input
+                            type="text"
+                            value={systemSmsSenderId}
+                            onChange={(e) => setSystemSmsSenderId(e.target.value)}
+                            placeholder="AUTADZ"
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 font-mono"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Sends OTP PINs and onboarding confirmation SMS directly to drivers after KYC approval.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
-                    <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1">
-                      🛺 Global Driver Reimbursement & Payout Rates
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Driver Payout Rate (₹ / KM)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0.1"
-                          value={driverRatePerKm}
-                          onChange={(e) => setDriverRatePerKm(parseFloat(e.target.value) || 0)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
+                  {/* Payout rates card */}
+                  <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-orange-50 border-b border-orange-100 px-5 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span>🛺</span>
+                        <span className="font-bold text-sm text-orange-800">Driver Payout Configuration</span>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Mileage Billing Threshold (KM)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={schedulerThreshold}
-                          onChange={(e) => setSchedulerThreshold(parseInt(e.target.value) || 0)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                        />
+                      <span className="text-[10px] text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full font-bold">GLOBAL RATES</span>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Payout Rate (₹ per KM)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            value={driverRatePerKm}
+                            onChange={(e) => setDriverRatePerKm(parseFloat(e.target.value) || 0)}
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-orange-400 font-mono"
+                          />
+                          <p className="text-[11px] text-slate-400">Current: ₹{driverRatePerKm}/km · Avg driver earns ₹{Math.round(driverRatePerKm * 80 * 25).toLocaleString()}/month</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Billing Threshold (KM)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={schedulerThreshold}
+                            onChange={(e) => setSchedulerThreshold(parseInt(e.target.value) || 0)}
+                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-orange-400 font-mono"
+                          />
+                          <p className="text-[11px] text-slate-400">Minimum km to trigger automated payout cycle</p>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-[9px] text-slate-400 italic font-mono leading-none">
-                      Determines the payment drivers receive per GPS-verified kilometer and the milestone needed to trigger automated billing.
-                    </p>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-[#10B981] hover:bg-emerald-600 text-white font-bold font-mono text-xs rounded-xl transition shadow-xs uppercase cursor-pointer text-center"
+                    className="w-full py-4 bg-[#0B1F4D] hover:bg-[#1a3a7a] text-white font-black text-sm rounded-xl transition shadow-lg tracking-wide"
                   >
-                    💾 Save & Verify Gateway Connections
+                    💾 Save All Settings
                   </button>
                 </form>
               </div>
