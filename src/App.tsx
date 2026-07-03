@@ -2819,151 +2819,160 @@ export default function App() {
 
         {/* DRIVER REGISTER PARTNER SECTION */}
         {landingSection === "register-driver" && (
-          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-xl mx-auto z-10 w-full text-left">
-            <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl space-y-6 w-full">
-              <div className="pb-3 border-b border-slate-800">
-                <span className="text-[10px] font-mono text-teal-400 font-bold uppercase tracking-widest">Driver Onboarding</span>
-                <h3 className="text-xl font-display font-black text-white mt-1">Register as Auto-Rickshaw Partner</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Submit your details to enter the KYC vault. Once approved by operations, you can allocate active campaigns!</p>
+          <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-2xl mx-auto z-10 w-full text-left">
+            {/* Header banner */}
+            <div className="w-full bg-gradient-to-r from-teal-700 to-teal-500 rounded-2xl p-6 mb-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl shrink-0">🛺</div>
+              <div>
+                <div className="text-[10px] font-mono text-teal-100 font-bold uppercase tracking-widest mb-0.5">Driver Onboarding</div>
+                <h3 className="text-2xl font-display font-black text-white leading-tight">Become a Driver Partner</h3>
+                <p className="text-sm text-teal-100 mt-0.5">Earn extra income by displaying ads on your auto. Free to join — approval within 48 hours.</p>
               </div>
+            </div>
 
+            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-5 w-full border border-slate-100">
               <form onSubmit={async (e) => {
                 await handleDriverRegister(e);
                 setLandingSection("login");
-                setActiveLoginSubTab("admin"); // Prompt to go to admin to accept! Extremely smart demo instruction.
-              }} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Driver Full Name</label>
-                  <input 
-                    type="text" 
+                setActiveLoginSubTab("admin");
+              }} className="space-y-5">
+
+                {/* Full Name */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Driver Full Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
                     required
-                    placeholder="e.g. Rajesh Kumar"
+                    placeholder="e.g. Ravi Das"
                     value={driverRegName}
                     onChange={(e) => setDriverRegName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none"
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-medium"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Contact Phone Number</label>
-                    <input 
-                      type="text" 
+                {/* Phone + RC Plate */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Mobile Number <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
                       required
                       placeholder="e.g. 9876543210"
                       value={driverRegPhone}
                       onChange={(e) => setDriverRegPhone(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none font-mono"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-mono"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Auto Rickshaw RC Plate No</label>
-                    <input 
-                      type="text" 
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Auto RC Plate Number <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
                       required
-                      placeholder="e.g. KA-03-EX-4921"
+                      placeholder="e.g. WB-02-AB-1234"
                       value={driverRegAutoNum}
                       onChange={(e) => setDriverRegAutoNum(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none font-mono"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Operating Hub / Region</label>
-                  <input 
-                    type="text" 
+                {/* Operating Area */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Operating Area / Hub <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
                     required
-                    placeholder="e.g. Bangalore - Indiranagar Hub"
+                    placeholder="e.g. Shyambazar, North Kolkata"
                     value={driverRegLoc}
                     onChange={(e) => setDriverRegLoc(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none"
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-medium"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Driving License (DL) Number</label>
-                    <input 
-                      type="text" 
+                {/* DL + Aadhaar numbers */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Driving License Number <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
                       required
-                      placeholder="e.g. DL-142011009825"
+                      placeholder="e.g. WB-2011-1234567"
                       value={driverRegDL}
                       onChange={(e) => setDriverRegDL(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none font-mono"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-mono"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Aadhaar Card Number</label>
-                    <input 
-                      type="text" 
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Aadhaar Card Number <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
                       required
                       placeholder="e.g. 5420-1948-2810"
                       value={driverRegAadhaar}
                       onChange={(e) => setDriverRegAadhaar(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-teal-500 focus:outline-none font-mono"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">DL Document Copy</label>
-                    <div className="flex flex-col gap-1">
-                      <label className="cursor-pointer flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-xl p-3 bg-slate-950 hover:bg-slate-900 transition text-center">
-                        <Upload size={14} className="text-teal-400 mb-1" />
-                        <span className="text-[9px] text-slate-300 font-bold">{driverRegDLFile ? "DL Uploaded" : "Upload DL Card"}</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => setDriverRegDLFile(event.target?.result as string);
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
-                  </div>
+                {/* Document uploads */}
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Upload KYC Documents</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 hover:border-teal-400 hover:bg-teal-50 transition text-center">
+                      <Upload size={18} className="text-teal-500 mb-1.5" />
+                      <span className="text-sm font-bold text-slate-700">{driverRegDLFile ? "✅ DL Uploaded" : "Upload DL Card"}</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5">JPG or PNG</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => setDriverRegDLFile(event.target?.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Aadhaar Document Copy</label>
-                    <div className="flex flex-col gap-1">
-                      <label className="cursor-pointer flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-xl p-3 bg-slate-950 hover:bg-slate-900 transition text-center">
-                        <Upload size={14} className="text-teal-400 mb-1" />
-                        <span className="text-[9px] text-slate-300 font-bold">{driverRegAadhaarFile ? "Aadhaar Uploaded" : "Upload Aadhaar Card"}</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => setDriverRegAadhaarFile(event.target?.result as string);
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
+                    <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 hover:border-teal-400 hover:bg-teal-50 transition text-center">
+                      <Upload size={18} className="text-teal-500 mb-1.5" />
+                      <span className="text-sm font-bold text-slate-700">{driverRegAadhaarFile ? "✅ Aadhaar Uploaded" : "Upload Aadhaar"}</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5">JPG or PNG</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => setDriverRegAadhaarFile(event.target?.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
                 </div>
 
-                <div className="bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] p-3 rounded-xl leading-relaxed">
-                  💡 <b>Onboarding Note</b>: After submitting this form, your application will go directly to the Admin KYC table. You can log into the <b>Operations / Admin</b> portal using sandbox credentials to instantly approve yourself and allocate active campaigns!
+                {/* Earnings info box */}
+                <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex gap-3 items-start">
+                  <span className="text-lg">💰</span>
+                  <p className="text-xs text-teal-800 leading-relaxed"><strong>Driver Earnings:</strong> Earn ₹4–6 per km driven with your ad banner displayed. Average driver earns ₹4,000–6,000/month extra. Our team will call you within 48 hours after reviewing your KYC.</p>
                 </div>
 
-                <button 
+                <button
                   type="submit"
-                  className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold font-mono text-xs rounded-xl transition shadow-lg shadow-teal-500/10"
+                  className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-black text-base rounded-xl transition shadow-lg shadow-teal-200 tracking-wide"
                 >
-                  📝 SUBMIT APPLICATION & OPEN OPERATOR VAULT
+                  📝 Submit Driver Application
                 </button>
+
+                <p className="text-center text-xs text-slate-400">Already registered? <button type="button" onClick={() => { setLandingSection("login"); setActiveLoginSubTab("driver"); }} className="text-teal-600 font-bold hover:underline">Driver login →</button></p>
               </form>
             </div>
           </main>
