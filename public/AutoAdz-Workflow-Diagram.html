@@ -95,6 +95,30 @@
   .foot{background:#F5F8FF;border-top:1px solid #e0e4ef;padding:14px 40px;display:flex;justify-content:space-between;align-items:center;}
   .foot-txt{font-size:11px;color:#888;}
   .foot-txt strong{color:#0B1F4D;}
+
+  /* MOBILE */
+  @media(max-width:640px){
+    body{padding:10px 0;}
+    .no-print{margin-bottom:12px;}
+    .hdr{padding:16px 18px;flex-direction:column;gap:8px;}
+    .hdr-logo{font-size:22px;}
+    .hdr-title{text-align:left;}
+    .hdr-title div:first-child{font-size:12px;}
+    .dbody{padding:20px 16px;}
+    .main-title{font-size:17px;}
+    .sub-title{font-size:11px;margin-bottom:20px;}
+    .col-headers{grid-template-columns:1fr;gap:6px;margin-bottom:6px;}
+    .flow-row{grid-template-columns:1fr;gap:4px;margin-bottom:4px;}
+    .flow-cell.arrow-col,.flow-cell.empty{display:none;}
+    .flow-cell{min-height:56px;border-radius:6px;}
+    .connector-row{display:none;}
+    .gps-section{grid-template-columns:1fr 1fr;gap:10px;padding:16px;}
+    .gps-num{font-size:18px;}
+    .report-flow{grid-template-columns:1fr 1fr;gap:8px;}
+    .report-arrow{display:none;}
+    .legend{flex-wrap:wrap;gap:12px;}
+    .foot{flex-direction:column;gap:8px;text-align:center;padding:14px 16px;}
+  }
 </style>
 </head>
 <body>

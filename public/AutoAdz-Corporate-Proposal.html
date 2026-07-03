@@ -136,6 +136,28 @@
 
   /* SCROLL TO TOP */
   .scroll-top{position:fixed;bottom:30px;right:30px;background:var(--green);color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:200;}
+
+  /* MOBILE */
+  @media(max-width:768px){
+    .toc-nav{display:none!important;}
+    .main{margin-left:0!important;}
+    .scroll-top{bottom:16px;right:16px;width:38px;height:38px;font-size:16px;}
+    .cover-top{padding:48px 24px 36px;}
+    .cover-logo{font-size:52px;}
+    .cover-title{font-size:24px;}
+    .cover-bottom{padding:32px 24px;}
+    .section{padding:40px 20px;}
+    .stat-grid{grid-template-columns:1fr!important;}
+    .vm-grid{grid-template-columns:1fr!important;}
+    .steps-grid{grid-template-columns:1fr!important;}
+    .format-grid{grid-template-columns:1fr!important;}
+    .contact-box{padding:24px 18px;}
+    table{font-size:12px;}
+    th,td{padding:8px 10px;}
+    .roadmap-period{min-width:80px;font-size:12px;padding:12px 10px;}
+    .roadmap-desc{padding:12px;}
+    .page-footer{font-size:10px;padding:10px;}
+  }
 </style>
 </head>
 <body>
