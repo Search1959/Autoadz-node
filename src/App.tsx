@@ -1056,6 +1056,8 @@ export default function App() {
   const [advertisers, setAdvertisers] = useState<any[]>([]);
   const [resetPwdTarget, setResetPwdTarget] = useState<{id: number, email: string} | null>(null);
   const [resetPwdVal, setResetPwdVal] = useState("");
+  const [editCreativeTarget, setEditCreativeTarget] = useState<{id: string, title: string, url: string} | null>(null);
+  const [editCreativeUrl, setEditCreativeUrl] = useState("");
 
   // Localized SEO subpage simulation states
   const [selectedSeoCity, setSelectedSeoCity] = useState<string | null>(null);
@@ -5610,21 +5612,29 @@ export default function App() {
                             </div>
                           </td>
                           <td className="py-3 text-right">
-                            {/* Admin Delete Campaign Button */}
-                            <button
-                              onClick={async () => {
-                                if (confirm(`Are you sure you want to permanently delete the campaign "${camp.title}"?`)) {
-                                  const res = await fetch(`/api/campaigns/${camp.id}`, { method: "DELETE" });
-                                  if (res.ok) {
-                                    fetchData();
+                            <div className="flex flex-col gap-1.5 items-end">
+                              {/* Edit Creative Button */}
+                              <button
+                                onClick={() => { setEditCreativeTarget({ id: camp.id, title: camp.title, url: camp.creativeUrl }); setEditCreativeUrl(camp.creativeUrl); }}
+                                className="text-blue-600 hover:text-white hover:bg-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 hover:border-blue-600 transition text-[10px] font-semibold inline-flex items-center gap-1 shadow-2xs hover:shadow-sm"
+                                title="Edit Creative Image"
+                              >
+                                🖼 Edit Creative
+                              </button>
+                              {/* Admin Delete Campaign Button */}
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Are you sure you want to permanently delete the campaign "${camp.title}"?`)) {
+                                    const res = await fetch(`/api/campaigns/${camp.id}`, { method: "DELETE" });
+                                    if (res.ok) { fetchData(); }
                                   }
-                                }
-                              }}
-                              className="text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-lg border border-rose-200 hover:border-rose-600 transition text-[10px] font-semibold inline-flex items-center gap-1 shadow-2xs hover:shadow-sm"
-                              title="Delete Campaign"
-                            >
-                              <Trash2 size={12} /> Delete Campaign
-                            </button>
+                                }}
+                                className="text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-lg border border-rose-200 hover:border-rose-600 transition text-[10px] font-semibold inline-flex items-center gap-1 shadow-2xs hover:shadow-sm"
+                                title="Delete Campaign"
+                              >
+                                <Trash2 size={12} /> Delete Campaign
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -6270,6 +6280,55 @@ export default function App() {
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* EDIT CREATIVE MODAL */}
+            {editCreativeTarget && (
+              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+                  <h3 className="font-bold text-[#0B1F4D] text-sm font-mono uppercase">Edit Campaign Creative</h3>
+                  <p className="text-xs text-slate-500 truncate">{editCreativeTarget.title}</p>
+                  {editCreativeUrl && (
+                    <img src={editCreativeUrl} alt="Preview" className="w-full h-36 object-cover rounded-xl border border-slate-200" referrerPolicy="no-referrer" onError={e => (e.currentTarget.style.display = "none")} />
+                  )}
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Image URL</label>
+                    <input
+                      type="text"
+                      placeholder="https://example.com/image.jpg"
+                      value={editCreativeUrl}
+                      onChange={e => setEditCreativeUrl(e.target.value)}
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      autoFocus
+                    />
+                    <p className="text-[10px] text-slate-400">Paste a direct image URL (JPG, PNG, WebP). Must start with https://</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setEditCreativeTarget(null); setEditCreativeUrl(""); }}
+                      className="flex-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    >Cancel</button>
+                    <button
+                      onClick={async () => {
+                        if (!editCreativeUrl.startsWith("http")) { alert("Please enter a valid URL"); return; }
+                        const res = await fetch(`/api/campaigns/${editCreativeTarget.id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ creativeUrl: editCreativeUrl }),
+                        });
+                        if (res.ok) {
+                          fetchData();
+                          setEditCreativeTarget(null);
+                          setEditCreativeUrl("");
+                        } else {
+                          alert("Failed to update. Please try again.");
+                        }
+                      }}
+                      className="flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700"
+                    >Save Creative</button>
+                  </div>
+                </div>
               </div>
             )}
 
