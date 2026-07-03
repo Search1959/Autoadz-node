@@ -1108,6 +1108,7 @@ export default function App() {
   const [newCampBudget, setNewCampBudget] = useState(75000);
   const [newCampAutos, setNewCampAutos] = useState(10);
   const [newCampCreative, setNewCampCreative] = useState("");
+  const [newCampContact, setNewCampContact] = useState("");
 
   // Driver Check-in / Proof Upload State
   const [selectedCampaignForProof, setSelectedCampaignForProof] = useState("");
@@ -2736,66 +2737,18 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Creative Template Selector */}
-                <div className="space-y-3">
-                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Ad Creative Template <span className="text-slate-400 font-normal normal-case">(choose one or upload your own)</span></label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {creativeTemplates.map((template) => (
-                      <button
-                        key={template.name}
-                        type="button"
-                        onClick={() => setNewCampCreative(template.url)}
-                        className={`p-3 rounded-xl border-2 text-sm text-left transition font-medium ${
-                          newCampCreative === template.url
-                            ? "border-[#FF9800] bg-orange-50 text-[#FF9800]"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
-                        }`}
-                      >
-                        🎨 {template.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Custom creative upload */}
-                  <div className="bg-slate-50 p-4 rounded-xl border-2 border-dashed border-slate-200 space-y-3">
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wide block">Or use your own creative:</span>
-                    <div className="flex gap-3">
-                      <label className="flex-1 cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-3 bg-white hover:border-[#FF9800] hover:bg-orange-50 transition">
-                        <Upload size={16} className="text-[#FF9800] mb-1" />
-                        <span className="text-xs text-slate-600 font-bold">Upload Banner Image</span>
-                        <span className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, GIF</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => {
-                                const base64 = event.target?.result as string;
-                                setNewCampCreative(base64);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                      </label>
-
-                      <div className="flex-1 flex flex-col justify-center gap-1">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase">Or paste image URL</span>
-                        <input
-                          type="text"
-                          placeholder="https://example.com/banner.jpg"
-                          className="w-full text-xs border-2 border-slate-200 rounded-lg p-2 bg-white text-slate-700 focus:outline-none focus:border-[#FF9800] placeholder-slate-400"
-                          onChange={(e) => {
-                            setNewCampCreative(e.target.value);
-                          }}
-                          value={newCampCreative && !newCampCreative.startsWith("data:") ? newCampCreative : ""}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                {/* Contact Phone */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Your Contact Number <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 9831012345"
+                    value={newCampContact}
+                    onChange={(e) => setNewCampContact(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-mono"
+                  />
+                  <p className="text-[11px] text-slate-400">We'll call you within 24 hours to confirm your campaign details.</p>
                 </div>
 
                 {/* Info note */}
