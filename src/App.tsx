@@ -401,71 +401,56 @@ export default function App() {
     });
 
     return (
-      <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
-          
-          {/* Decorative Radial Accents */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF9800]/5 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl w-full max-w-2xl h-[88vh] flex flex-col shadow-2xl overflow-hidden text-left">
 
-          {/* Header */}
-          <div className="p-6 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-950/40">
+          {/* Header — navy gradient */}
+          <div className="bg-gradient-to-r from-[#0B1F4D] to-[#1a3a7a] px-6 py-5 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-500/10 text-[#FF9800] rounded-2xl flex items-center justify-center border border-orange-500/20">
-                <HelpCircle size={20} />
+              <div className="w-11 h-11 rounded-xl bg-[#FF9800] flex items-center justify-center text-white shrink-0">
+                <HelpCircle size={22} />
               </div>
               <div>
-                <h3 className="font-display font-extrabold text-white text-base">AutoAdz.in Help Center & FAQ</h3>
-                <p className="text-[11px] text-slate-400 font-sans">Everything you need to know about GPS-tracked Transit Out-of-Home (OOH) advertising</p>
+                <h3 className="font-display font-extrabold text-white text-lg leading-tight">Help Center & FAQ</h3>
+                <p className="text-xs text-blue-200 mt-0.5">AutoAdz.in — GPS-tracked auto-rickshaw advertising</p>
               </div>
             </div>
-            <button 
-              onClick={() => {
-                setShowHelpModal(false);
-                setFaqSearchQuery("");
-                setExpandedFaq(null);
-              }}
-              className="p-2 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl transition duration-200"
+            <button
+              onClick={() => { setShowHelpModal(false); setFaqSearchQuery(""); setExpandedFaq(null); }}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 
-          {/* Search and Category Filter Section */}
-          <div className="p-6 pb-2 border-b border-slate-850 bg-slate-950/20 shrink-0 space-y-4">
-            {/* Live Filter Search Input */}
+          {/* Search */}
+          <div className="px-6 pt-5 pb-3 bg-slate-50 border-b border-slate-100 shrink-0">
             <div className="relative">
-              <Search className="absolute left-3.5 top-3.5 text-slate-500" size={16} />
-              <input 
+              <Search className="absolute left-4 top-3.5 text-slate-400" size={16} />
+              <input
                 type="text"
-                placeholder="Search frequently asked questions (e.g., GPS, creatives, driver payout...)"
+                placeholder="Search questions — e.g. GPS, pricing, driver earnings..."
                 value={faqSearchQuery}
                 onChange={(e) => setFaqSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition font-medium"
+                className="w-full pl-11 pr-12 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#0B1F4D] transition"
               />
               {faqSearchQuery && (
-                <button 
-                  onClick={() => setFaqSearchQuery("")}
-                  className="absolute right-3.5 top-3 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded"
-                >
+                <button onClick={() => setFaqSearchQuery("")} className="absolute right-3.5 top-2.5 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-500 px-2 py-1 rounded-lg font-bold">
                   Clear
                 </button>
               )}
             </div>
 
-            {/* Category Filter Tabs */}
-            <div className="flex gap-2 border-b border-slate-850 pb-2 overflow-x-auto scrollbar-none">
+            {/* Category tabs */}
+            <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none pb-1">
               {(["All", "Advertisers", "Drivers", "General", "Platform"] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => {
-                    setFaqActiveTab(tab);
-                    setExpandedFaq(null);
-                  }}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap ${
-                    faqActiveTab === tab 
-                      ? "bg-[#FF9800] text-slate-950" 
-                      : "bg-slate-950/40 text-slate-400 border border-slate-800/60 hover:text-white hover:border-slate-700"
+                  onClick={() => { setFaqActiveTab(tab); setExpandedFaq(null); }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap border-2 ${
+                    faqActiveTab === tab
+                      ? "bg-[#0B1F4D] text-white border-[#0B1F4D]"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
                   }`}
                 >
                   {tab === "All" ? "⭐ All" : tab === "Advertisers" ? "💼 Advertisers" : tab === "Drivers" ? "🛺 Drivers" : tab === "General" ? "🌐 General" : "⚙️ Platform"}
@@ -474,94 +459,84 @@ export default function App() {
             </div>
           </div>
 
-          {/* Scrollable Q&A Accordion List */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-950/10">
+          {/* Count bar */}
+          <div className="px-6 py-2 bg-slate-50 border-b border-slate-100 shrink-0">
+            <p className="text-[11px] text-slate-400 font-medium">{filteredFaqs.length} question{filteredFaqs.length !== 1 ? "s" : ""} found</p>
+          </div>
+
+          {/* Scrollable Q&A */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-white">
             {filteredFaqs.length > 0 ? (
               filteredFaqs.map((item, idx) => {
                 const originalIndex = faqItems.findIndex(f => f.question === item.question);
                 const isExpanded = expandedFaq === originalIndex;
                 return (
-                  <div 
+                  <div
                     key={idx}
-                    className={`border rounded-2xl transition duration-200 overflow-hidden ${
-                      isExpanded 
-                        ? "border-[#FF9800]/50 bg-slate-850/60 shadow-lg shadow-orange-500/5" 
-                        : "border-slate-800/80 bg-slate-900 hover:bg-slate-850/30 hover:border-slate-700"
+                    className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
+                      isExpanded ? "border-[#0B1F4D] shadow-md" : "border-slate-100 hover:border-slate-200 bg-slate-50 hover:bg-white"
                     }`}
                   >
-                    {/* Accordion Trigger Head */}
                     <button
                       onClick={() => setExpandedFaq(isExpanded ? null : originalIndex)}
-                      className="w-full p-4 flex items-center justify-between text-left gap-4 font-sans"
+                      className="w-full px-5 py-4 flex items-center justify-between text-left gap-4"
                     >
-                      <div className="space-y-1">
-                        <span className={`text-[8px] font-mono font-black uppercase px-2 py-0.5 rounded ${
-                          item.category === "Advertisers" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                          item.category === "Drivers" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
-                          item.category === "Platform" ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" :
-                          "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`shrink-0 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg ${
+                          item.category === "Advertisers" ? "bg-blue-100 text-blue-700" :
+                          item.category === "Drivers" ? "bg-teal-100 text-teal-700" :
+                          item.category === "Platform" ? "bg-orange-100 text-orange-700" :
+                          "bg-purple-100 text-purple-700"
                         }`}>
                           {item.category}
                         </span>
-                        <h4 className="font-bold text-xs text-white tracking-tight pt-1 font-sans">
+                        <h4 className={`font-semibold text-sm leading-snug truncate ${isExpanded ? "text-[#0B1F4D]" : "text-slate-700"}`}>
                           {item.question}
                         </h4>
                       </div>
-                      <span className={`text-slate-500 shrink-0 transform transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
-                        <ChevronRight size={16} className={isExpanded ? "text-[#FF9800]" : "text-slate-500"} />
-                      </span>
+                      <ChevronRight size={18} className={`shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90 text-[#0B1F4D]" : "text-slate-400"}`} />
                     </button>
 
-                    {/* Accordion Body Content */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 border-t border-slate-800/60 bg-slate-950/40 text-xs text-slate-300 leading-relaxed font-sans">
-                        {item.answer}
+                      <div className="px-5 pb-5 pt-0">
+                        <div className="h-px bg-slate-100 mb-4" />
+                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{item.answer}</p>
                       </div>
                     )}
                   </div>
                 );
               })
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 font-sans">
-                <div className="p-4 bg-slate-900 border border-slate-800 text-slate-500 rounded-2xl">
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
                   <AlertCircle size={28} />
                 </div>
                 <div>
-                  <p className="text-xs text-white font-bold">No answers found</p>
-                  <p className="text-[10px] text-slate-400 max-w-xs mt-1">We couldn't find matching articles for "{faqSearchQuery}". Try using simpler search terms or select another category tab above.</p>
+                  <p className="text-sm font-bold text-slate-700">No results for "{faqSearchQuery}"</p>
+                  <p className="text-xs text-slate-400 mt-1">Try shorter keywords or browse by category above.</p>
                 </div>
-                <button 
-                  onClick={() => {
-                    setFaqSearchQuery("");
-                    setFaqActiveTab("All");
-                  }}
-                  className="text-[10px] font-mono font-bold text-[#FF9800] bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition"
-                >
-                  RESET FILTERS
+                <button onClick={() => { setFaqSearchQuery(""); setFaqActiveTab("All"); }} className="text-xs font-bold text-[#0B1F4D] bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition">
+                  Clear filters
                 </button>
               </div>
             )}
           </div>
 
-          {/* Modal Footer */}
-          <div className="p-5 border-t border-slate-800 bg-slate-950/90 text-center shrink-0 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div className="text-left font-sans">
-              <p className="text-[9px] text-slate-500 uppercase font-mono font-bold">CUSTOMER SUPPORT LINE</p>
-              <p className="text-xs text-white font-bold flex items-center gap-1.5 font-sans">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                +91 98361-30393 <span className="text-slate-400 font-normal">| apex7tech@gmail.com</span>
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Need more help?</p>
+              <p className="text-sm font-bold text-[#0B1F4D] flex items-center gap-2 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block"></span>
+                +91 98361-30393
+                <span className="text-slate-400 font-normal text-xs">| deinrimsolutionss@gmail.com</span>
               </p>
             </div>
             <button
-              onClick={() => {
-                setShowHelpModal(false);
-                setFaqSearchQuery("");
-                setExpandedFaq(null);
-                setLandingSection("register-campaign");
-              }}
-              className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 text-[10px] font-mono font-extrabold px-4 py-2 rounded-xl shadow-lg transition"
+              onClick={() => { setShowHelpModal(false); setFaqSearchQuery(""); setExpandedFaq(null); setLandingSection("register-campaign"); }}
+              className="bg-[#FF9800] hover:bg-orange-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow transition"
             >
-              🚀 LAUNCH A CAMPAIGN NOW
+              🚀 Start a Campaign
             </button>
           </div>
 
