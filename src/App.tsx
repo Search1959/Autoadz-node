@@ -3246,10 +3246,6 @@ export default function App() {
                       className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg text-slate-800 tracking-[0.5em] text-center font-mono focus:border-teal-500 focus:outline-none"
                     />
                   </div>
-                  <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 flex gap-2 items-start">
-                    <span>💡</span>
-                    <p className="text-xs text-teal-700"><strong>Demo driver:</strong> Phone 9876543210 · PIN 4921</p>
-                  </div>
                 </div>
               )}
 
