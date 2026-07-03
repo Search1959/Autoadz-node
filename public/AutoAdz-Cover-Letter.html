@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoAdz — Cover Letter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',Arial,sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+  @media print{body{background:#fff;padding:0;display:block;} .no-print{display:none!important;} .letter{box-shadow:none!important;max-width:100%;}}
+  .letter{background:#fff;max-width:750px;width:100%;box-shadow:0 4px 40px rgba(0,0,0,0.12);border-radius:0;}
+
+  /* HEADER */
+  .lh{background:#0B1F4D;padding:32px 48px;display:flex;align-items:center;justify-content:space-between;}
+  .lh-logo{font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px;}
+  .lh-logo span{color:#90EE90;}
+  .lh-tag{font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;letter-spacing:1px;}
+  .lh-contact{text-align:right;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.8;}
+  .lh-contact a{color:#90EE90;text-decoration:none;}
+
+  /* GREEN BAR */
+  .gbar{background:#2E7D32;height:5px;}
+
+  /* BODY */
+  .lbody{padding:48px;}
+  .date{font-size:13px;color:#888;margin-bottom:28px;}
+  .to-block{margin-bottom:28px;}
+  .to-block .to-label{font-size:10px;letter-spacing:2px;color:#2E7D32;font-weight:700;margin-bottom:6px;}
+  .to-block .to-name{font-size:15px;font-weight:700;color:#0B1F4D;}
+  .to-block .to-detail{font-size:13px;color:#555;line-height:1.7;}
+  .subject{background:#EEF2FF;border-left:4px solid #0B1F4D;padding:14px 20px;margin-bottom:32px;border-radius:0 6px 6px 0;}
+  .subject-label{font-size:10px;letter-spacing:2px;color:#0B1F4D;font-weight:700;margin-bottom:3px;}
+  .subject-text{font-size:14px;font-weight:700;color:#0B1F4D;}
+  .salutation{font-size:15px;color:#222;margin-bottom:18px;font-weight:500;}
+  p.lp{font-size:14px;color:#333;line-height:1.85;margin-bottom:16px;}
+  .cta-box{background:#F0FFF0;border:1px solid #C8E6C9;border-radius:10px;padding:24px 28px;margin:28px 0;}
+  .cta-label{font-size:10px;letter-spacing:2px;color:#2E7D32;font-weight:700;margin-bottom:10px;}
+  .cta-link{display:block;font-size:15px;font-weight:700;color:#0B1F4D;word-break:break-all;margin-bottom:12px;}
+  .cta-link a{color:#0B1F4D;text-decoration:underline;}
+  .cta-note{font-size:12px;color:#555;}
+  .bullets{list-style:none;margin:18px 0 20px;padding:0;}
+  .bullets li{padding:7px 0 7px 22px;position:relative;font-size:13.5px;color:#333;border-bottom:1px solid #f0f0f0;}
+  .bullets li::before{content:"▶";position:absolute;left:0;color:#2E7D32;font-size:9px;top:10px;}
+  .closing{margin-top:32px;}
+  .closing p{font-size:14px;color:#333;line-height:1.8;margin-bottom:6px;}
+  .sig-name{font-size:17px;font-weight:800;color:#0B1F4D;margin-top:18px;}
+  .sig-title{font-size:13px;color:#2E7D32;font-style:italic;}
+  .sig-contact{font-size:12px;color:#555;margin-top:6px;line-height:1.8;}
+
+  /* FOOTER */
+  .lfoot{background:#F5F8FF;border-top:1px solid #e0e4ef;padding:16px 48px;display:flex;justify-content:space-between;align-items:center;}
+  .lfoot-brand{font-size:11px;color:#888;}
+  .lfoot-brand strong{color:#0B1F4D;}
+  .print-btn{background:#2E7D32;color:#fff;border:none;padding:8px 18px;font-size:11px;font-weight:700;border-radius:20px;cursor:pointer;font-family:inherit;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="letter">
+
+  <!-- HEADER -->
+  <div class="lh">
+    <div>
+      <div class="lh-logo">Auto<span>Adz</span></div>
+      <div class="lh-tag">EVERY AUTO IS A MOVING BILLBOARD</div>
+    </div>
+    <div class="lh-contact">
+      <div>autoadz.in</div>
+      <div>deinrimsolutionss@gmail.com</div>
+      <div>+91 98361-30393</div>
+      <div>Kolkata – 700 006</div>
+    </div>
+  </div>
+  <div class="gbar"></div>
+
+  <!-- BODY -->
+  <div class="lbody">
+    <div class="date">Date: <span id="ldate"></span></div>
+
+    <div class="to-block">
+      <div class="to-label">TO</div>
+      <div class="to-name">The Marketing Head / Brand Manager</div>
+      <div class="to-detail">
+        [Company Name]<br>
+        [City, India]
+      </div>
+    </div>
+
+    <div class="subject">
+      <div class="subject-label">SUBJECT</div>
+      <div class="subject-text">Proposal for GPS-Tracked Auto-Rickshaw Advertising Campaign — AutoAdz, Kolkata</div>
+    </div>
+
+    <div class="salutation">Dear Sir / Ma'am,</div>
+
+    <p class="lp">I hope this message finds you well. On behalf of <strong>AutoAdz</strong> — a Deinrim Solutionss (P) Ltd. initiative — I am pleased to share our corporate proposal for India's first <strong>GPS-tracked auto-rickshaw advertising network</strong>, currently in active pilot launch in Kolkata.</p>
+
+    <p class="lp">In a city of 80,000+ auto-rickshaws covering every lane, market, and neighbourhood, AutoAdz turns each auto into a moving billboard — delivering your brand directly to communities that static hoardings simply cannot reach. What makes AutoAdz different is <strong>accountability</strong>: you pay only for GPS-verified kilometres driven with your creative displayed, not estimated impressions.</p>
+
+    <p class="lp">Our platform offers you:</p>
+
+    <ul class="bullets">
+      <li><strong>Hyperlocal targeting</strong> — choose your city zone: North, South, East, Central, or Howrah</li>
+      <li><strong>Real-time GPS dashboard</strong> — live tracking of your campaign, 24/7</li>
+      <li><strong>Morning photo audit proofs</strong> — daily evidence your creative is on display</li>
+      <li><strong>QR code scan tracking</strong> — measure audience engagement digitally</li>
+      <li><strong>Affordable entry</strong> — campaigns from ₹45,000/month for 10 autos</li>
+      <li><strong>Pilot launch offer</strong> — 20% discount + free creative design for your first campaign</li>
+    </ul>
+
+    <p class="lp">I invite you to review our complete corporate proposal, including campaign packages, pricing, technology overview, and case studies, at the link below:</p>
+
+    <div class="cta-box">
+      <div class="cta-label">VIEW FULL CORPORATE PROPOSAL</div>
+      <div class="cta-link"><a href="https://autoadz.in/AutoAdz-Corporate-Proposal.html" target="_blank">https://autoadz.in/AutoAdz-Corporate-Proposal.html</a></div>
+      <div class="cta-note">📱 Mobile-friendly — view on any device. Click "Print / Save PDF" inside the proposal to download.</div>
+    </div>
+
+    <p class="lp">We would be delighted to schedule a 20-minute discovery call at your convenience to understand your brand's objectives and present a customised campaign plan. A tailored proposal with specific route maps, zone data, and pricing can be ready within <strong>48 hours</strong> of your brief.</p>
+
+    <div class="closing">
+      <p>Thanking you for your time and consideration.</p>
+      <p style="margin-top:8px;">Warm regards,</p>
+      <div class="sig-name">Rimjhim Jaiswal</div>
+      <div class="sig-title">Director, Deinrim Solutionss (P) Ltd.</div>
+      <div class="sig-contact">
+        📞 +91 98361-30393 &nbsp;|&nbsp; +91 74392-65589<br>
+        ✉️ deinrimsolutionss@gmail.com<br>
+        🌐 autoadz.in
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="lfoot">
+    <div class="lfoot-brand"><strong>AutoAdz</strong> — Deinrim Solutionss (P) Ltd. | 27/3B Jugal Kishor Das Lane, Kolkata – 700 006</div>
+    <button class="print-btn no-print" onclick="window.print()">🖨 PRINT / PDF</button>
+  </div>
+
+</div>
+<script>
+  document.getElementById('ldate').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+</script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoAdz — Campaign Workflow Diagram</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',Arial,sans-serif;background:#f0f2f5;padding:30px 20px;}
+  @media print{
+    body{background:#fff;padding:0;}
+    .no-print{display:none!important;}
+    .wrap{box-shadow:none!important;}
+  }
+  .no-print{text-align:center;margin-bottom:20px;}
+  .no-print button{background:#2E7D32;color:#fff;border:none;padding:10px 28px;font-size:13px;font-weight:700;border-radius:20px;cursor:pointer;font-family:inherit;margin:0 8px;}
+  .no-print button.navy{background:#0B1F4D;}
+
+  .wrap{background:#fff;max-width:960px;margin:0 auto;box-shadow:0 4px 40px rgba(0,0,0,0.1);}
+
+  /* HEADER */
+  .hdr{background:#0B1F4D;padding:28px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .hdr-logo{font-size:28px;font-weight:900;color:#fff;}
+  .hdr-logo span{color:#90EE90;}
+  .hdr-title{text-align:right;}
+  .hdr-title div:first-child{font-size:14px;font-weight:700;color:#fff;letter-spacing:1px;}
+  .hdr-title div:last-child{font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;}
+  .gbar{background:#2E7D32;height:4px;}
+
+  /* DIAGRAM BODY */
+  .dbody{padding:40px;}
+
+  /* SECTION TITLE */
+  .sec-title{font-size:11px;letter-spacing:2px;color:#2E7D32;font-weight:700;text-align:center;margin-bottom:6px;}
+  .main-title{font-size:22px;font-weight:800;color:#0B1F4D;text-align:center;margin-bottom:4px;}
+  .sub-title{font-size:13px;color:#888;text-align:center;margin-bottom:36px;}
+
+  /* THREE COLUMNS: BRAND | AUTOADZ | DRIVER */
+  .col-headers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:12px;}
+  .col-hdr{padding:12px;border-radius:8px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1px;}
+  .col-hdr.brand{background:#0B1F4D;color:#fff;}
+  .col-hdr.platform{background:#2E7D32;color:#fff;}
+  .col-hdr.driver{background:#FF9800;color:#0B1F4D;}
+
+  /* FLOW STEPS */
+  .flow{display:flex;flex-direction:column;gap:0;}
+  .flow-row{display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;gap:0;align-items:center;margin-bottom:0;}
+  .flow-cell{min-height:70px;display:flex;align-items:center;justify-content:center;padding:4px;}
+  .flow-cell.brand-col{background:#EEF2FF;border:1px solid #C5CAE9;}
+  .flow-cell.platform-col{background:#E8F5E9;border:1px solid #C8E6C9;}
+  .flow-cell.driver-col{background:#FFF8E1;border:1px solid #FFE082;}
+  .flow-cell.empty{background:transparent;border:none;}
+  .flow-cell.arrow-col{background:transparent;border:none;justify-content:center;}
+  .step-box{width:100%;text-align:center;padding:10px 8px;}
+  .step-num{display:inline-block;background:#0B1F4D;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;margin-bottom:5px;}
+  .step-num.green{background:#2E7D32;}
+  .step-num.amber{background:#E65100;color:#fff;}
+  .step-icon{font-size:22px;margin-bottom:4px;}
+  .step-title{font-size:12px;font-weight:700;color:#0B1F4D;margin-bottom:2px;line-height:1.3;}
+  .step-desc{font-size:10px;color:#555;line-height:1.4;}
+
+  /* CONNECTOR ARROWS */
+  .arrow-down{display:flex;flex-direction:column;align-items:center;padding:2px 0;}
+  .arrow-down .line{width:2px;height:16px;background:#ccc;}
+  .arrow-down .head{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #ccc;}
+  .arrow-right{font-size:18px;color:#aaa;line-height:1;}
+  .connector-row{display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;gap:0;}
+  .conn-cell{display:flex;justify-content:center;padding:3px 0;}
+  .conn-cell.empty-conn{background:transparent;}
+
+  /* GPS TRACKER */
+  .gps-section{background:linear-gradient(135deg,#0B1F4D,#1a3a6b);border-radius:12px;padding:24px;margin:24px 0;color:#fff;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;text-align:center;}
+  .gps-stat{padding:12px;}
+  .gps-num{font-size:24px;font-weight:900;color:#90EE90;margin-bottom:4px;}
+  .gps-label{font-size:11px;color:rgba(255,255,255,0.7);}
+
+  /* REPORTING FLOW */
+  .report-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0;align-items:start;}
+  .report-step{background:#F5F8FF;border:1px solid #C5CAE9;border-radius:8px;padding:14px 10px;text-align:center;}
+  .report-arrow{display:flex;align-items:center;justify-content:center;font-size:20px;color:#aaa;padding-top:24px;}
+  .report-icon{font-size:24px;margin-bottom:6px;}
+  .report-title{font-size:11px;font-weight:700;color:#0B1F4D;margin-bottom:3px;}
+  .report-desc{font-size:10px;color:#666;line-height:1.4;}
+
+  /* DIVIDER */
+  .sec-divider{border:none;border-top:2px dashed #e0e4ef;margin:28px 0;}
+
+  /* LEGEND */
+  .legend{display:flex;gap:24px;justify-content:center;margin:20px 0 0;}
+  .leg-item{display:flex;align-items:center;gap:8px;font-size:12px;color:#555;}
+  .leg-dot{width:14px;height:14px;border-radius:3px;}
+
+  /* FOOTER */
+  .foot{background:#F5F8FF;border-top:1px solid #e0e4ef;padding:14px 40px;display:flex;justify-content:space-between;align-items:center;}
+  .foot-txt{font-size:11px;color:#888;}
+  .foot-txt strong{color:#0B1F4D;}
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()">🖨 Save as PDF / Print</button>
+  <button class="navy" onclick="window.history.back()">← Back</button>
+</div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">Auto<span>Adz</span></div>
+    <div class="hdr-title">
+      <div>CAMPAIGN WORKFLOW DIAGRAM</div>
+      <div>End-to-End Process — Brand to Driver to Report</div>
+    </div>
+  </div>
+  <div class="gbar"></div>
+
+  <div class="dbody">
+
+    <div class="sec-title">HOW IT WORKS</div>
+    <div class="main-title">AutoAdz Campaign — Complete Workflow</div>
+    <div class="sub-title">From brand registration to GPS-verified campaign report in 10 steps</div>
+
+    <!-- COLUMN HEADERS -->
+    <div class="col-headers">
+      <div class="col-hdr brand">🏢 BRAND / ADVERTISER</div>
+      <div class="col-hdr platform">⚙️ AUTOADZ PLATFORM</div>
+      <div class="col-hdr driver">🛺 DRIVER PARTNER</div>
+    </div>
+
+    <!-- PHASE 1: ONBOARDING -->
+    <div style="background:#F8F9FF;border:1px solid #e0e4ef;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:10px;font-weight:700;color:#666;letter-spacing:1px;">PHASE 1 — CAMPAIGN SETUP</div>
+
+    <!-- ROW 1 -->
+    <div class="flow-row">
+      <div class="flow-cell brand-col">
+        <div class="step-box">
+          <div class="step-num">STEP 1</div>
+          <div class="step-icon">📝</div>
+          <div class="step-title">Register & Login</div>
+          <div class="step-desc">Brand creates account on autoadz.in brand portal</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col"><div class="arrow-right">→</div></div>
+      <div class="flow-cell platform-col">
+        <div class="step-box">
+          <div class="step-num green">STEP 2</div>
+          <div class="step-icon">✅</div>
+          <div class="step-title">Account Verified</div>
+          <div class="step-desc">Platform verifies brand details, activates dashboard</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col"></div>
+      <div class="flow-cell empty"></div>
+    </div>
+
+    <!-- CONNECTOR -->
+    <div class="connector-row">
+      <div class="conn-cell"><div class="arrow-down"><div class="line"></div><div class="head"></div></div></div>
+      <div class="conn-cell empty-conn"></div>
+      <div class="conn-cell"></div>
+      <div class="conn-cell empty-conn"></div>
+      <div class="conn-cell"></div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="flow-row">
+      <div class="flow-cell brand-col">
+        <div class="step-box">
+          <div class="step-num">STEP 3</div>
+          <div class="step-icon">🗺️</div>
+          <div class="step-title">Configure Campaign</div>
+          <div class="step-desc">Choose city, zone, autos, budget, duration. Upload creative artwork.</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col"><div class="arrow-right">→</div></div>
+      <div class="flow-cell platform-col">
+        <div class="step-box">
+          <div class="step-num green">STEP 4</div>
+          <div class="step-icon">🔍</div>
+          <div class="step-title">Admin Review</div>
+          <div class="step-desc">AutoAdz reviews creative & brief. Approves within 24 hours.</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col"><div class="arrow-right">→</div></div>
+      <div class="flow-cell driver-col">
+        <div class="step-box">
+          <div class="step-num amber">STEP 5</div>
+          <div class="step-icon">🎨</div>
+          <div class="step-title">Creative Installed</div>
+          <div class="step-desc">AutoAdz team prints & installs creative on assigned autos</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <!-- PHASE 2: ACTIVE CAMPAIGN -->
+    <div style="background:#E8F5E9;border:1px solid #C8E6C9;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:10px;font-weight:700;color:#2E7D32;letter-spacing:1px;">PHASE 2 — ACTIVE CAMPAIGN (DAILY)</div>
+
+    <!-- ROW 3 -->
+    <div class="flow-row">
+      <div class="flow-cell empty"></div>
+      <div class="flow-cell arrow-col"></div>
+      <div class="flow-cell platform-col">
+        <div class="step-box">
+          <div class="step-num green">STEP 6</div>
+          <div class="step-icon">📸</div>
+          <div class="step-title">Morning Audit</div>
+          <div class="step-desc">Driver uploads photo proof of creative display via app each morning</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col">←</div>
+      <div class="flow-cell driver-col">
+        <div class="step-box">
+          <div class="step-num amber">DAILY</div>
+          <div class="step-icon">🚗</div>
+          <div class="step-title">Driver Starts Route</div>
+          <div class="step-desc">Driver logs in, GPS tracking activates, morning check-in submitted</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTOR -->
+    <div class="connector-row">
+      <div class="conn-cell"></div>
+      <div class="conn-cell empty-conn"></div>
+      <div class="conn-cell"><div class="arrow-down"><div class="line"></div><div class="head"></div></div></div>
+      <div class="conn-cell empty-conn"></div>
+      <div class="conn-cell"><div class="arrow-down"><div class="line"></div><div class="head"></div></div></div>
+    </div>
+
+    <!-- ROW 4 -->
+    <div class="flow-row">
+      <div class="flow-cell brand-col">
+        <div class="step-box">
+          <div class="step-num">STEP 7</div>
+          <div class="step-icon">📊</div>
+          <div class="step-title">Live Dashboard</div>
+          <div class="step-desc">Brand views real-time GPS map, km counter, zone heatmap — 24/7</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col">←</div>
+      <div class="flow-cell platform-col">
+        <div class="step-box">
+          <div class="step-num green">AUTO</div>
+          <div class="step-icon">🛰️</div>
+          <div class="step-title">GPS Telematics</div>
+          <div class="step-desc">10-second location updates logged. Km tallied. QR scans recorded.</div>
+        </div>
+      </div>
+      <div class="flow-cell arrow-col">←</div>
+      <div class="flow-cell driver-col">
+        <div class="step-box">
+          <div class="step-num amber">LIVE</div>
+          <div class="step-icon">📍</div>
+          <div class="step-title">GPS Active</div>
+          <div class="step-desc">Driver's phone sends location every 10 seconds while driving</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <!-- GPS STATS BAR -->
+    <div class="gps-section">
+      <div class="gps-stat"><div class="gps-num">10 sec</div><div class="gps-label">GPS Update Interval</div></div>
+      <div class="gps-stat"><div class="gps-num">80–120 km</div><div class="gps-label">Daily Coverage/Auto</div></div>
+      <div class="gps-stat"><div class="gps-num">1 Cr+</div><div class="gps-label">Monthly Impressions (100 autos)</div></div>
+      <div class="gps-stat"><div class="gps-num">₹4.50/km</div><div class="gps-label">Driver Earnings Rate</div></div>
+    </div>
+
+    <!-- PHASE 3: REPORTING -->
+    <div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:6px 10px;margin-bottom:16px;font-size:10px;font-weight:700;color:#E65100;letter-spacing:1px;">PHASE 3 — REPORTING & BILLING</div>
+
+    <div class="report-flow">
+      <div class="report-step">
+        <div class="report-icon">📅</div>
+        <div class="report-title">Daily Report</div>
+        <div class="report-desc">Total km covered by fleet. Audit photos reviewed.</div>
+      </div>
+      <div class="report-arrow">→</div>
+      <div class="report-step">
+        <div class="report-icon">🗺️</div>
+        <div class="report-title">Weekly Report</div>
+        <div class="report-desc">Zone heatmap. Impression estimate. QR scan count.</div>
+      </div>
+      <div class="report-arrow">→</div>
+      <div class="report-step">
+        <div class="report-icon">🏁</div>
+        <div class="report-title">Campaign End</div>
+        <div class="report-desc">Final GPS-verified reach report + completion certificate.</div>
+      </div>
+      <div class="report-arrow">→</div>
+      <div class="report-step" style="background:#E8F5E9;border-color:#C8E6C9;">
+        <div class="report-icon">🧾</div>
+        <div class="report-title">GST Invoice</div>
+        <div class="report-desc">Invoice based on actual verified km. Issued within 48 hrs.</div>
+      </div>
+    </div>
+
+    <hr class="sec-divider">
+
+    <!-- DRIVER EARNINGS FLOW -->
+    <div class="sec-title">DRIVER EARNING CYCLE</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 24px;">
+      <div style="background:#FFF8E1;border:2px solid #FFE082;border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:6px;">🚖</div>
+        <div style="font-size:11px;font-weight:700;color:#0B1F4D;">Drive with Creative</div>
+        <div style="font-size:10px;color:#666;margin-top:3px;">Brand creative displayed on auto</div>
+      </div>
+      <div style="background:#FFF8E1;border:2px solid #FFE082;border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:6px;">🛰️</div>
+        <div style="font-size:11px;font-weight:700;color:#0B1F4D;">GPS Logs Every KM</div>
+        <div style="font-size:10px;color:#666;margin-top:3px;">₹4.50 earned per verified km</div>
+      </div>
+      <div style="background:#FFF8E1;border:2px solid #FFE082;border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:6px;">💰</div>
+        <div style="font-size:11px;font-weight:700;color:#0B1F4D;">Weekly Settlement</div>
+        <div style="font-size:10px;color:#666;margin-top:3px;">₹360–540/day credited to wallet</div>
+      </div>
+      <div style="background:#E8F5E9;border:2px solid #C8E6C9;border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:6px;">📲</div>
+        <div style="font-size:11px;font-weight:700;color:#0B1F4D;">UPI Payout</div>
+        <div style="font-size:10px;color:#666;margin-top:3px;">Direct bank / UPI transfer weekly</div>
+      </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#EEF2FF;border:1px solid #C5CAE9;"></div>Brand / Advertiser actions</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#E8F5E9;border:1px solid #C8E6C9;"></div>AutoAdz Platform actions</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#FFF8E1;border:1px solid #FFE082;"></div>Driver Partner actions</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#0B1F4D;"></div>Automated / GPS</div>
+    </div>
+
+  </div><!-- /dbody -->
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <div class="foot-txt"><strong>AutoAdz</strong> — Deinrim Solutionss (P) Ltd. | autoadz.in | deinrimsolutionss@gmail.com | +91 98361-30393</div>
+    <div class="foot-txt" style="color:#2E7D32;font-weight:700;">autoadz.in</div>
+  </div>
+
+</div><!-- /wrap -->
+</body>
+</html>
