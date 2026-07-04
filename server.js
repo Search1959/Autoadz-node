@@ -1,11 +1,13 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import Anthropic from "@anthropic-ai/sdk";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import multer from "multer";
 
 dotenv.config();
 
@@ -42,6 +44,18 @@ if (process.env.ANTHROPIC_API_KEY) {
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
+
+// ─── Multer — Proof Photo Upload ─────────────────────────────────────────────
+const uploadsDir = path.join(process.cwd(), "public", "uploads", "proofs");
+fs.mkdirSync(uploadsDir, { recursive: true });
+const proofStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    cb(null, `proof_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const uploadProof = multer({ storage: proofStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 function ts() {
@@ -342,25 +356,28 @@ app.get("/api/proofs", async (req, res) => {
   }
 });
 
-app.post("/api/proofs", async (req, res) => {
+app.post("/api/proofs", uploadProof.single("photo"), async (req, res) => {
   try {
-    const { driverId, campaignId, type, imageUrl, location } = req.body;
+    const { driverId, campaignId, type, location } = req.body;
+    const imageUrl = req.file
+      ? `/uploads/proofs/${req.file.filename}`
+      : (req.body.imageUrl || "");
     const [driver] = await db("SELECT name FROM drivers WHERE id = ?", [driverId]);
     const [campaign] = await db("SELECT title FROM campaigns WHERE id = ?", [campaignId]);
     const id = uid("proof");
     const nowTs = ts();
+    const proofType = (type === "installation" || type === "daily") ? type : "daily";
 
     await db(
       `INSERT INTO proofs (id, driver_id, driver_name, campaign_id, campaign_title, image_url, location, timestamp, status, type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [id, driverId || "", driver ? driver.name : "Unknown Driver",
        campaignId || "", campaign ? campaign.title : "Unknown Campaign",
-       imageUrl || "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
-       location || "Unknown", nowTs, type || "installation"]
+       imageUrl, location || "Unknown", nowTs, proofType]
     );
     await db(
       `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Proof Uploaded', ?, ?, 1, 'driver')`,
-      [uid("notif"), `${driver ? driver.name : "A driver"} uploaded proof for ${campaign ? campaign.title : "a campaign"}.`, nowTs]
+      [uid("notif"), `${driver ? driver.name : "A driver"} uploaded ${proofType} proof for ${campaign ? campaign.title : "a campaign"}.`, nowTs]
     );
 
     const [newProof] = await db("SELECT * FROM proofs WHERE id = ?", [id]);
@@ -380,6 +397,8 @@ app.put("/api/proofs/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const allowed = ["pending", "approved", "flagged"];
+    if (!allowed.includes(status)) return res.status(400).json({ error: "Invalid status" });
     await db("UPDATE proofs SET status = ? WHERE id = ?", [status, id]);
     const [updated] = await db("SELECT * FROM proofs WHERE id = ?", [id]);
     if (!updated) return res.status(404).json({ error: "Proof not found" });

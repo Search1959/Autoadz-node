@@ -1180,10 +1180,12 @@ export default function App() {
 
   // Driver Check-in / Proof Upload State
   const [selectedCampaignForProof, setSelectedCampaignForProof] = useState("");
-  const [selectedProofType, setSelectedProofType] = useState<"installation" | "morning" | "evening">("morning");
-  const [customProofImg, setCustomProofImg] = useState("");
+  const [proofPhotoType, setProofPhotoType] = useState<"installation" | "daily">("daily");
+  const [capturedProofFile, setCapturedProofFile] = useState<File | null>(null);
+  const [proofPreviewUrl, setProofPreviewUrl] = useState<string>("");
   const [proofLocation, setProofLocation] = useState("Shyambazar, North Kolkata");
   const [driverCheckInMsg, setDriverCheckInMsg] = useState("");
+  const [proofAdminFilter, setProofAdminFilter] = useState<"all" | "pending" | "installation" | "daily">("pending");
 
   // Driver Registration Form
   const [driverRegName, setDriverRegName] = useState("");
@@ -1521,26 +1523,32 @@ export default function App() {
   // Submit check-in proof
   const handleUploadProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    const activeDriver = drivers.find(d => d.id === loggedInDriverId); // Dynamic active driver simulator
+    const activeDriver = drivers.find(d => d.id === loggedInDriverId);
     if (!activeDriver) return;
+    if (!capturedProofFile) {
+      setDriverCheckInMsg("Please take a photo first using your camera.");
+      return;
+    }
 
     try {
-      const response = await fetch("/api/proofs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          driverId: activeDriver.id,
-          campaignId: selectedCampaignForProof || activeDriver.currentCampaignId || (campaigns[0]?.id || "camp_1"),
-          type: selectedProofType,
-          imageUrl: customProofImg || "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
-          location: proofLocation
-        })
-      });
+      const campaignId = selectedCampaignForProof || activeDriver.currentCampaignId || (campaigns[0]?.id || "");
+      const formData = new FormData();
+      formData.append("photo", capturedProofFile);
+      formData.append("driverId", activeDriver.id);
+      formData.append("campaignId", campaignId);
+      formData.append("type", proofPhotoType);
+      formData.append("location", proofLocation);
+
+      const response = await fetch("/api/proofs", { method: "POST", body: formData });
 
       if (response.ok) {
-        setDriverCheckInMsg("Proof uploaded successfully! Awaiting Admin audit.");
-        setCustomProofImg("");
-        setTimeout(() => setDriverCheckInMsg(""), 5000);
+        const msg = proofPhotoType === "installation"
+          ? "Installation photo submitted! Admin will verify the banner setup."
+          : "Daily check-in submitted! Admin will review your proof.";
+        setDriverCheckInMsg(msg);
+        setCapturedProofFile(null);
+        setProofPreviewUrl("");
+        setTimeout(() => setDriverCheckInMsg(""), 6000);
         fetchData();
       }
     } catch (err) {
@@ -1549,7 +1557,7 @@ export default function App() {
   };
 
   // Admin audit proof
-  const handleAuditProof = async (id: string, status: "approved" | "rejected") => {
+  const handleAuditProof = async (id: string, status: "approved" | "flagged") => {
     try {
       const response = await fetch(`/api/proofs/${id}/status`, {
         method: "PUT",
@@ -4860,17 +4868,36 @@ export default function App() {
                     {/* DRIVER PHOTO PROOF TAB */}
                     {driverTab === "proof" && (
                       <div className="space-y-3">
-                        <div className="bg-white p-3 rounded-xl border border-slate-200">
-                          <h5 className="font-bold text-xs text-[#0B1F4D] flex items-center gap-1">
-                            <Camera size={12} className="text-[#FF9800]" /> Check-In Photo Proof Upload
+                        {/* Header */}
+                        <div className="bg-[#0B1F4D] p-3 rounded-xl">
+                          <h5 className="font-bold text-xs text-white flex items-center gap-1.5">
+                            <Camera size={13} className="text-[#FF9800]" /> Photo Proof Upload
                           </h5>
-                          <p className="text-[10px] text-slate-400 mt-1">Submit visual check-ins to unlock daily payouts. Admin audits images in real-time.</p>
+                          <p className="text-[10px] text-slate-300 mt-1">Live camera photo required — no gallery uploads. GPS tracking runs independently.</p>
                         </div>
 
-                        <form onSubmit={handleUploadProof} className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                        {/* Installation status banner */}
+                        {(() => {
+                          const campId = selectedCampaignForProof || drivers.find(d => d.id === loggedInDriverId)?.currentCampaignId || campaigns[0]?.id || "";
+                          const hasInstallation = proofs.some(p => p.driverId === loggedInDriverId && p.campaignId === campId && p.type === "installation");
+                          return hasInstallation ? (
+                            <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 flex items-center gap-2">
+                              <CheckCircle size={14} className="text-green-600 shrink-0" />
+                              <p className="text-[10px] text-green-700 font-semibold">Installation photo submitted ✓ — Submit daily check-in photo each day.</p>
+                            </div>
+                          ) : (
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-center gap-2">
+                              <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                              <p className="text-[10px] text-amber-700 font-semibold">First submit an Installation photo showing your banner on the auto.</p>
+                            </div>
+                          );
+                        })()}
+
+                        <form onSubmit={handleUploadProof} className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3">
+                          {/* Campaign */}
                           <div>
-                            <label className="text-[10px] text-slate-500 block font-medium">Select Campaign</label>
-                            <select 
+                            <label className="text-[10px] text-slate-500 block font-medium mb-1">Campaign</label>
+                            <select
                               value={selectedCampaignForProof}
                               onChange={(e) => setSelectedCampaignForProof(e.target.value)}
                               className="w-full text-xs border border-slate-200 rounded p-1.5 bg-slate-50"
@@ -4881,87 +4908,143 @@ export default function App() {
                             </select>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-1.5 text-center">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedProofType("installation")}
-                              className={`p-1.5 rounded text-[10px] font-bold border transition ${
-                                selectedProofType === "installation" ? "bg-[#0B1F4D] text-white border-[#0B1F4D]" : "border-slate-200 text-slate-600"
-                              }`}
-                            >
-                              Installation
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedProofType("morning")}
-                              className={`p-1.5 rounded text-[10px] font-bold border transition ${
-                                selectedProofType === "morning" ? "bg-[#0B1F4D] text-white border-[#0B1F4D]" : "border-slate-200 text-slate-600"
-                              }`}
-                            >
-                              Morning Check
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedProofType("evening")}
-                              className={`p-1.5 rounded text-[10px] font-bold border transition ${
-                                selectedProofType === "evening" ? "bg-[#0B1F4D] text-white border-[#0B1F4D]" : "border-slate-200 text-slate-600"
-                              }`}
-                            >
-                              Evening Check
-                            </button>
-                          </div>
+                          {/* Photo type */}
+                          {(() => {
+                            const campId = selectedCampaignForProof || drivers.find(d => d.id === loggedInDriverId)?.currentCampaignId || campaigns[0]?.id || "";
+                            const hasInstallation = proofs.some(p => p.driverId === loggedInDriverId && p.campaignId === campId && p.type === "installation");
+                            return (
+                              <div>
+                                <label className="text-[10px] text-slate-500 block font-medium mb-1">Photo Type</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <button type="button" onClick={() => setProofPhotoType("installation")}
+                                    disabled={hasInstallation}
+                                    className={`p-2 rounded-lg text-[10px] font-bold border transition flex flex-col items-center gap-1 ${
+                                      proofPhotoType === "installation" ? "bg-[#0B1F4D] text-white border-[#0B1F4D]" :
+                                      hasInstallation ? "border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed" :
+                                      "border-slate-200 text-slate-600 hover:border-[#0B1F4D]"
+                                    }`}>
+                                    <span className="text-base">🔧</span>
+                                    Installation {hasInstallation && "✓"}
+                                  </button>
+                                  <button type="button" onClick={() => setProofPhotoType("daily")}
+                                    disabled={!hasInstallation}
+                                    className={`p-2 rounded-lg text-[10px] font-bold border transition flex flex-col items-center gap-1 ${
+                                      proofPhotoType === "daily" ? "bg-[#FF9800] text-white border-[#FF9800]" :
+                                      !hasInstallation ? "border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed" :
+                                      "border-slate-200 text-slate-600 hover:border-[#FF9800]"
+                                    }`}>
+                                    <span className="text-base">📸</span>
+                                    Daily Check-in
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()}
 
+                          {/* Camera capture */}
                           <div>
-                            <label className="text-[10px] text-slate-500 block font-medium">Current Location</label>
-                            <select
-                              value={proofLocation}
-                              onChange={(e) => setProofLocation(e.target.value)}
-                              className="w-full text-[11px] border border-slate-200 rounded p-1.5 focus:outline-none bg-white mt-1"
-                            >
-                              <option>Shyambazar, North Kolkata</option>
-                              <option>Ultadanga, North Kolkata</option>
-                              <option>Salt Lake, Sector V</option>
-                              <option>New Town, Rajarhat</option>
-                              <option>Gariahat, South Kolkata</option>
-                              <option>Jadavpur, South Kolkata</option>
-                              <option>Park Street, Central Kolkata</option>
-                              <option>Esplanade, Central Kolkata</option>
-                              <option>Howrah Station Area</option>
-                              <option>Lake Market, Kolkata</option>
-                            </select>
+                            <label className="text-[10px] text-slate-500 block font-medium mb-1">
+                              Take Photo <span className="text-[#FF9800] font-bold">(Live Camera Only)</span>
+                            </label>
+                            <label className="flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition overflow-hidden">
+                              {proofPreviewUrl ? (
+                                <img src={proofPreviewUrl} className="w-full max-h-36 object-cover" alt="Preview" />
+                              ) : (
+                                <div className="py-4 flex flex-col items-center gap-1">
+                                  <Camera size={22} className="text-slate-400" />
+                                  <span className="text-[10px] text-slate-500 font-semibold">Tap to open camera</span>
+                                  <span className="text-[9px] text-slate-400">Gallery not allowed</span>
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setCapturedProofFile(file);
+                                  setProofPreviewUrl(URL.createObjectURL(file));
+                                }}
+                              />
+                            </label>
+                            {proofPreviewUrl && (
+                              <button type="button" onClick={() => { setCapturedProofFile(null); setProofPreviewUrl(""); }}
+                                className="text-[9px] text-red-500 mt-1 underline">Retake photo</button>
+                            )}
                           </div>
 
-                          <button 
-                            type="submit"
-                            className="w-full bg-[#0B1F4D] hover:bg-slate-800 text-white font-bold py-2 rounded text-xs transition"
-                          >
-                            UPLOAD PROOF TO ADMIN
+                          {/* Date/time + location */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[10px] text-slate-500 block font-medium mb-1">Date & Time</label>
+                              <div className="text-[10px] bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-600 font-mono">
+                                {new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-slate-500 block font-medium mb-1">Location</label>
+                              <select value={proofLocation} onChange={(e) => setProofLocation(e.target.value)}
+                                className="w-full text-[10px] border border-slate-200 rounded p-1.5 bg-white focus:outline-none">
+                                <option>Shyambazar, North Kolkata</option>
+                                <option>Ultadanga, North Kolkata</option>
+                                <option>Salt Lake, Sector V</option>
+                                <option>New Town, Rajarhat</option>
+                                <option>Gariahat, South Kolkata</option>
+                                <option>Jadavpur, South Kolkata</option>
+                                <option>Park Street, Central Kolkata</option>
+                                <option>Esplanade, Central Kolkata</option>
+                                <option>Howrah Station Area</option>
+                                <option>Lake Market, Kolkata</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <button type="submit"
+                            className="w-full bg-[#0B1F4D] hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                            <Upload size={12} /> SUBMIT PROOF TO ADMIN
                           </button>
 
                           {driverCheckInMsg && (
-                            <p className="text-[10px] text-center text-green-700 font-bold bg-green-50 rounded p-1.5 border border-green-200">{driverCheckInMsg}</p>
+                            <p className={`text-[10px] text-center font-bold rounded p-1.5 border ${
+                              driverCheckInMsg.includes("Please") ? "text-red-700 bg-red-50 border-red-200" : "text-green-700 bg-green-50 border-green-200"
+                            }`}>{driverCheckInMsg}</p>
                           )}
                         </form>
 
+                        {/* Upload history */}
                         <div className="bg-white p-3 rounded-xl border border-slate-200">
-                          <span className="text-[10px] font-bold text-slate-700 block uppercase mb-1.5">My Upload History</span>
-                          <div className="space-y-1.5">
-                            {proofs.filter(p => p.driverId === loggedInDriverId).slice(0, 3).map(p => (
-                              <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded text-xs border border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-700 block uppercase mb-2">My Proof History</span>
+                          <div className="space-y-2">
+                            {proofs.filter(p => p.driverId === loggedInDriverId).slice(0, 5).map(p => (
+                              <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-2">
-                                  <img src={p.imageUrl} className="w-8 h-8 rounded object-cover" alt="" referrerPolicy="no-referrer" />
+                                  {p.imageUrl ? (
+                                    <img src={p.imageUrl} className="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" alt="" />
+                                  ) : (
+                                    <div className="w-9 h-9 rounded-lg bg-slate-200 flex items-center justify-center shrink-0">
+                                      <Camera size={12} className="text-slate-400" />
+                                    </div>
+                                  )}
                                   <div>
-                                    <p className="font-bold text-slate-800 uppercase text-[9px]">{p.type}</p>
-                                    <p className="text-[8px] text-slate-400 truncate w-32">{p.location}</p>
+                                    <p className="font-bold text-slate-700 text-[9px]">
+                                      {p.type === "installation" ? "🔧 Installation" : "📸 Daily Check-in"}
+                                    </p>
+                                    <p className="text-[8px] text-slate-400 truncate w-28">{p.timestamp}</p>
+                                    <p className="text-[8px] text-slate-400 truncate w-28">{p.location}</p>
                                   </div>
                                 </div>
-                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                                  p.status === "approved" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                                }`}>
-                                  {p.status}
-                                </span>
+                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                                  p.status === "approved" ? "bg-green-100 text-green-700" :
+                                  p.status === "flagged" ? "bg-orange-100 text-orange-700" :
+                                  "bg-amber-100 text-amber-700"
+                                }`}>{p.status === "flagged" ? "⚑ Flagged" : p.status}</span>
                               </div>
                             ))}
+                            {proofs.filter(p => p.driverId === loggedInDriverId).length === 0 && (
+                              <p className="text-[10px] text-slate-400 text-center py-3">No proofs submitted yet.</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -6014,26 +6097,52 @@ export default function App() {
             {/* ADMIN AUDIT PROOFS SUB-TAB */}
             {adminTab === "proofs" && (
               <div className="space-y-4 flex-1 flex flex-col">
-                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100 flex-wrap gap-2">
                   <div>
                     <h4 className="font-display font-bold text-sm text-[#0B1F4D] flex items-center gap-2">
                       <Camera size={14} className="text-[#FF9800]" /> Photo Proof Audit
                     </h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Verify daily vehicle display check-in uploads</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">GPS tracking continues regardless of approval — flag suspicious photos</p>
                   </div>
                   <span className="text-[10px] font-mono bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-semibold">
                     {proofs.filter(p => p.status === "pending").length} pending review
                   </span>
                 </div>
 
+                {/* Filter tabs */}
+                <div className="flex gap-1.5 flex-wrap">
+                  {(["pending", "all", "installation", "daily"] as const).map(f => (
+                    <button key={f} onClick={() => setProofAdminFilter(f)}
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border transition ${
+                        proofAdminFilter === f ? "bg-[#0B1F4D] text-white border-[#0B1F4D]" : "border-slate-200 text-slate-500 hover:border-slate-400"
+                      }`}>
+                      {f === "pending" ? `⏳ Pending (${proofs.filter(p => p.status === "pending").length})` :
+                       f === "installation" ? "🔧 Installation" :
+                       f === "daily" ? "📸 Daily" : "All"}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {proofs.map((p) => (
+                  {proofs.filter(p =>
+                    proofAdminFilter === "all" ? true :
+                    proofAdminFilter === "pending" ? p.status === "pending" :
+                    p.type === proofAdminFilter
+                  ).map((p) => (
                     <div key={p.id} className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-3 flex flex-col justify-between">
                       <div className="flex gap-3">
-                        <img src={p.imageUrl} className="w-16 h-16 rounded-lg object-cover border border-slate-300 shrink-0" alt="" referrerPolicy="no-referrer" />
+                        {p.imageUrl ? (
+                          <img src={p.imageUrl} className="w-16 h-16 rounded-lg object-cover border border-slate-300 shrink-0" alt="" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 border border-slate-300">
+                            <Camera size={18} className="text-slate-400" />
+                          </div>
+                        )}
                         <div className="space-y-1 min-w-0">
-                          <span className="bg-orange-100 text-orange-800 text-[8px] font-bold font-mono px-1.5 py-0.5 rounded uppercase">
-                            {p.type} Proof
+                          <span className={`text-[8px] font-bold font-mono px-1.5 py-0.5 rounded uppercase ${
+                            p.type === "installation" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"
+                          }`}>
+                            {p.type === "installation" ? "🔧 Installation" : "📸 Daily Check-in"}
                           </span>
                           <p className="font-bold text-xs text-slate-800 truncate">{p.campaignTitle}</p>
                           <p className="text-[10px] text-slate-500">Driver: <b>{p.driverName}</b></p>
@@ -6044,33 +6153,41 @@ export default function App() {
                       </div>
 
                       <div className="flex justify-between items-center pt-2.5 border-t border-slate-200">
-                        <span className="text-[9px] text-slate-400 font-mono">{p.timestamp}</span>
+                        <span className="text-[9px] text-slate-500 font-mono">{p.timestamp}</span>
                         {p.status === "pending" ? (
                           <div className="flex gap-1.5">
                             <button
                               onClick={() => handleAuditProof(p.id, "approved")}
                               className="bg-green-500 hover:bg-green-600 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-0.5"
                             >
-                              <ThumbsUp size={10} /> Approve Check-in
+                              <ThumbsUp size={10} /> Approve
                             </button>
                             <button
-                              onClick={() => handleAuditProof(p.id, "rejected")}
-                              className="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1 rounded text-[10px] font-bold"
+                              onClick={() => handleAuditProof(p.id, "flagged")}
+                              className="bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-0.5"
                             >
-                              Reject
+                              ⚑ Flag
                             </button>
                           </div>
                         ) : (
                           <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
                             p.status === "approved" ? "bg-green-100 text-green-700 border border-green-200" :
-                            "bg-red-100 text-red-700 border border-red-200"
+                            p.status === "flagged" ? "bg-orange-100 text-orange-700 border border-orange-200" :
+                            "bg-slate-100 text-slate-500 border border-slate-200"
                           }`}>
-                            {p.status}
+                            {p.status === "flagged" ? "⚑ Flagged" : p.status}
                           </span>
                         )}
                       </div>
                     </div>
                   ))}
+                  {proofs.filter(p =>
+                    proofAdminFilter === "all" ? true :
+                    proofAdminFilter === "pending" ? p.status === "pending" :
+                    p.type === proofAdminFilter
+                  ).length === 0 && (
+                    <div className="col-span-2 text-center py-8 text-slate-400 text-xs">No proofs in this category.</div>
+                  )}
                 </div>
               </div>
             )}

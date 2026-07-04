@@ -40,7 +40,7 @@ export interface Driver {
   trackingStartTime?: number | null;
 }
 
-export type ProofType = "morning" | "evening" | "installation";
+export type ProofType = "installation" | "daily";
 
 export interface Proof {
   id: string;
@@ -52,7 +52,7 @@ export interface Proof {
   imageUrl: string;
   timestamp: string;
   location: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "flagged";
 }
 
 export interface WalletTransaction {
