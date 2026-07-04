@@ -1137,10 +1137,14 @@ export default function App() {
   // System Config states
   const [cities, setCities] = useState<any[]>([]);
   const [adminAddingCity, setAdminAddingCity] = useState(false);
+  const [adminEditingCityId, setAdminEditingCityId] = useState<string | null>(null);
   const [adminCityName, setAdminCityName] = useState("");
   const [adminCityZone, setAdminCityZone] = useState("");
-  const [adminCityRate, setAdminCityRate] = useState("18");
-  const [adminCityAutos, setAdminCityAutos] = useState("100");
+  const [adminCityDriverRate, setAdminCityDriverRate] = useState("5");
+  const [adminCityBrandRate, setAdminCityBrandRate] = useState("150");
+  const [adminCityCapacity, setAdminCityCapacity] = useState("100");
+  const [adminCityAutos, setAdminCityAutos] = useState("0");
+  const [adminCityStatus, setAdminCityStatus] = useState<"active" | "coming_soon">("active");
 
   // Admin System integration placeholder credentials
   const [systemWhatsAppToken, setSystemWhatsAppToken] = useState(() => localStorage.getItem("sys_whatsapp_token") || "");
@@ -1624,6 +1628,12 @@ export default function App() {
     }
   };
 
+  const resetCityForm = () => {
+    setAdminCityName(""); setAdminCityZone(""); setAdminCityDriverRate("5");
+    setAdminCityBrandRate("150"); setAdminCityCapacity("100"); setAdminCityAutos("0");
+    setAdminCityStatus("active");
+  };
+
   // City addition
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1633,37 +1643,44 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: adminCityName,
-          zones: adminCityZone || "High Traffic Zones",
-          priceRate: Number(adminCityRate) || 18,
-          activeAutos: Number(adminCityAutos) || 100,
+          name: adminCityName, zone: adminCityZone,
+          driverRate: Number(adminCityDriverRate),
+          brandRate: Number(adminCityBrandRate),
+          capacity: Number(adminCityCapacity),
+          activeAutos: Number(adminCityAutos),
+          status: adminCityStatus,
         })
       });
-      if (response.ok) {
-        setAdminCityName("");
-        setAdminCityZone("");
-        setAdminAddingCity(false);
-        fetchData();
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      if (response.ok) { resetCityForm(); setAdminAddingCity(false); fetchData(); }
+    } catch (err) { console.error(err); }
+  };
+
+  // City edit save
+  const handleSaveCity = async (id: string) => {
+    try {
+      const response = await fetch(`/api/cities/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: adminCityName, zone: adminCityZone,
+          driverRate: Number(adminCityDriverRate),
+          brandRate: Number(adminCityBrandRate),
+          capacity: Number(adminCityCapacity),
+          activeAutos: Number(adminCityAutos),
+          status: adminCityStatus,
+        })
+      });
+      if (response.ok) { setAdminEditingCityId(null); resetCityForm(); fetchData(); }
+    } catch (err) { console.error(err); }
   };
 
   // City deletion
-  const handleDeleteCity = async (name: string) => {
+  const handleDeleteCity = async (id: string) => {
+    if (!confirm("Delete this city?")) return;
     try {
-      const response = await fetch("/api/cities", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
-      });
-      if (response.ok) {
-        fetchData();
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      const response = await fetch(`/api/cities/${id}`, { method: "DELETE" });
+      if (response.ok) fetchData();
+    } catch (err) { console.error(err); }
   };
 
   // Save Settings
@@ -6195,110 +6212,172 @@ export default function App() {
             {/* ADMIN CITIES SUB-TAB */}
             {adminTab === "cities" && (
               <div className="space-y-4 flex-1 flex flex-col">
+                {/* Header */}
                 <div className="flex justify-between items-center pb-2 border-b border-slate-100 flex-wrap gap-2">
                   <div>
-                    <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Hyperlocal Operating Cities</h4>
-                    <span className="text-xs text-slate-400">Configure regional transit rates and active vehicle caps</span>
+                    <h4 className="font-bold text-sm text-[#0B1F4D] flex items-center gap-2"><MapPin size={14} className="text-[#FF9800]" /> Hyperlocal Operating Cities</h4>
+                    <span className="text-[10px] text-slate-400">{cities.filter(c => c.status === "active").length} active · {cities.filter(c => c.status === "coming_soon").length} coming soon</span>
                   </div>
-                  <button
-                    onClick={() => setAdminAddingCity(!adminAddingCity)}
-                    className="bg-[#10B981] text-white hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs"
-                  >
-                    <Plus size={13} /> Add Operating City
+                  <button onClick={() => { resetCityForm(); setAdminAddingCity(!adminAddingCity); setAdminEditingCityId(null); }}
+                    className="bg-[#10B981] text-white hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                    <Plus size={13} /> Add City
                   </button>
                 </div>
 
-                {/* Inline Add City form */}
-                {adminAddingCity && (
-                  <form onSubmit={handleAddCity} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs text-slate-700">
-                    <h5 className="font-bold text-[#0B1F4D] text-xs font-mono uppercase">Provision New Territory</h5>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase font-mono">City Name</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Pune"
-                          value={adminCityName}
-                          onChange={(e) => setAdminCityName(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus:border-[#10B981] focus:outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase font-mono">Hotspot Zones (comma-separated)</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Koregaon Park, Shivaji Nagar"
-                          value={adminCityZone}
-                          onChange={(e) => setAdminCityZone(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus:border-[#10B981] focus:outline-none"
-                        />
-                      </div>
-                    </div>
+                {/* Add / Edit City form */}
+                {(adminAddingCity || adminEditingCityId) && (() => {
+                  const isEdit = !!adminEditingCityId;
+                  return (
+                    <form onSubmit={isEdit ? (e) => { e.preventDefault(); handleSaveCity(adminEditingCityId!); } : handleAddCity}
+                      className="bg-[#0B1F4D] rounded-2xl p-4 space-y-3 text-xs text-white">
+                      <h5 className="font-bold text-sm flex items-center gap-2">
+                        {isEdit ? <><Edit size={13} className="text-[#FF9800]" /> Edit City</> : <><Plus size={13} className="text-[#FF9800]" /> Add New City</>}
+                      </h5>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase font-mono">Ad Rate (₹ per Auto / Day)</label>
-                        <input
-                          type="number"
-                          value={adminCityRate}
-                          onChange={(e) => setAdminCityRate(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus:border-[#10B981] focus:outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase font-mono">Registered Auto Fleet Cap</label>
-                        <input
-                          type="number"
-                          value={adminCityAutos}
-                          onChange={(e) => setAdminCityAutos(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus:border-[#10B981] focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setAdminAddingCity(false)}
-                        className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg font-bold"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-1.5 bg-[#10B981] hover:bg-emerald-600 text-white rounded-lg font-bold"
-                      >
-                        Save Territory
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {cities.map((city: any, idx: number) => (
-                    <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between space-y-3">
-                      <div className="space-y-1.5 text-left">
-                        <div className="flex justify-between items-center">
-                          <h5 className="font-extrabold text-[#0B1F4D] text-sm">{city.name}</h5>
-                          <span className="text-[9px] font-bold font-mono bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                            ₹{city.priceRate}/day rate
-                          </span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-300 font-bold uppercase">City Name *</label>
+                          <input required value={adminCityName} onChange={(e) => setAdminCityName(e.target.value)}
+                            placeholder="e.g. Pune" className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white placeholder-white/40 focus:border-[#FF9800] focus:outline-none" />
                         </div>
-                        <p className="text-[10px] text-slate-500 font-mono"><b>Target Zones:</b> {city.zones}</p>
-                        <p className="text-[10px] text-slate-500 font-mono"><b>Active Auto Capacity:</b> {city.activeAutos} Rickshaws</p>
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-300 font-bold uppercase">Status</label>
+                          <select value={adminCityStatus} onChange={(e) => setAdminCityStatus(e.target.value as any)}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white focus:border-[#FF9800] focus:outline-none">
+                            <option value="active">🟢 Active</option>
+                            <option value="coming_soon">🟡 Coming Soon</option>
+                          </select>
+                        </div>
                       </div>
 
-                      <div className="flex justify-end pt-2 border-t border-slate-100">
-                        <button
-                          onClick={() => handleDeleteCity(city.name)}
-                          className="text-red-500 hover:text-red-600 font-bold font-mono text-[10px] transition"
-                        >
-                          DELETE TERRITORY
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-slate-300 font-bold uppercase">Target Zones (comma-separated)</label>
+                        <input value={adminCityZone} onChange={(e) => setAdminCityZone(e.target.value)}
+                          placeholder="e.g. Park Street, Salt Lake, Howrah" className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white placeholder-white/40 focus:border-[#FF9800] focus:outline-none" />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-300 font-bold uppercase">Driver Rate (₹/km)</label>
+                          <input type="number" step="0.5" value={adminCityDriverRate} onChange={(e) => setAdminCityDriverRate(e.target.value)}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white focus:border-[#FF9800] focus:outline-none" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-300 font-bold uppercase">Brand Rate (₹/auto/day)</label>
+                          <input type="number" value={adminCityBrandRate} onChange={(e) => setAdminCityBrandRate(e.target.value)}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white focus:border-[#FF9800] focus:outline-none" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-300 font-bold uppercase">Fleet Cap</label>
+                          <input type="number" value={adminCityCapacity} onChange={(e) => setAdminCityCapacity(e.target.value)}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white focus:border-[#FF9800] focus:outline-none" />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-1">
+                        <button type="button" onClick={() => { setAdminAddingCity(false); setAdminEditingCityId(null); resetCityForm(); }}
+                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg font-bold text-white">Cancel</button>
+                        <button type="submit" className="px-4 py-1.5 bg-[#FF9800] hover:bg-amber-500 text-black rounded-lg font-bold">
+                          {isEdit ? "Save Changes" : "Add City"}
                         </button>
                       </div>
-                    </div>
-                  ))}
+                    </form>
+                  );
+                })()}
+
+                {/* City cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {cities.map((city: any) => {
+                    const cityDrivers = drivers.filter(d => d.location?.toLowerCase().includes(city.name.toLowerCase())).length;
+                    const cityCampaigns = campaigns.filter(c => c.city?.toLowerCase().includes(city.name.toLowerCase()) && c.status === "active").length;
+                    const fillPct = city.capacity > 0 ? Math.min(100, Math.round((city.activeAutos / city.capacity) * 100)) : 0;
+                    const zones = city.zone ? city.zone.split(",").map((z: string) => z.trim()).filter(Boolean) : [];
+                    const isEditing = adminEditingCityId === city.id;
+
+                    return (
+                      <div key={city.id} className={`bg-white border-2 rounded-2xl p-4 flex flex-col gap-3 transition ${
+                        city.status === "active" ? "border-emerald-200" : "border-amber-200 opacity-80"
+                      }`}>
+                        {/* Top row */}
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h5 className="font-extrabold text-[#0B1F4D] text-sm leading-tight">{city.name}</h5>
+                            <p className="text-[9px] text-slate-400 mt-0.5">{city.activeAutos} autos registered</p>
+                          </div>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                            city.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                          }`}>{city.status === "active" ? "🟢 Active" : "🟡 Coming Soon"}</span>
+                        </div>
+
+                        {/* Rate chips */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-blue-50 border border-blue-100 rounded-xl p-2 text-center">
+                            <p className="text-[9px] text-blue-500 font-bold uppercase">Driver Payout</p>
+                            <p className="text-sm font-extrabold text-blue-700">₹{city.driverRate}<span className="text-[9px] font-normal">/km</span></p>
+                          </div>
+                          <div className="bg-orange-50 border border-orange-100 rounded-xl p-2 text-center">
+                            <p className="text-[9px] text-orange-500 font-bold uppercase">Brand Charge</p>
+                            <p className="text-sm font-extrabold text-orange-700">₹{city.brandRate}<span className="text-[9px] font-normal">/auto/day</span></p>
+                          </div>
+                        </div>
+
+                        {/* Zones */}
+                        {zones.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {zones.map((z: string, i: number) => (
+                              <span key={i} className="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">{z}</span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Fleet capacity bar */}
+                        <div>
+                          <div className="flex justify-between text-[9px] text-slate-500 mb-1">
+                            <span>Fleet: {city.activeAutos}/{city.capacity} autos</span>
+                            <span className="font-bold">{fillPct}% filled</span>
+                          </div>
+                          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${fillPct >= 90 ? "bg-red-400" : fillPct >= 60 ? "bg-amber-400" : "bg-emerald-400"}`}
+                              style={{ width: `${fillPct}%` }} />
+                          </div>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 gap-2 text-center bg-slate-50 rounded-xl p-2">
+                          <div>
+                            <p className="text-[10px] font-extrabold text-[#0B1F4D]">{cityCampaigns}</p>
+                            <p className="text-[8px] text-slate-400 uppercase">Active Campaigns</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-extrabold text-[#0B1F4D]">{cityDrivers}</p>
+                            <p className="text-[8px] text-slate-400 uppercase">Drivers Matched</p>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-1 border-t border-slate-100">
+                          <button onClick={() => {
+                            setAdminEditingCityId(city.id);
+                            setAdminAddingCity(false);
+                            setAdminCityName(city.name);
+                            setAdminCityZone(city.zone || "");
+                            setAdminCityDriverRate(String(city.driverRate));
+                            setAdminCityBrandRate(String(city.brandRate));
+                            setAdminCityCapacity(String(city.capacity));
+                            setAdminCityAutos(String(city.activeAutos));
+                            setAdminCityStatus(city.status || "active");
+                          }}
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-[#0B1F4D] bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                            <Edit size={10} /> Edit
+                          </button>
+                          <button onClick={() => handleDeleteCity(city.id)}
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition">
+                            <Trash2 size={10} /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

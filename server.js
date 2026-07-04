@@ -32,6 +32,20 @@ async function db(sql, params = []) {
   return rows;
 }
 
+// ─── DB migrations — add columns silently if missing ─────────────────────────
+async function runMigrations() {
+  const migrations = [
+    "ALTER TABLE cities ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'",
+    "ALTER TABLE cities ADD COLUMN driver_rate DECIMAL(10,2) NOT NULL DEFAULT 5.00",
+    "ALTER TABLE cities ADD COLUMN brand_rate DECIMAL(10,2) NOT NULL DEFAULT 150.00",
+    "ALTER TABLE cities ADD COLUMN capacity INT NOT NULL DEFAULT 100",
+  ];
+  for (const q of migrations) {
+    try { await db(q); } catch (_) { /* column already exists — skip */ }
+  }
+}
+runMigrations();
+
 // ─── Claude AI Client ─────────────────────────────────────────────────────────
 let claude = null;
 if (process.env.ANTHROPIC_API_KEY) {
@@ -727,13 +741,21 @@ app.post("/api/notifications/read", async (req, res) => {
 });
 
 // ─── CITIES ───────────────────────────────────────────────────────────────────
+function mapCity(r) {
+  return {
+    id: r.id, name: r.name, zone: r.zone || "",
+    rate: Number(r.rate) || 0, activeAutos: Number(r.active_autos) || 0,
+    status: r.status || "active",
+    driverRate: Number(r.driver_rate) || 5,
+    brandRate: Number(r.brand_rate) || 150,
+    capacity: Number(r.capacity) || 100,
+  };
+}
+
 app.get("/api/cities", async (req, res) => {
   try {
     const rows = await db("SELECT * FROM cities ORDER BY name ASC");
-    res.json(rows.map(r => ({
-      id: r.id, name: r.name, zone: r.zone,
-      rate: Number(r.rate), activeAutos: r.active_autos,
-    })));
+    res.json(rows.map(mapCity));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -742,14 +764,35 @@ app.get("/api/cities", async (req, res) => {
 
 app.post("/api/cities", async (req, res) => {
   try {
-    const { name, zone, rate, activeAutos } = req.body;
+    const { name, zone, rate, activeAutos, status, driverRate, brandRate, capacity } = req.body;
     const id = uid("city");
     await db(
-      "INSERT INTO cities (id, name, zone, rate, active_autos) VALUES (?, ?, ?, ?, ?)",
-      [id, name || "New City", zone || "General Zone", Number(rate) || 15, Number(activeAutos) || 50]
+      `INSERT INTO cities (id, name, zone, rate, active_autos, status, driver_rate, brand_rate, capacity)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, name || "New City", zone || "", Number(rate) || 0,
+       Number(activeAutos) || 0, status || "active",
+       Number(driverRate) || 5, Number(brandRate) || 150, Number(capacity) || 100]
     );
     const [newCity] = await db("SELECT * FROM cities WHERE id = ?", [id]);
-    res.status(201).json({ id: newCity.id, name: newCity.name, zone: newCity.zone, rate: Number(newCity.rate), activeAutos: newCity.active_autos });
+    res.status(201).json(mapCity(newCity));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.put("/api/cities/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, zone, activeAutos, status, driverRate, brandRate, capacity } = req.body;
+    await db(
+      `UPDATE cities SET name=?, zone=?, active_autos=?, status=?, driver_rate=?, brand_rate=?, capacity=? WHERE id=?`,
+      [name, zone || "", Number(activeAutos) || 0, status || "active",
+       Number(driverRate) || 5, Number(brandRate) || 150, Number(capacity) || 100, id]
+    );
+    const [updated] = await db("SELECT * FROM cities WHERE id = ?", [id]);
+    if (!updated) return res.status(404).json({ error: "City not found" });
+    res.json(mapCity(updated));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
