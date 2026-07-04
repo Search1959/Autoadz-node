@@ -1169,7 +1169,9 @@ export default function App() {
   const [driverRatePerKm, setDriverRatePerKm] = useState<number>(4.5);
   const [schedulerLogs, setSchedulerLogs] = useState<Array<{ timestamp: string; status: string; message: string }>>([]);
   const [schedulerLastRun, setSchedulerLastRun] = useState("");
+  const [schedulerNextRun, setSchedulerNextRun] = useState("");
   const [schedulerRunStatus, setSchedulerRunStatus] = useState("");
+  const [billingStats, setBillingStats] = useState({ totalBilled: 0, totalCollected: 0, owedToDrivers: 0, netBalance: 0 });
 
   // New Campaign Form State
   const [showCreateCampaign, setShowCreateCampaign] = useState(false);
@@ -1386,14 +1388,18 @@ export default function App() {
         if (resScheduler.ok) {
           const schedulerData = await resScheduler.json();
           setSchedulerEnabled(schedulerData.enabled);
-          setSchedulerThreshold(schedulerData.mileageThreshold);
-          setDriverRatePerKm(schedulerData.driverRatePerKm !== undefined ? schedulerData.driverRatePerKm : 4.5);
           setSchedulerLogs(schedulerData.logs || []);
           setSchedulerLastRun(schedulerData.lastRunTimestamp || "Never");
+          setSchedulerNextRun(schedulerData.nextRunTime || "");
         }
       } catch (err) {
         console.error("Error fetching scheduler settings", err);
       }
+
+      try {
+        const resStats = await fetch("/api/billing/stats");
+        if (resStats.ok) setBillingStats(await resStats.json());
+      } catch (_) { /* non-critical */ }
     } catch (err) {
       console.error("Error fetching telemetry database", err);
     } finally {
@@ -5175,19 +5181,22 @@ export default function App() {
 
                           {/* List of raised bills */}
                           <div className="space-y-1.5 pt-1.5">
-                            <span className="text-[9px] text-slate-400 font-mono block">Billing Requests Status</span>
+                            <span className="text-[9px] text-slate-400 font-mono block">Your Bills</span>
+                            {bills.filter(b => b.senderId === loggedInDriverId).length === 0 && (
+                              <p className="text-[10px] text-slate-400 italic text-center py-2">Admin will generate your weekly bill automatically every Monday.</p>
+                            )}
                             {bills.filter(b => b.senderId === loggedInDriverId).map(bill => (
-                              <div key={bill.id} className="p-2 bg-slate-50 border border-slate-150 rounded-lg text-[10px] space-y-1 font-mono">
-                                <div className="flex justify-between items-center text-[9px]">
-                                  <span className="text-slate-500 font-bold">{bill.id}</span>
-                                  <span className={`px-1 rounded text-[8px] font-bold uppercase ${
+                              <div key={bill.id} className={`p-2 rounded-lg text-[10px] space-y-1 font-mono border ${bill.status === "paid" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-slate-600">{bill.periodStart} → {bill.periodEnd}</span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
                                     bill.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700 animate-pulse"
                                   }`}>
-                                    {bill.status}
+                                    {bill.status === "paid" ? "✓ PAID" : "⏳ PENDING"}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center text-slate-700 text-[10px]">
-                                  <span>{bill.kmsCovered} KMs completed</span>
+                                <div className="flex justify-between items-center text-slate-700">
+                                  <span>{bill.kmsCovered} KM</span>
                                   <span className="font-bold text-slate-900">₹{bill.amount}</span>
                                 </div>
                               </div>
@@ -6763,438 +6772,298 @@ export default function App() {
               <div className="space-y-6 flex-1 flex flex-col">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-2 border-b border-slate-100 gap-2">
                   <div>
-                    <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Financial Ledger & CRM Control</h4>
-                    <p className="text-[11px] text-slate-400">Reconcile advance advertiser payments, manage weekly driver invoices & service bills.</p>
+                    <h4 className="font-bold text-sm text-[#0B1F4D] uppercase font-mono tracking-wider">Finance & CRM</h4>
+                    <p className="text-[11px] text-slate-400">Weekly driver bills, advertiser invoices, and automated billing scheduler.</p>
                   </div>
-                  
-                  {/* Sub tab navigation */}
-                  <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px] font-bold">
-                    <button
-                      onClick={() => setFinanceSubTab("overview")}
-                      className={`px-2.5 py-1 rounded-md transition ${financeSubTab === "overview" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:text-slate-900"}`}
-                    >
-                      📊 Overview
-                    </button>
-                    <button
-                      onClick={() => setFinanceSubTab("advertiser_bills")}
-                      className={`px-2.5 py-1 rounded-md transition ${financeSubTab === "advertiser_bills" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:text-slate-900"}`}
-                    >
-                      🏢 Ad Invoices
-                    </button>
-                    <button
-                      onClick={() => setFinanceSubTab("driver_bills")}
-                      className={`px-2.5 py-1 rounded-md transition ${financeSubTab === "driver_bills" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:text-slate-900"}`}
-                    >
-                      🛺 Driver Bills
-                    </button>
-                    <button
-                      onClick={() => setFinanceSubTab("ledger")}
-                      className={`px-2.5 py-1 rounded-md transition ${financeSubTab === "ledger" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:text-slate-900"}`}
-                    >
-                      📓 Transaction Ledger
-                    </button>
-                    <button
-                      onClick={() => setFinanceSubTab("scheduler")}
-                      className={`px-2.5 py-1 rounded-md transition ${financeSubTab === "scheduler" ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:text-slate-900"}`}
-                    >
-                      ⚙️ Auto Billing
-                    </button>
+                  <div className="flex flex-wrap gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px] font-bold">
+                    {(["overview","driver_bills","advertiser_bills","scheduler","ledger"] as const).map(tab => (
+                      <button key={tab} onClick={() => setFinanceSubTab(tab as typeof financeSubTab)}
+                        className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${financeSubTab === tab ? "bg-white text-[#0B1F4D] shadow-2xs" : "text-slate-600 hover:text-slate-900"}`}>
+                        {tab === "overview" ? "📊 Overview" : tab === "driver_bills" ? "🛺 Driver Bills" : tab === "advertiser_bills" ? "🏢 Ad Invoices" : tab === "scheduler" ? "⚙️ Auto Billing" : "📓 Ledger"}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* OVERVIEW SECTION */}
+                {/* OVERVIEW */}
                 {financeSubTab === "overview" && (
-                  <div className="space-y-6">
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      {/* Income */}
-                      <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 text-emerald-950">
-                        <span className="text-[10px] text-emerald-600 uppercase font-mono font-bold tracking-wide">Deposits Recieved</span>
-                        <h3 className="text-xl font-display font-black text-emerald-700 mt-1">
-                          ₹{(
-                            transactions
-                              .filter(t => t.userId === "advertiser_main" && t.type === "deposit" && t.status === "success")
-                              .reduce((acc, curr) => acc + curr.amount, 0) +
-                            bills
-                              .filter(b => b.type === "advertiser_invoice" && b.status === "paid")
-                              .reduce((acc, curr) => acc + curr.amount, 0)
-                          ).toLocaleString()}
-                        </h3>
-                        <p className="text-[9px] text-emerald-600 font-mono mt-0.5">Real-time campaigns revenue</p>
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-white border-2 border-slate-200 rounded-2xl p-4">
+                        <span className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Total Billed</span>
+                        <span className="text-[10px] text-slate-400 font-mono block mb-1">Driver service bills raised</span>
+                        <h3 className="text-lg font-black text-[#0B1F4D] font-mono">₹{billingStats.totalBilled.toLocaleString()}</h3>
                       </div>
-
-                      {/* Expenditure */}
-                      <div className="bg-rose-50/70 border border-rose-100 rounded-2xl p-4 text-rose-950">
-                        <span className="text-[10px] text-rose-600 uppercase font-mono font-bold tracking-wide">Payments to Drivers</span>
-                        <h3 className="text-xl font-display font-black text-rose-700 mt-1">
-                          ₹{(
-                            bills
-                              .filter(b => b.type === "driver_service_bill" && b.status === "paid")
-                              .reduce((acc, curr) => acc + curr.amount, 0) +
-                            drivers.length * 150
-                          ).toLocaleString()}
-                        </h3>
-                        <p className="text-[9px] text-rose-600 font-mono mt-0.5">Paid service bills + printing stickers</p>
+                      <div className="bg-white border-2 border-emerald-200 rounded-2xl p-4">
+                        <span className="text-[10px] text-emerald-600 uppercase font-mono font-bold block">Total Collected</span>
+                        <span className="text-[10px] text-slate-400 font-mono block mb-1">Paid advertiser invoices</span>
+                        <h3 className="text-lg font-black text-emerald-700 font-mono">₹{billingStats.totalCollected.toLocaleString()}</h3>
                       </div>
-
-                      {/* Net Margin / Agency Spread */}
-                      <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-indigo-950">
-                        <span className="text-[10px] text-indigo-600 uppercase font-mono font-bold tracking-wide">Agency Profit Margin</span>
-                        <h3 className="text-xl font-display font-black text-indigo-700 mt-1">
-                          ₹{(
-                            (transactions
-                              .filter(t => t.userId === "advertiser_main" && t.type === "deposit" && t.status === "success")
-                              .reduce((acc, curr) => acc + curr.amount, 0) +
-                            bills
-                              .filter(b => b.type === "advertiser_invoice" && b.status === "paid")
-                              .reduce((acc, curr) => acc + curr.amount, 0)) -
-                            (bills
-                              .filter(b => b.type === "driver_service_bill" && b.status === "paid")
-                              .reduce((acc, curr) => acc + curr.amount, 0) +
-                            drivers.length * 150)
-                          ).toLocaleString()}
-                        </h3>
-                        <p className="text-[9px] text-indigo-600 font-mono mt-0.5">Net profit spread margin</p>
+                      <div className="bg-white border-2 border-amber-200 rounded-2xl p-4">
+                        <span className="text-[10px] text-amber-600 uppercase font-mono font-bold block">Owed to Drivers</span>
+                        <span className="text-[10px] text-slate-400 font-mono block mb-1">Pending driver bills</span>
+                        <h3 className="text-lg font-black text-amber-700 font-mono">₹{billingStats.owedToDrivers.toLocaleString()}</h3>
                       </div>
-
-                      {/* Liability holding */}
-                      <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-4 text-amber-950">
-                        <span className="text-[10px] text-amber-600 uppercase font-mono font-bold tracking-wide">Accrued Unpaid Liability</span>
-                        <h3 className="text-xl font-display font-black text-amber-700 mt-1">
-                          ₹{drivers.reduce((acc, curr) => acc + (curr.walletBalance || 0), 0).toLocaleString()}
+                      <div className={`bg-white border-2 rounded-2xl p-4 ${billingStats.netBalance >= 0 ? "border-indigo-200" : "border-rose-200"}`}>
+                        <span className={`text-[10px] uppercase font-mono font-bold block ${billingStats.netBalance >= 0 ? "text-indigo-600" : "text-rose-600"}`}>Net Balance</span>
+                        <span className="text-[10px] text-slate-400 font-mono block mb-1">Collected minus billed</span>
+                        <h3 className={`text-lg font-black font-mono ${billingStats.netBalance >= 0 ? "text-indigo-700" : "text-rose-700"}`}>
+                          {billingStats.netBalance >= 0 ? "+" : ""}₹{billingStats.netBalance.toLocaleString()}
                         </h3>
-                        <p className="text-[9px] text-amber-600 font-mono mt-0.5">Unpaid active driver balances</p>
                       </div>
                     </div>
 
-                    {/* Quick Raise Advertiser Bill Form */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-4">
-                      <div>
-                        <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1">
-                          🏢 Raised Advertiser Bill Tool (Advance / Progress Invoicing)
-                        </h5>
-                        <p className="text-[11px] text-slate-400">Generate a custom invoice based on campaign GPS kilometers covered during the billing week.</p>
+                    {/* Quick stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                        <p className="text-[10px] font-mono font-bold text-slate-500 uppercase">Driver Bills</p>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Pending</span>
+                          <span className="font-bold text-amber-600">{bills.filter(b => b.type === "driver_service_bill" && b.status === "pending").length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Paid</span>
+                          <span className="font-bold text-emerald-600">{bills.filter(b => b.type === "driver_service_bill" && b.status === "paid").length}</span>
+                        </div>
                       </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                        <p className="text-[10px] font-mono font-bold text-slate-500 uppercase">Ad Invoices</p>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Pending</span>
+                          <span className="font-bold text-amber-600">{bills.filter(b => b.type === "advertiser_invoice" && b.status === "pending").length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Paid</span>
+                          <span className="font-bold text-emerald-600">{bills.filter(b => b.type === "advertiser_invoice" && b.status === "paid").length}</span>
+                        </div>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                        <p className="text-[10px] font-mono font-bold text-slate-500 uppercase">Auto Billing</p>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Scheduler</span>
+                          <span className={`font-bold ${schedulerEnabled ? "text-emerald-600" : "text-slate-400"}`}>{schedulerEnabled ? "Active" : "Paused"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Next run</span>
+                          <span className="font-bold text-[#0B1F4D] text-[10px]">{schedulerNextRun ? schedulerNextRun.split(",")[0] : "Monday 9 AM"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* ADVERTISER INVOICES */}
+                {financeSubTab === "advertiser_bills" && (
+                  <div className="space-y-4">
+                    {/* Create Invoice Form */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                      <h5 className="font-bold text-[#0B1F4D] text-xs uppercase font-mono">Create Advertiser Invoice</h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Select Target Campaign</label>
-                          <select
-                            value={selectedCampIdForInvoice}
-                            onChange={(e) => {
-                              const cid = e.target.value;
-                              setSelectedCampIdForInvoice(cid);
-                              const cmp = campaigns.find(c => c.id === cid);
-                              if (cmp) {
-                                const kCovered = Math.floor(cmp.kmsCovered || 0);
-                                setInvoiceKms(String(kCovered));
-                                setInvoiceAmount(String(kCovered * 20));
-                                setInvoiceDesc(`Weekly Advertising Progress Mileage Invoice - Completed ${kCovered} KMs on active routes`);
-                              }
-                            }}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                          >
-                            <option value="">-- Choose Campaign --</option>
-                            {campaigns.map(c => (
-                              <option key={c.id} value={c.id}>{c.title} ({c.client})</option>
-                            ))}
+                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Campaign</label>
+                          <select value={selectedCampIdForInvoice} onChange={(e) => {
+                            const cid = e.target.value;
+                            setSelectedCampIdForInvoice(cid);
+                            const cmp = campaigns.find(c => c.id === cid);
+                            if (cmp) {
+                              const k = Math.floor(cmp.kmsCovered || 0);
+                              setInvoiceKms(String(k));
+                              setInvoiceAmount(String(k * 20));
+                              setInvoiceDesc(`Weekly GPS Progress Invoice — ${k} KM on active routes`);
+                            }
+                          }} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500">
+                            <option value="">-- Select Campaign --</option>
+                            {campaigns.map(c => <option key={c.id} value={c.id}>{c.title} ({c.client})</option>)}
                           </select>
                         </div>
-
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Billing KMs Covered</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 500"
-                            value={invoiceKms}
-                            onChange={(e) => setInvoiceKms(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                          />
+                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">KMs</label>
+                          <input type="number" placeholder="KMs covered" value={invoiceKms} onChange={e => setInvoiceKms(e.target.value)}
+                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
                         </div>
-
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Invoice Amount (₹)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 10000"
-                            value={invoiceAmount}
-                            onChange={(e) => setInvoiceAmount(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                          />
+                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Amount (₹)</label>
+                          <input type="number" placeholder="Invoice amount" value={invoiceAmount} onChange={e => setInvoiceAmount(e.target.value)}
+                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
                         </div>
-
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Period Start Date</label>
-                          <input
-                            type="date"
-                            value={invoicePeriodStart}
-                            onChange={(e) => setInvoicePeriodStart(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                          />
+                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Period Start</label>
+                          <input type="date" value={invoicePeriodStart} onChange={e => setInvoicePeriodStart(e.target.value)}
+                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
                         </div>
-
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Period End Date</label>
-                          <input
-                            type="date"
-                            value={invoicePeriodEnd}
-                            onChange={(e) => setInvoicePeriodEnd(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                          />
+                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Period End</label>
+                          <input type="date" value={invoicePeriodEnd} onChange={e => setInvoicePeriodEnd(e.target.value)}
+                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
                         </div>
-
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Invoice Narrative (Description)</label>
-                          <input
-                            type="text"
-                            placeholder="Progress Billing..."
-                            value={invoiceDesc}
-                            onChange={(e) => setInvoiceDesc(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                          />
+                          <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">Description</label>
+                          <input type="text" placeholder="Invoice description" value={invoiceDesc} onChange={e => setInvoiceDesc(e.target.value)}
+                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
                         </div>
                       </div>
-
-                      <button
-                        onClick={async () => {
-                          if (!selectedCampIdForInvoice || !invoiceAmount) {
-                            alert("Please select a campaign and input a billing amount.");
-                            return;
-                          }
-                          const campaignObj = campaigns.find(c => c.id === selectedCampIdForInvoice);
-                          try {
-                            const res = await fetch("/api/bills", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                type: "advertiser_invoice",
-                                senderId: "admin",
-                                senderName: "AutoAdz Admin",
-                                receiverId: "advertiser_main",
-                                campaignId: selectedCampIdForInvoice,
-                                amount: parseFloat(invoiceAmount),
-                                kmsCovered: parseFloat(invoiceKms || "0"),
-                                periodStart: invoicePeriodStart || new Date(Date.now() - 7*24*3600*1000).toISOString().split("T")[0],
-                                periodEnd: invoicePeriodEnd || new Date().toISOString().split("T")[0],
-                                description: invoiceDesc || `Weekly Advertising Mileage Progress Invoice for campaign: ${campaignObj?.title || ""}`
-                              })
-                            });
-                            if (res.ok) {
-                              alert("✓ Campaign Invoice Raised successfully!");
-                              setSelectedCampIdForInvoice("");
-                              setInvoiceAmount("");
-                              setInvoiceKms("");
-                              setInvoiceDesc("");
-                              fetchData();
-                            } else {
-                              alert("Failed to create campaign invoice.");
-                            }
-                          } catch (e) {
-                            console.error(e);
-                          }
-                        }}
-                        className="py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-slate-950 font-bold font-mono text-xs rounded-xl transition shadow-xs uppercase flex items-center gap-1.5 cursor-pointer"
-                      >
-                        ⚡ RAISE WEEKLY ADVANCE BILL
+                      <button onClick={async () => {
+                        if (!selectedCampIdForInvoice || !invoiceAmount) { alert("Select a campaign and enter amount."); return; }
+                        const cmp = campaigns.find(c => c.id === selectedCampIdForInvoice);
+                        try {
+                          const res = await fetch("/api/bills", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+                            type: "advertiser_invoice", senderId: "admin", senderName: "AutoAdz Admin",
+                            receiverId: "advertiser_main", campaignId: selectedCampIdForInvoice,
+                            amount: parseFloat(invoiceAmount), kmsCovered: parseFloat(invoiceKms || "0"),
+                            periodStart: invoicePeriodStart || new Date(Date.now()-7*24*3600*1000).toISOString().split("T")[0],
+                            periodEnd: invoicePeriodEnd || new Date().toISOString().split("T")[0],
+                            description: invoiceDesc || `Weekly GPS Invoice — ${cmp?.title || ""}`
+                          })});
+                          if (res.ok) {
+                            setSelectedCampIdForInvoice(""); setInvoiceAmount(""); setInvoiceKms(""); setInvoiceDesc("");
+                            fetchData();
+                          } else { alert("Failed to create invoice."); }
+                        } catch (e) { console.error(e); }
+                      }} className="px-4 py-2 bg-[#FF9800] hover:bg-orange-600 text-slate-950 font-bold text-xs rounded-xl transition cursor-pointer font-mono uppercase">
+                        ⚡ Create Invoice
                       </button>
                     </div>
 
-                    {/* Operational Expenditure Ledger Explanation */}
-                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 text-xs space-y-2">
-                      <h5 className="font-bold text-slate-800 uppercase font-mono tracking-wide text-[10px]">🏢 Real-time Operational Breakdown</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-600">
-                        <div>
-                          <p className="font-bold text-slate-700">Income Stream Details:</p>
-                          <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px]">
-                            <li>Advance Advertiser Campaign Pre-bookings</li>
-                            <li>Weekly progress invoices raised for metered GPS telemetry KMs</li>
-                            <li>Payment settled instantly through advertiser wallets</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-700">Expenditure Stream Details:</p>
-                          <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px]">
-                            <li>Ricshaw driver weekly GPS service billing payouts (e.g. ₹15/KM Kolkata, ₹20/KM Bangalore)</li>
-                            <li>Static Vinyl Branding print & pasting setup fees (Fixed ₹150 per rickshaw auto)</li>
-                            <li>Real-time verification operations audit expense</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ADVERTISER INVOICES TAB */}
-                {financeSubTab === "advertiser_bills" && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h5 className="font-bold text-slate-800 text-xs uppercase font-mono">Issued Campaign Progress Invoices</h5>
-                      <span className="text-[10px] text-slate-500 font-mono">These are charged to advertiser advance budgets</span>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs text-slate-700">
-                        <thead>
-                          <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase font-mono">
-                            <th className="py-2.5">Bill ID / Date</th>
-                            <th className="py-2.5">Campaign Title</th>
-                            <th className="py-2.5">KMs Billed</th>
-                            <th className="py-2.5">Amount</th>
-                            <th className="py-2.5">Billing Cycle</th>
-                            <th className="py-2.5">Status</th>
-                            <th className="py-2.5 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                          {bills.filter(b => b.type === "advertiser_invoice").map(bill => {
-                            const camp = campaigns.find(c => c.id === bill.campaignId);
-                            return (
-                              <tr key={bill.id} className="hover:bg-slate-50/50 transition">
-                                <td className="py-3 font-mono text-[11px]">
-                                  <span className="font-bold text-slate-800 block">{bill.id}</span>
-                                  <span className="text-slate-400 text-[9px]">{bill.timestamp}</span>
-                                </td>
-                                <td className="py-3 font-medium text-slate-800">
-                                  {camp?.title || "Direct Account Balance"}
-                                  <span className="block text-[10px] text-slate-400 font-normal">Client: {camp?.client || "Advertiser Principal"}</span>
-                                </td>
-                                <td className="py-3 font-mono font-bold text-slate-600">{bill.kmsCovered} KM</td>
-                                <td className="py-3 font-bold text-slate-900 font-mono">₹{bill.amount.toLocaleString()}</td>
-                                <td className="py-3 font-mono text-[10px] text-slate-500">{bill.periodStart} to {bill.periodEnd}</td>
-                                <td className="py-3">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    bill.status === "paid" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500 animate-pulse"
-                                  }`}>
+                    {/* Invoice List */}
+                    <div className="space-y-3">
+                      {bills.filter(b => b.type === "advertiser_invoice").length === 0 ? (
+                        <div className="py-10 text-center text-slate-400 italic text-sm">No advertiser invoices yet.</div>
+                      ) : bills.filter(b => b.type === "advertiser_invoice").map(bill => {
+                        const camp = campaigns.find(c => c.id === bill.campaignId);
+                        return (
+                          <div key={bill.id} className="bg-white border-2 border-slate-200 rounded-2xl p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                              <div className="flex-1 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-slate-800 text-sm">{camp?.title || "Direct Invoice"}</span>
+                                  <span className="text-[10px] text-slate-500">Client: {camp?.client || "Advertiser"}</span>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${bill.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                                     {bill.status.toUpperCase()}
                                   </span>
-                                </td>
-                                <td className="py-3 text-right">
-                                  {bill.status === "pending" && (
-                                    <button
-                                      onClick={async () => {
-                                        if (confirm(`Approve settlement of ₹${bill.amount} from advertiser's pre-paid advance wallet?`)) {
-                                          try {
-                                            const res = await fetch(`/api/bills/${bill.id}`, {
-                                              method: "PUT",
-                                              headers: { "Content-Type": "application/json" },
-                                              body: JSON.stringify({ status: "paid" })
-                                            });
-                                            if (res.ok) {
-                                              alert("✓ Invoice successfully settled!");
-                                              fetchData();
-                                            }
-                                          } catch (e) {
-                                            console.error(e);
-                                          }
-                                        }
-                                      }}
-                                      className="px-2 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-[10px] font-bold rounded-lg transition cursor-pointer"
-                                    >
-                                      Settlement via Wallet
-                                    </button>
-                                  )}
-                                  {bill.status === "paid" && (
-                                    <span className="text-[10px] font-mono text-slate-400 italic">Settled ✔</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                          {bills.filter(b => b.type === "advertiser_invoice").length === 0 && (
-                            <tr>
-                              <td colSpan={7} className="py-8 text-center text-slate-400 italic">No advertiser invoices created yet.</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                                </div>
+                                <p className="text-[11px] text-slate-500 font-mono">{bill.description}</p>
+                                <p className="text-[10px] text-slate-400 font-mono">{bill.periodStart} → {bill.periodEnd} · {bill.timestamp}</p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <span className="text-xl font-black text-[#FF9800] font-mono block">₹{bill.amount.toLocaleString()}</span>
+                                <span className="text-[10px] text-slate-400 font-mono">{bill.kmsCovered} KM</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-3 flex-wrap">
+                              {bill.status === "pending" && (
+                                <button onClick={async () => {
+                                  if (confirm(`Mark invoice of ₹${bill.amount} as paid?`)) {
+                                    try {
+                                      const res = await fetch(`/api/bills/${bill.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "paid" }) });
+                                      if (res.ok) fetchData();
+                                    } catch (e) { console.error(e); }
+                                  }
+                                }} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] rounded-lg transition cursor-pointer">
+                                  ✓ Mark Paid
+                                </button>
+                              )}
+                              <button onClick={() => {
+                                const msg = `Dear ${camp?.client || "Advertiser"}, your AutoAdz campaign invoice of ₹${bill.amount} for the period ${bill.periodStart} to ${bill.periodEnd} (${bill.kmsCovered} KM) is ${bill.status === "paid" ? "settled. Thank you!" : "pending payment. Please process at your earliest."}`;
+                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+                              }} className="px-3 py-1.5 bg-[#25D366] hover:bg-[#1ebe5b] text-white font-bold text-[11px] rounded-lg transition cursor-pointer">
+                                WhatsApp
+                              </button>
+                              <button onClick={() => {
+                                const win = window.open("", "_blank");
+                                if (!win) return;
+                                win.document.write(`<!DOCTYPE html><html><head><title>Invoice</title><style>body{font-family:sans-serif;padding:40px;max-width:600px;margin:auto}h1{color:#0B1F4D}table{width:100%;border-collapse:collapse;margin-top:16px}td{padding:8px;border-bottom:1px solid #eee}.amt{font-size:24px;font-weight:900;color:#FF9800}@media print{body{padding:0}}</style></head><body><h1>AutoAdz — Advertiser Invoice</h1><p><b>Invoice ID:</b> ${bill.id}</p><table><tr><td>Campaign</td><td><b>${camp?.title || "—"}</b></td></tr><tr><td>Client</td><td>${camp?.client || "Advertiser"}</td></tr><tr><td>Period</td><td>${bill.periodStart} to ${bill.periodEnd}</td></tr><tr><td>KMs Covered</td><td>${bill.kmsCovered} KM</td></tr><tr><td>Description</td><td>${bill.description}</td></tr><tr><td>Status</td><td>${bill.status.toUpperCase()}</td></tr><tr><td>Generated</td><td>${bill.timestamp}</td></tr></table><p class="amt" style="margin-top:24px">Amount Due: ₹${bill.amount.toLocaleString()}</p><br/><script>window.print()</script></body></html>`);
+                                win.document.close();
+                              }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition cursor-pointer">
+                                Print PDF
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* DRIVER SERVICE BILLS TAB */}
+                {/* DRIVER SERVICE BILLS */}
                 {financeSubTab === "driver_bills" && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <h5 className="font-bold text-slate-800 text-xs uppercase font-mono">Weekly Driver Service Bills (Payout Requests)</h5>
-                      <span className="text-[10px] text-slate-400">Approved driver service bills deduct their online wallet balance</span>
+                      <h5 className="font-bold text-slate-800 text-xs uppercase font-mono">Weekly Driver Service Bills</h5>
+                      <span className="text-[10px] text-amber-600 font-mono font-bold">{bills.filter(b => b.type === "driver_service_bill" && b.status === "pending").length} pending</span>
                     </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs text-slate-700">
-                        <thead>
-                          <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase font-mono">
-                            <th className="py-2.5">Bill ID / Date</th>
-                            <th className="py-2.5">Driver Name</th>
-                            <th className="py-2.5">KMs Metered</th>
-                            <th className="py-2.5">Requested Amount</th>
-                            <th className="py-2.5">Billing Cycle</th>
-                            <th className="py-2.5">Status</th>
-                            <th className="py-2.5 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                          {bills.filter(b => b.type === "driver_service_bill").map(bill => {
-                            const dvr = drivers.find(d => d.id === bill.senderId);
-                            return (
-                              <tr key={bill.id} className="hover:bg-slate-50/50 transition">
-                                <td className="py-3 font-mono text-[11px]">
-                                  <span className="font-bold text-slate-800 block">{bill.id}</span>
-                                  <span className="text-slate-400 text-[9px]">{bill.timestamp}</span>
-                                </td>
-                                <td className="py-3 font-medium text-slate-800">
-                                  {bill.senderName}
-                                  <span className="block text-[10px] text-slate-400 font-normal">Auto: {dvr?.autoNumber || "WB-01-EX-1234"}</span>
-                                </td>
-                                <td className="py-3 font-mono text-slate-600 font-bold">{bill.kmsCovered} KM</td>
-                                <td className="py-3 font-bold text-slate-900 font-mono">₹{bill.amount.toLocaleString()}</td>
-                                <td className="py-3 font-mono text-[10px] text-slate-500">{bill.periodStart} to {bill.periodEnd}</td>
-                                <td className="py-3">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    bill.status === "paid" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500 animate-pulse"
-                                  }`}>
-                                    {bill.status.toUpperCase()}
-                                  </span>
-                                </td>
-                                <td className="py-3 text-right">
-                                  {bill.status === "pending" && (
-                                    <button
-                                      onClick={async () => {
-                                        if (confirm(`Approve bank transfer payout of ₹${bill.amount} to driver ${bill.senderName}?`)) {
-                                          try {
-                                            const res = await fetch(`/api/bills/${bill.id}`, {
-                                              method: "PUT",
-                                              headers: { "Content-Type": "application/json" },
-                                              body: JSON.stringify({ status: "paid" })
-                                            });
-                                            if (res.ok) {
-                                              alert(`✓ Driver weekly bill settled successfully! Payout of ₹${bill.amount} dispatched to bank account.`);
-                                              fetchData();
-                                            }
-                                          } catch (e) {
-                                            console.error(e);
-                                          }
-                                        }
-                                      }}
-                                      className="px-2 py-1 bg-teal-500 hover:bg-teal-600 text-slate-950 font-mono text-[10px] font-bold rounded-lg transition cursor-pointer"
-                                    >
-                                      Disburse Payout
-                                    </button>
-                                  )}
-                                  {bill.status === "paid" && (
-                                    <span className="text-[10px] font-mono text-slate-400 italic">Disbursed ✔</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                          {bills.filter(b => b.type === "driver_service_bill").length === 0 && (
-                            <tr>
-                              <td colSpan={7} className="py-8 text-center text-slate-400 italic">No driver weekly service bills found.</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                    {bills.filter(b => b.type === "driver_service_bill").length === 0 ? (
+                      <div className="py-12 text-center text-slate-400 italic text-sm">No driver bills yet. Run Auto Billing to generate them.</div>
+                    ) : (
+                      <div className="space-y-3">
+                        {bills.filter(b => b.type === "driver_service_bill").map(bill => {
+                          const dvr = drivers.find(d => d.id === bill.senderId);
+                          const isPending = bill.status === "pending";
+                          return (
+                            <div key={bill.id} className={`bg-white border-2 rounded-2xl p-4 ${isPending ? "border-amber-200" : "border-slate-200"}`}>
+                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-slate-800 text-sm">{bill.senderName}</span>
+                                    {dvr?.autoNumber && <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{dvr.autoNumber}</span>}
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isPending ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                      {bill.status.toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-500 font-mono">{bill.description}</p>
+                                  <p className="text-[10px] text-slate-400 font-mono">{bill.periodStart} → {bill.periodEnd} · Generated {bill.timestamp}</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <span className="text-xl font-black text-[#0B1F4D] font-mono block">₹{bill.amount.toLocaleString()}</span>
+                                  <span className="text-[10px] text-slate-400 font-mono">{bill.kmsCovered} KM</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 mt-3 flex-wrap">
+                                {isPending && (
+                                  <button
+                                    onClick={async () => {
+                                      if (confirm(`Mark ₹${bill.amount} paid to ${bill.senderName}?`)) {
+                                        try {
+                                          const res = await fetch(`/api/bills/${bill.id}`, {
+                                            method: "PUT",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ status: "paid" })
+                                          });
+                                          if (res.ok) { fetchData(); }
+                                        } catch (e) { console.error(e); }
+                                      }
+                                    }}
+                                    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] rounded-lg transition cursor-pointer"
+                                  >
+                                    ✓ Mark Paid
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    const phone = dvr?.phone?.replace(/\D/g, "") || "";
+                                    const msg = `Hi ${bill.senderName}, your AutoAdz service bill of ₹${bill.amount} for the period ${bill.periodStart} to ${bill.periodEnd} (${bill.kmsCovered} KM) has been ${bill.status === "paid" ? "paid. Thank you!" : "generated and is pending payment."}`;
+                                    window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+                                  }}
+                                  className="px-3 py-1.5 bg-[#25D366] hover:bg-[#1ebe5b] text-white font-bold text-[11px] rounded-lg transition cursor-pointer"
+                                >
+                                  WhatsApp
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const win = window.open("", "_blank");
+                                    if (!win) return;
+                                    win.document.write(`<!DOCTYPE html><html><head><title>Driver Bill</title><style>body{font-family:sans-serif;padding:40px;max-width:600px;margin:auto}h1{color:#0B1F4D}table{width:100%;border-collapse:collapse;margin-top:16px}td{padding:8px;border-bottom:1px solid #eee}.amt{font-size:24px;font-weight:900;color:#0B1F4D}@media print{body{padding:0}}</style></head><body><h1>AutoAdz — Driver Service Bill</h1><p><b>Bill ID:</b> ${bill.id}</p><table><tr><td>Driver</td><td><b>${bill.senderName}</b></td></tr><tr><td>Auto No.</td><td>${dvr?.autoNumber || "—"}</td></tr><tr><td>Period</td><td>${bill.periodStart} to ${bill.periodEnd}</td></tr><tr><td>KMs Covered</td><td>${bill.kmsCovered} KM</td></tr><tr><td>Description</td><td>${bill.description}</td></tr><tr><td>Status</td><td>${bill.status.toUpperCase()}</td></tr><tr><td>Generated</td><td>${bill.timestamp}</td></tr></table><p class="amt" style="margin-top:24px">Amount: ₹${bill.amount.toLocaleString()}</p><br/><script>window.print()</script></body></html>`);
+                                    win.document.close();
+                                  }}
+                                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition cursor-pointer"
+                                >
+                                  Print PDF
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -7243,238 +7112,87 @@ export default function App() {
                   </div>
                 )}
 
-                {/* BILLING SCHEDULER CONTROLS & SETTINGS */}
+                {/* AUTO BILLING SCHEDULER */}
                 {financeSubTab === "scheduler" && (
-                  <div className="space-y-6">
-                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-4">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-4">
+                    {/* Scheduler Info Card */}
+                    <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
-                          <h5 className="font-bold text-slate-800 text-sm flex items-center gap-1.5 uppercase font-mono">
-                            ⚙️ Automated Weekly Driver Service Bill Generator
-                          </h5>
-                          <p className="text-[11px] text-slate-500">
-                            Configure or trigger the automated job that aggregates weekly telemetry and posts pending bills for high-mileage drivers.
-                          </p>
+                          <h5 className="font-bold text-[#0B1F4D] text-sm font-mono uppercase">Weekly Auto Billing</h5>
+                          <p className="text-[11px] text-slate-500 mt-0.5">Runs every Monday 9 AM IST. Bills all drivers based on their city's driver rate × GPS km for the week.</p>
                         </div>
-                        
-                        {/* Status Toggle */}
-                        <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200">
-                          <span className="text-[10px] font-mono font-bold uppercase text-slate-500">Scheduler Status:</span>
-                          <button
-                            onClick={async () => {
-                              try {
-                                const res = await fetch("/api/scheduler/settings", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ enabled: !schedulerEnabled })
-                                });
-                                if (res.ok) {
-                                  const data = await res.json();
-                                  setSchedulerEnabled(data.settings.enabled);
-                                  fetchData();
-                                }
-                              } catch (e) {
-                                console.error(e);
-                              }
-                            }}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-mono font-black transition cursor-pointer ${
-                              schedulerEnabled 
-                                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-200" 
-                                : "bg-slate-200 text-slate-500 border border-slate-300"
-                            }`}
-                          >
-                            {schedulerEnabled ? "● ACTIVE" : "○ DISABLED"}
-                          </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const res = await fetch("/api/scheduler/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !schedulerEnabled }) });
+                              if (res.ok) { const d = await res.json(); setSchedulerEnabled(d.settings.enabled); fetchData(); }
+                            } catch (e) { console.error(e); }
+                          }}
+                          className={`px-4 py-2 rounded-xl text-[11px] font-mono font-black transition cursor-pointer border-2 ${schedulerEnabled ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-slate-100 text-slate-500 border-slate-300"}`}
+                        >
+                          {schedulerEnabled ? "● ACTIVE — Click to Pause" : "○ PAUSED — Click to Enable"}
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="bg-slate-50 rounded-xl p-3">
+                          <span className="text-[10px] text-slate-400 font-mono uppercase block">Last Run</span>
+                          <span className="font-bold text-slate-700 block mt-0.5">{schedulerLastRun || "Never"}</span>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-3">
+                          <span className="text-[10px] text-slate-400 font-mono uppercase block">Next Run</span>
+                          <span className="font-bold text-[#0B1F4D] block mt-0.5">{schedulerNextRun || "Monday 9:00 AM IST"}</span>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-3">
+                          <span className="text-[10px] text-slate-400 font-mono uppercase block">Rate Source</span>
+                          <span className="font-bold text-slate-700 block mt-0.5">Cities Tab (per city)</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {/* Configure Threshold and Driver Rate */}
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-4">
-                          <div>
-                            <h6 className="font-mono font-bold text-xs text-[#0B1F4D] uppercase">
-                              🔧 Billing & Rate Settings
-                            </h6>
-                            <p className="text-[11px] text-slate-400 leading-normal">
-                              Configure the conditions and rates used for automated billing schedules and driver mileage payouts.
-                            </p>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">
-                                Mileage Threshold (KM)
-                              </label>
-                              <input
-                                type="number"
-                                min="1"
-                                placeholder="e.g. 10"
-                                value={schedulerThreshold}
-                                onChange={(e) => setSchedulerThreshold(parseInt(e.target.value) || 0)}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                              />
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] text-slate-500 uppercase font-mono font-bold block">
-                                Driver Payout Rate (₹/KM)
-                              </label>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0.1"
-                                placeholder="e.g. 4.5"
-                                value={driverRatePerKm}
-                                onChange={(e) => setDriverRatePerKm(parseFloat(e.target.value) || 0)}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={async () => {
-                              try {
-                                const res = await fetch("/api/scheduler/settings", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ 
-                                    mileageThreshold: schedulerThreshold,
-                                    driverRatePerKm: driverRatePerKm 
-                                  })
-                                });
-                                if (res.ok) {
-                                  alert("✓ Billing and rate settings successfully saved!");
-                                  fetchData();
-                                }
-                              } catch (e) {
-                                console.error(e);
-                              }
-                            }}
-                            className="w-full py-2 bg-[#0B1F4D] hover:bg-[#163375] text-white text-[11px] font-bold rounded-lg transition font-mono uppercase cursor-pointer text-center"
-                          >
-                            Save Billing Settings
-                          </button>
-                        </div>
-
-                        {/* Trigger Manual Job */}
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between">
-                          <div>
-                            <h6 className="font-mono font-bold text-xs text-[#0B1F4D] uppercase">
-                              ⚡ Instant Run Trigger
-                            </h6>
-                            <p className="text-[11px] text-slate-400 leading-normal">
-                              Force run the scheduler instantly to generate bills using the set threshold. Ideal for weekly reconciliation or live demos.
-                            </p>
-                          </div>
-
-                          <div className="space-y-2 pt-2">
-                            <button
-                              disabled={!!schedulerRunStatus}
-                              onClick={async () => {
-                                setSchedulerRunStatus("Running checks...");
-                                try {
-                                  const res = await fetch("/api/scheduler/trigger", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ mileageThreshold: schedulerThreshold })
-                                  });
-                                  if (res.ok) {
-                                    const result = await res.json();
-                                    setSchedulerRunStatus(`Result: ${result.summary}`);
-                                    alert(`Scheduler Result:\n${result.summary}`);
-                                    fetchData();
-                                  } else {
-                                    setSchedulerRunStatus("Failed to execute");
-                                  }
-                                } catch (e) {
-                                  console.error(e);
-                                  setSchedulerRunStatus("Failed to execute");
-                                } finally {
-                                  setTimeout(() => setSchedulerRunStatus(""), 8000);
-                                }
-                              }}
-                              className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-slate-950 font-bold font-mono text-xs rounded-xl transition shadow-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer"
-                            >
-                              🚀 FORCE RUN WEEKLY BILLING SCHEDULER
-                            </button>
-                            {schedulerRunStatus && (
-                              <p className="text-[10px] font-mono text-center text-indigo-600 font-bold animate-pulse">
-                                {schedulerRunStatus}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                      <div className="pt-2">
+                        <button
+                          disabled={!!schedulerRunStatus}
+                          onClick={async () => {
+                            setSchedulerRunStatus("Running...");
+                            try {
+                              const res = await fetch("/api/scheduler/trigger", { method: "POST", headers: { "Content-Type": "application/json" } });
+                              if (res.ok) {
+                                const result = await res.json();
+                                setSchedulerRunStatus(result.summary);
+                                fetchData();
+                              } else { setSchedulerRunStatus("Failed"); }
+                            } catch (e) { console.error(e); setSchedulerRunStatus("Error"); }
+                            finally { setTimeout(() => setSchedulerRunStatus(""), 10000); }
+                          }}
+                          className="w-full py-3 bg-[#FF9800] hover:bg-orange-600 disabled:bg-slate-300 text-slate-950 font-black font-mono text-xs rounded-xl transition cursor-pointer uppercase"
+                        >
+                          🚀 {schedulerRunStatus || "Run Billing Now (Manual Trigger)"}
+                        </button>
+                        {schedulerRunStatus && <p className="text-[10px] font-mono text-center text-indigo-600 font-bold mt-2 animate-pulse">{schedulerRunStatus}</p>}
                       </div>
                     </div>
 
-                    {/* Run Logs Table */}
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-3xs space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                        <h5 className="font-bold text-slate-900 text-sm uppercase">
-                          📋 Scheduler Run History & Execution Logs
-                        </h5>
-                        <span className="text-xs text-slate-700 font-semibold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
-                          Last run: {schedulerLastRun}
-                        </span>
-                      </div>
-
-                      <div className="overflow-x-auto max-h-80 pr-1">
-                        <table className="w-full text-left text-xs text-slate-800">
-                          <thead>
-                            <tr className="border-b border-slate-200 text-xs text-slate-800 font-bold uppercase">
-                              <th className="py-3 px-1">Timestamp</th>
-                              <th className="py-3 px-1">Execution Status</th>
-                              <th className="py-3 px-1">Outcome / Summary Details</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 font-sans text-xs">
-                            {schedulerLogs.map((log, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50 transition">
-                                <td className="py-3 px-1 text-slate-700 font-semibold whitespace-nowrap">{log.timestamp}</td>
-                                <td className="py-3 px-1">
-                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                                    log.status === "Success" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-slate-200 text-slate-700 border border-slate-300"
-                                  }`}>
-                                    {log.status.toUpperCase()}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-1 text-slate-900 font-medium leading-relaxed">{log.message}</td>
-                              </tr>
-                            ))}
-                            {schedulerLogs.length === 0 && (
-                              <tr>
-                                <td colSpan={3} className="py-12 text-center text-slate-500 font-medium italic">
-                                  No scheduler run logs captured yet.
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* How it works info card */}
-                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 text-xs space-y-2">
-                      <h5 className="font-bold text-indigo-900 uppercase font-mono tracking-wide text-[10px]">
-                        🧠 How Billing Automation Works
-                      </h5>
-                      <ul className="list-disc list-inside mt-1 space-y-1 text-slate-600 text-[11px]">
-                        <li>
-                          The background cron triggers automatically every few minutes, or can be forced instantly via the admin trigger.
-                        </li>
-                        <li>
-                          It scans all registered rickshaw drivers and calculates their completed GPS tracking mileage for the current period.
-                        </li>
-                        <li>
-                          If a driver exceeds the threshold (e.g. <span className="font-bold text-slate-800">{schedulerThreshold} KM</span>) and has no existing pending bills, a new weekly service bill is auto-generated.
-                        </li>
-                        <li>
-                          The system issues notifications to both the driver and the admin dashboard immediately.
-                        </li>
-                        <li>
-                          Generated bills sit in the <b>"Pending"</b> state under <span className="font-bold">Driver Bills</span> until audited and paid by the admin.
-                        </li>
-                      </ul>
+                    {/* Run Logs */}
+                    <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 space-y-3">
+                      <h5 className="font-bold text-slate-800 text-xs uppercase font-mono">Run History</h5>
+                      {schedulerLogs.length === 0 ? (
+                        <p className="text-center text-slate-400 italic py-6 text-sm">No billing runs yet.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {schedulerLogs.map((log, idx) => (
+                            <div key={idx} className="flex items-start gap-3 py-2 border-b border-slate-50 last:border-0">
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold flex-shrink-0 mt-0.5 ${log.status === "Success" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                                {log.status}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] text-slate-700 leading-relaxed">{log.message}</p>
+                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{log.timestamp}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

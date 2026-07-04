@@ -8,6 +8,7 @@ import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
+import schedule from "node-schedule";
 
 dotenv.config();
 
@@ -575,20 +576,25 @@ app.put("/api/bills/:id", async (req, res) => {
   }
 });
 
-// ─── SCHEDULER ────────────────────────────────────────────────────────────────
-async function runBillingScheduler(thresholdOverride) {
-  const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
-  const threshold = thresholdOverride !== undefined ? Number(thresholdOverride) : Number(settings.mileage_threshold);
-  const currentRate = Number(settings.driver_rate_per_km) || 4.5;
+// ─── BILLING SCHEDULER ────────────────────────────────────────────────────────
+// Rates come from each driver's city (cities.driver_rate) — no global threshold.
+async function runBillingScheduler() {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const nowTs = now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const periodStart = sevenDaysAgo.toISOString().split("T")[0];
+  const periodEnd = now.toISOString().split("T")[0];
 
   const drivers = await db("SELECT * FROM drivers");
+  const cities = await db("SELECT * FROM cities");
+  const cityRateMap = {};
+  cities.forEach(c => { cityRateMap[c.name.toLowerCase()] = Number(c.driver_rate) || 5; });
+
   const generatedBills = [];
   const skippedDrivers = [];
 
   for (const driver of drivers) {
+    // Skip if a pending bill already exists for this driver
     const [pendingBill] = await db(
       "SELECT id FROM bills WHERE sender_id = ? AND type = 'driver_service_bill' AND status = 'pending' LIMIT 1",
       [driver.id]
@@ -598,54 +604,56 @@ async function runBillingScheduler(thresholdOverride) {
       continue;
     }
 
+    // Get city rate for this driver
+    const cityName = (driver.location || "").toLowerCase();
+    const cityRate = cityRateMap[cityName] || 5;
+
+    // Calculate KMs from this week's earning transactions
     const driverTxs = await db(
       "SELECT amount, description, timestamp FROM wallet_transactions WHERE user_id = ? AND type = 'earning'",
       [driver.id]
     );
-
     let weekKms = 0;
     driverTxs.forEach(tx => {
       const txDate = new Date(tx.timestamp);
       if (!isNaN(txDate.getTime()) && txDate >= sevenDaysAgo) {
         const m = tx.description.match(/Completed\s+([\d.]+)\s*KM/i);
-        weekKms += m ? parseFloat(m[1]) : (Number(tx.amount) / currentRate);
+        weekKms += m ? parseFloat(m[1]) : (Number(tx.amount) / cityRate);
       }
     });
 
+    // Fallback: use wallet balance if no KM records found
     if (weekKms === 0 && Number(driver.wallet_balance) > 0) {
-      weekKms = Number(driver.wallet_balance) / currentRate;
+      weekKms = Number(driver.wallet_balance) / cityRate;
     }
     weekKms = parseFloat(weekKms.toFixed(1));
 
-    if (weekKms >= threshold) {
-      const billAmount = Number(driver.wallet_balance) > 0 ? Number(driver.wallet_balance) : parseFloat((weekKms * currentRate).toFixed(2));
+    // Bill every driver who drove any KMs this week
+    if (weekKms > 0) {
+      const billAmount = parseFloat((weekKms * cityRate).toFixed(2));
       const billId = uid("bill_auto");
-
       await db(
         `INSERT INTO bills (id, type, sender_id, sender_name, receiver_id, campaign_id, amount, status, kms_covered, period_start, period_end, timestamp, description)
          VALUES (?, 'driver_service_bill', ?, ?, 'admin', ?, ?, 'pending', ?, ?, ?, ?, ?)`,
         [billId, driver.id, driver.name, driver.current_campaign_id || null,
-         billAmount, weekKms, sevenDaysAgo.toISOString().split("T")[0],
-         now.toISOString().split("T")[0], nowTs,
-         `Automated Weekly Service Bill - ${weekKms} KM (threshold: ${threshold} KM)`]
+         billAmount, weekKms, periodStart, periodEnd, nowTs,
+         `Weekly Service Bill — ${weekKms} KM × ₹${cityRate}/KM (${driver.location || "City"})`]
       );
-
       await db(
-        `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Automated Weekly Bill', ?, ?, 1, 'billing')`,
-        [uid("notif"), `${weekKms} KM exceeded ${threshold} KM threshold. Bill for ₹${billAmount} generated.`, nowTs]
+        `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Weekly Driver Bill', ?, ?, 1, 'billing')`,
+        [uid("notif"), `Bill of ₹${billAmount} generated for ${driver.name} (${weekKms} KM).`, nowTs]
       );
-
-      generatedBills.push({ id: driver.id, name: driver.name, kms: weekKms, amount: billAmount });
+      generatedBills.push({ id: driver.id, name: driver.name, kms: weekKms, amount: billAmount, city: driver.location });
     } else {
-      skippedDrivers.push({ id: driver.id, name: driver.name, kms: weekKms, reason: `Under threshold of ${threshold} KM` });
+      skippedDrivers.push({ id: driver.id, name: driver.name, kms: 0, reason: "No KMs recorded this week" });
     }
   }
 
   await db("UPDATE scheduler_settings SET last_run_timestamp = ? WHERE id = 1", [nowTs]);
 
   const summaryMessage = generatedBills.length > 0
-    ? `Generated ${generatedBills.length} bills: ${generatedBills.map(g => `${g.name} (${g.kms} KM, ₹${g.amount})`).join(", ")}`
-    : `Scheduler ran. No drivers exceeded ${threshold} KM. (${drivers.length} drivers checked)`;
+    ? `Generated ${generatedBills.length} bill(s): ${generatedBills.map(g => `${g.name} (${g.kms} KM, ₹${g.amount})`).join(", ")}`
+    : `Ran — no KMs recorded for any driver this week. (${drivers.length} checked)`;
 
   await db(
     `INSERT INTO scheduler_logs (timestamp, status, message) VALUES (?, ?, ?)`,
@@ -655,16 +663,40 @@ async function runBillingScheduler(thresholdOverride) {
   return { success: true, generatedBills, skippedDrivers, summary: summaryMessage };
 }
 
+// ─── Next Monday 9 AM IST helper ─────────────────────────────────────────────
+function nextMondayIST() {
+  const now = new Date();
+  // IST = UTC+5:30
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istNow = new Date(now.getTime() + istOffset);
+  const day = istNow.getUTCDay(); // 0=Sun, 1=Mon…
+  const daysUntilMonday = day === 1 ? 7 : (8 - day) % 7 || 7;
+  const nextMon = new Date(istNow);
+  nextMon.setUTCDate(istNow.getUTCDate() + daysUntilMonday);
+  nextMon.setUTCHours(9 - 5, 60 - 30, 0, 0); // 9:00 IST = 03:30 UTC
+  return new Date(nextMon.getTime() - istOffset);
+}
+
+// Schedule: every Monday at 09:00 IST (03:30 UTC)
+schedule.scheduleJob("30 3 * * 1", async () => {
+  try {
+    const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
+    if (!settings || !settings.enabled) return;
+    console.log("[Scheduler] Running weekly billing — Monday 9 AM IST");
+    await runBillingScheduler();
+  } catch (err) {
+    console.error("[Scheduler Error]", err.message);
+  }
+});
+
 app.get("/api/scheduler/settings", async (req, res) => {
   try {
     const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
-    const logs = await db("SELECT * FROM scheduler_logs ORDER BY id DESC LIMIT 30");
+    const logs = await db("SELECT * FROM scheduler_logs ORDER BY id DESC LIMIT 20");
     res.json({
       enabled: !!settings.enabled,
-      mileageThreshold: Number(settings.mileage_threshold),
-      intervalMinutes: Number(settings.interval_minutes),
       lastRunTimestamp: settings.last_run_timestamp,
-      driverRatePerKm: Number(settings.driver_rate_per_km),
+      nextRunTime: nextMondayIST().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
       logs: logs.map(l => ({ timestamp: l.timestamp, status: l.status, message: l.message })),
     });
   } catch (err) {
@@ -675,15 +707,12 @@ app.get("/api/scheduler/settings", async (req, res) => {
 
 app.post("/api/scheduler/settings", async (req, res) => {
   try {
-    const { enabled, mileageThreshold, driverRatePerKm } = req.body;
-    const updates = [];
-    const vals = [];
-    if (enabled !== undefined) { updates.push("enabled = ?"); vals.push(enabled ? 1 : 0); }
-    if (mileageThreshold !== undefined) { updates.push("mileage_threshold = ?"); vals.push(Number(mileageThreshold)); }
-    if (driverRatePerKm !== undefined) { updates.push("driver_rate_per_km = ?"); vals.push(Number(driverRatePerKm)); }
-    if (updates.length) await db(`UPDATE scheduler_settings SET ${updates.join(", ")} WHERE id = 1`, vals);
+    const { enabled } = req.body;
+    if (enabled !== undefined) {
+      await db("UPDATE scheduler_settings SET enabled = ? WHERE id = 1", [enabled ? 1 : 0]);
+    }
     const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
-    res.json({ success: true, settings });
+    res.json({ success: true, settings: { enabled: !!settings.enabled } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -692,7 +721,7 @@ app.post("/api/scheduler/settings", async (req, res) => {
 
 app.post("/api/scheduler/trigger", async (req, res) => {
   try {
-    const result = await runBillingScheduler(req.body.mileageThreshold);
+    const result = await runBillingScheduler();
     res.json(result);
   } catch (err) {
     console.error(err);
@@ -700,21 +729,20 @@ app.post("/api/scheduler/trigger", async (req, res) => {
   }
 });
 
-// Background scheduler tick
-setInterval(async () => {
+// ─── BILLING STATS ────────────────────────────────────────────────────────────
+app.get("/api/billing/stats", async (req, res) => {
   try {
-    const [settings] = await db("SELECT * FROM scheduler_settings WHERE id = 1");
-    if (!settings || !settings.enabled) return;
-    const lastRun = settings.last_run_timestamp ? new Date(settings.last_run_timestamp) : null;
-    const diffMs = lastRun ? Date.now() - lastRun.getTime() : Infinity;
-    if (diffMs > 3 * 60 * 1000) {
-      console.log("[Scheduler] Running automated billing check...");
-      await runBillingScheduler();
-    }
+    const bills = await db("SELECT * FROM bills");
+    const totalBilled = bills.filter(b => b.type === "driver_service_bill").reduce((s, b) => s + Number(b.amount), 0);
+    const totalCollected = bills.filter(b => b.type === "advertiser_invoice" && b.status === "paid").reduce((s, b) => s + Number(b.amount), 0);
+    const owedToDrivers = bills.filter(b => b.type === "driver_service_bill" && b.status === "pending").reduce((s, b) => s + Number(b.amount), 0);
+    const netBalance = totalCollected - totalBilled;
+    res.json({ totalBilled, totalCollected, owedToDrivers, netBalance });
   } catch (err) {
-    console.error("[Scheduler Error]", err.message);
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
-}, 60000);
+});
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
 app.get("/api/notifications", async (req, res) => {
