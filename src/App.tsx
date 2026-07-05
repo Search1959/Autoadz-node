@@ -3073,93 +3073,24 @@ export default function App() {
                       </div>
                     </>
                   ) : (
-                    <>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Contact Name *</label>
-                        <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="e.g. Rahul Sharma"
-                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Company / Brand Name *</label>
-                        <input type="text" value={regCompany} onChange={(e) => setRegCompany(e.target.value)} placeholder="e.g. Tata Motors Ltd."
-                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Business Email *</label>
-                        <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="brand@company.in"
-                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password *</label>
-                        <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="Min. 6 characters"
-                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Phone</label>
-                          <input type="text" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} placeholder="+91 9876543210"
-                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">GSTIN</label>
-                          <input type="text" value={regGstin} onChange={(e) => setRegGstin(e.target.value)} placeholder="29AAACA1100D"
-                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none" />
-                        </div>
+                    <div className="flex flex-col items-center text-center gap-5 py-4">
+                      <div className="w-16 h-16 rounded-2xl bg-[#FF9800]/10 flex items-center justify-center text-4xl">📣</div>
+                      <div>
+                        <h4 className="font-display font-black text-slate-900 text-lg">New to AutoAdz?</h4>
+                        <p className="text-sm text-slate-500 mt-1 leading-relaxed max-w-xs mx-auto">
+                          Registration is part of the campaign setup. Start your campaign and create your account in one simple flow.
+                        </p>
                       </div>
                       <button
-                        disabled={regLoading}
-                        onClick={async () => {
-                          if (!regName || !regEmail || !regPassword) { setLoginError("Name, email and password are required."); return; }
-                          if (regPassword.length < 6) { setLoginError("Password must be at least 6 characters."); return; }
-                          setRegLoading(true);
-                          setLoginError("");
-                          try {
-                            const res = await fetch("/api/auth/register", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ name: regName, email: regEmail, password: regPassword, company: regCompany, phone: regPhone, gstin: regGstin }),
-                            });
-                            const data = await res.json();
-                            if (!res.ok) { setLoginError(data.error || "Registration failed."); return; }
-                            setLoginEmail(regEmail);
-                            setLoginPassword(regPassword);
-                            setShowAdvRegister(false);
-                            setLoginError("✅ Account created! Logging you in...");
-                            const loginRes = await fetch("/api/auth/login", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ role: "advertiser", email: regEmail, password: regPassword }),
-                            });
-                            const loginData = await loginRes.json();
-                            if (loginRes.ok) {
-                              localStorage.setItem("autoadz_adv_jwt", loginData.token);
-                              localStorage.setItem("autoadz_adv_user_id", String(loginData.userId));
-                              localStorage.setItem("autoadz_adv_email", loginData.email);
-                              localStorage.setItem("autoadz_adv_brand_name", loginData.name);
-                              localStorage.setItem("autoadz_adv_brand_id", loginData.company || loginData.email.split("@")[0]);
-                              localStorage.setItem("autoadz_adv_gstin", loginData.gstin || "");
-                              localStorage.setItem("autoadz_adv_phone", loginData.phone || "");
-                              localStorage.setItem("autoadz_adv_office", loginData.office || "");
-                              setAdvJwt(loginData.token);
-                              setAdvUserId(loginData.userId);
-                              setAdvEmail(loginData.email);
-                              setAdvBrandName(loginData.name);
-                              setAdvBrandId(loginData.company || loginData.email.split("@")[0]);
-                              setAdvGstin(loginData.gstin || "");
-                              setAdvPhone(loginData.phone || "");
-                              setAdvOffice(loginData.office || "");
-                              setUserSession("advertiser");
-                              setActiveSimulator("advertiser");
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }
-                          } catch { setLoginError("Network error. Please try again."); }
-                          finally { setRegLoading(false); }
-                        }}
-                        className="w-full py-3.5 rounded-xl text-sm font-bold bg-[#FF9800] hover:bg-orange-500 text-white transition disabled:opacity-60 shadow shadow-orange-200"
+                        onClick={() => { setLandingSection("register-campaign"); setCampRegStep(1); }}
+                        className="w-full py-4 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-base rounded-xl transition shadow-lg shadow-orange-200"
                       >
-                        {regLoading ? "Creating Account..." : "Create Brand Account →"}
+                        🚀 Start a Campaign & Register →
                       </button>
-                    </>
+                      <p className="text-xs text-slate-400">
+                        You will create your login account in Step 2 of the campaign form.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
