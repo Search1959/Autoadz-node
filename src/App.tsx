@@ -2238,15 +2238,6 @@ export default function App() {
         {/* LANDING PAGE HERO / PLATFORM INFO SECTION */}
         {landingSection === "hero" && (
           <div className="relative w-full overflow-hidden flex-1 flex flex-col justify-start">
-            {/* ── STATS TICKER BAR ─────────────────────────────────────── */}
-            <div className="w-full bg-[#166534] text-white text-[10px] font-mono font-bold tracking-wider px-6 py-1.5 flex items-center gap-8 overflow-x-auto">
-              <span className="shrink-0">🛺 {drivers.length || 50}+ Autos Live</span>
-              <span className="shrink-0">📍 {(totalKmsAll + simulatedKmsTotal).toFixed(0)}+ KM Covered</span>
-              <span className="shrink-0">📣 {campaigns.length || 10}+ Campaigns Active</span>
-              <span className="shrink-0">📲 {totalScansAll || 500}+ QR Scans</span>
-              <span className="shrink-0 ml-auto">📞 76030-64791</span>
-            </div>
-
             <main className="flex-1 flex flex-col w-full relative">
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
@@ -2285,15 +2276,19 @@ export default function App() {
                   {/* Live Stats */}
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { icon:"🛺", value: drivers.length || "50+", label:"Auto Partners Active", bg:"bg-[#166534]", text:"text-white" },
-                      { icon:"📍", value:`${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label:"KM GPS-Verified", bg:"bg-[#FF9800]", text:"text-white" },
-                      { icon:"📣", value: campaigns.length || "10+", label:"Campaigns Running", bg:"bg-[#0B1F4D]", text:"text-white" },
-                      { icon:"📲", value: totalScansAll || "500+", label:"QR Engagements", bg:"bg-slate-100", text:"text-slate-900" },
+                      { icon:"🛺", value: drivers.length || "50+", label:"Auto Partners Active", sub:"On road, GPS-live", accent:"#166534" },
+                      { icon:"📍", value:`${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label:"KM GPS-Verified", sub:"Tracked & approved", accent:"#FF9800" },
+                      { icon:"📣", value: campaigns.length || "10+", label:"Campaigns Running", sub:"Active right now", accent:"#0B1F4D" },
+                      { icon:"📲", value: totalScansAll || "500+", label:"QR Engagements", sub:"Real audience scans", accent:"#166534" },
                     ].map((s, i) => (
-                      <div key={i} className={`${s.bg} ${s.text} rounded-2xl p-4 flex flex-col`}>
-                        <span className="text-2xl mb-1">{s.icon}</span>
-                        <span className="text-2xl font-display font-black leading-none">{s.value}</span>
-                        <span className={`text-[10px] font-mono mt-1 ${s.bg === "bg-slate-100" ? "text-slate-500" : "text-white/70"}`}>{s.label}</span>
+                      <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-1 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-2xl">{s.icon}</span>
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.accent }}></span>
+                        </div>
+                        <span className="text-3xl font-display font-black leading-none" style={{ color: s.accent }}>{s.value}</span>
+                        <span className="text-xs font-bold text-slate-800 leading-tight">{s.label}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{s.sub}</span>
                       </div>
                     ))}
                   </div>
