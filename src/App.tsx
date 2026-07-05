@@ -3023,76 +3023,44 @@ export default function App() {
                 </p>
               </div>
 
-              {/* ADVERTISER LOGIN / REGISTER FIELDS */}
+              {/* ADVERTISER LOGIN FIELDS */}
               {activeLoginSubTab === "advertiser" && (
                 <div className="space-y-4">
-                  {/* Toggle */}
-                  <div className="flex rounded-xl overflow-hidden border-2 border-slate-100 text-xs font-bold">
-                    <button
-                      onClick={() => { setShowAdvRegister(false); setLoginError(""); }}
-                      className={`flex-1 py-2.5 transition ${!showAdvRegister ? "bg-[#FF9800] text-white" : "text-slate-400 hover:text-slate-600 bg-slate-50"}`}
-                    >Login</button>
-                    <button
-                      onClick={() => { setShowAdvRegister(true); setLoginError(""); }}
-                      className={`flex-1 py-2.5 transition ${showAdvRegister ? "bg-[#FF9800] text-white" : "text-slate-400 hover:text-slate-600 bg-slate-50"}`}
-                    >Register</button>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Corporate Email</label>
+                    <input
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value.trim())}
+                      placeholder="brand@company.in"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      autoComplete="email"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none"
+                    />
                   </div>
-
-                  {!showAdvRegister ? (
-                    <>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Corporate Email</label>
-                        <input
-                          type="email"
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value.trim())}
-                          placeholder="brand@company.in"
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          autoComplete="email"
-                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
-                        <div className="relative">
-                          <input
-                            type={showAdvPassword ? "text" : "password"}
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            placeholder="••••••••"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            autoComplete="off"
-                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 pr-16 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none"
-                          />
-                          <button type="button" onClick={() => setShowAdvPassword(p => !p)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold">
-                            {showAdvPassword ? "Hide" : "Show"}
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center text-center gap-5 py-4">
-                      <div className="w-16 h-16 rounded-2xl bg-[#FF9800]/10 flex items-center justify-center text-4xl">📣</div>
-                      <div>
-                        <h4 className="font-display font-black text-slate-900 text-lg">New to AutoAdz?</h4>
-                        <p className="text-sm text-slate-500 mt-1 leading-relaxed max-w-xs mx-auto">
-                          Registration is part of the campaign setup. Start your campaign and create your account in one simple flow.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => { setLandingSection("register-campaign"); setCampRegStep(1); }}
-                        className="w-full py-4 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-base rounded-xl transition shadow-lg shadow-orange-200"
-                      >
-                        🚀 Start a Campaign & Register →
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showAdvPassword ? "text" : "password"}
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="••••••••"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        autoComplete="off"
+                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 pr-16 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none"
+                      />
+                      <button type="button" onClick={() => setShowAdvPassword(p => !p)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold">
+                        {showAdvPassword ? "Hide" : "Show"}
                       </button>
-                      <p className="text-xs text-slate-400">
-                        You will create your login account in Step 2 of the campaign form.
-                      </p>
                     </div>
-                  )}
+                  </div>
+                  <p className="text-xs text-slate-400 text-center">
+                    New to AutoAdz? <button type="button" onClick={() => { setLandingSection("register-campaign"); setCampRegStep(1); }} className="text-[#FF9800] font-bold hover:underline">Start a campaign & register →</button>
+                  </p>
                 </div>
               )}
 
@@ -3164,7 +3132,7 @@ export default function App() {
               )}
 
               {/* Submit button */}
-              {!(activeLoginSubTab === "advertiser" && showAdvRegister) && (
+              {(
                 <button
                   onClick={async () => {
                     if (activeLoginSubTab === "advertiser") {
