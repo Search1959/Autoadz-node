@@ -2522,7 +2522,7 @@ export default function App() {
                     className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-8 py-3 rounded-lg shadow-lg transition">
                     Start a Campaign
                   </button>
-                  <a href="https://wa.me/917603064791?text=Hi%20AutoAdz%20Team%2C%20I%27d%20like%20to%20know%20more%20about%20advertising%20on%20your%20platform."
+                  <a href="https://wa.me/919836130393?text=Hi%20AutoAdz%20Team%2C%20I%27d%20like%20to%20know%20more%20about%20advertising%20on%20your%20platform."
                     target="_blank" rel="noopener noreferrer"
                     className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-sm px-8 py-3 rounded-lg transition">
                     💬 WhatsApp Us
