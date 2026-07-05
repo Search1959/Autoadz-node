@@ -2281,14 +2281,13 @@ export default function App() {
                   </div>
                 </div>
                 {/* Tracking Workflow Infographic */}
-                <div className="flex items-center justify-center">
-                  <img
-                    src="/workflow.png"
-                    alt="AutoAdz Tracking Workflow"
-                    className="w-full max-w-xl rounded-2xl shadow-lg"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
+                <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+                  <iframe
+                    src="/AutoAdz-Workflow-Diagram.html"
+                    title="AutoAdz Tracking Workflow"
+                    className="w-full"
+                    style={{ height: "420px", border: "none" }}
+                    scrolling="no"
                   />
                 </div>
               </div>
