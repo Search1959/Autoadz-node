@@ -32,6 +32,11 @@ export default function App() {
   const [userSession, setUserSession] = useState<"advertiser" | "driver" | "admin" | null>(null);
   const [loggedInDriverId, setLoggedInDriverId] = useState<string>("driver_delip");
   const [landingSection, setLandingSection] = useState<"hero" | "register-campaign" | "register-driver" | "login">("hero");
+  const [heroSlide, setHeroSlide] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setHeroSlide(s => (s + 1) % 4), 3500);
+    return () => clearInterval(t);
+  }, []);
   const [heroBgVisibility, setHeroBgVisibility] = useState<"none" | "light" | "medium" | "full">("light");
   const [campaignSuccessMsg, setCampaignSuccessMsg] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
@@ -2302,50 +2307,96 @@ export default function App() {
                     <span>✓ Real-time Dashboard</span>
                   </div>
                 </div>
-                {/* Hero Right — Platform Highlights */}
-                <div className="flex flex-col gap-4">
-                  {/* Live Stats */}
-                  <div className="grid grid-cols-2 gap-3">
+                {/* Hero Right — Auto-rotating Slide Carousel */}
+                <div className="flex flex-col gap-3">
+                  {/* Slide panel */}
+                  <div className="relative rounded-2xl overflow-hidden shadow-lg" style={{ minHeight: "320px" }}>
                     {[
-                      { icon:"🛺", value: drivers.length || "50+", label:"Auto Partners Active", sub:"On road, GPS-live", accent:"#166534" },
-                      { icon:"📍", value:`${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label:"KM GPS-Verified", sub:"Tracked & approved", accent:"#FF9800" },
-                      { icon:"📣", value: campaigns.length || "10+", label:"Campaigns Running", sub:"Active right now", accent:"#0B1F4D" },
-                      { icon:"📲", value: totalScansAll || "500+", label:"QR Engagements", sub:"Real audience scans", accent:"#166534" },
-                    ].map((s, i) => (
-                      <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-1 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-2xl">{s.icon}</span>
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.accent }}></span>
-                        </div>
-                        <span className="text-3xl font-display font-black leading-none" style={{ color: s.accent }}>{s.value}</span>
-                        <span className="text-xs font-bold text-slate-800 leading-tight">{s.label}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{s.sub}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Key Trust Signals */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                    <div className="text-[10px] font-mono font-bold text-[#166534] uppercase tracking-widest">Why Brands Choose AutoAdz</div>
-                    {[
-                      { icon:"✅", title:"100% Verified Reach", desc:"Every km GPS-tracked & photo-proven before billing" },
-                      { icon:"📊", title:"Real-time Dashboard", desc:"Live map of your autos — anytime, anywhere" },
-                      { icon:"₹", title:"Pay Only for Verified KM", desc:"No fixed rent — cost scales with actual exposure" },
-                      { icon:"🔔", title:"Weekly Reports", desc:"Photos, distance, route & impressions every week" },
-                    ].map((t, i) => (
-                      <div key={i} className="flex gap-3 items-start">
-                        <span className="w-7 h-7 rounded-lg bg-[#166534]/10 text-[#166534] flex items-center justify-center text-sm shrink-0 font-bold">{t.icon}</span>
+                      {
+                        bg: "#166534", tag: "For Advertisers", icon: "📊",
+                        title: "100% GPS-Verified Reach",
+                        desc: "Every kilometre your ad travels is tracked by GPS and backed by daily photo proof. You pay only for verified exposure — not assumptions.",
+                        bullets: ["Live auto tracking on map", "Daily photo proof uploads", "Pay per verified km only"],
+                        cta: "Start a Campaign", ctaAction: "register-campaign",
+                      },
+                      {
+                        bg: "#0B1F4D", tag: "For Drivers", icon: "🛺",
+                        title: "Earn While You Drive",
+                        desc: "Join AutoAdz as a driver partner. Get your auto branded for free and earn ₹5–₹10 per km on top of your regular income — paid every week.",
+                        bullets: ["Free branding installation", "Weekly automatic payment", "Easy app — upload & go"],
+                        cta: "Join as Driver", ctaAction: "register-driver",
+                      },
+                      {
+                        bg: "#FF9800", tag: "Platform Feature", icon: "📍",
+                        title: "Real-time Dashboard",
+                        desc: "Watch your campaign live — see exactly which autos are running, which routes they are covering, and how many impressions your brand is generating.",
+                        bullets: ["Live map view", "Route & distance reports", "QR scan engagement data"],
+                        cta: "See How It Works", ctaAction: "hero",
+                      },
+                      {
+                        bg: "#166534", tag: "Why AutoAdz", icon: "🏆",
+                        title: "No Fixed Rent. No Guesswork.",
+                        desc: "Unlike traditional hoardings or auto branding, AutoAdz gives you full transparency. Your budget goes exactly as far as your ad travels — nothing more, nothing less.",
+                        bullets: ["Zero hidden charges", "Weekly performance reports", "Photo + GPS dual verification"],
+                        cta: "Launch a Campaign", ctaAction: "register-campaign",
+                      },
+                    ].map((slide, i) => (
+                      <div
+                        key={i}
+                        className="absolute inset-0 flex flex-col justify-between p-7 transition-all duration-700"
+                        style={{
+                          background: slide.bg,
+                          opacity: heroSlide === i ? 1 : 0,
+                          pointerEvents: heroSlide === i ? "auto" : "none",
+                          transform: heroSlide === i ? "translateX(0)" : "translateX(30px)",
+                        }}
+                      >
                         <div>
-                          <div className="text-xs font-bold text-slate-900">{t.title}</div>
-                          <div className="text-[10px] text-slate-500 leading-snug">{t.desc}</div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <span className="text-2xl">{slide.icon}</span>
+                            <span className="text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest">{slide.tag}</span>
+                          </div>
+                          <h3 className="text-2xl font-display font-black text-white leading-tight mb-3">{slide.title}</h3>
+                          <p className="text-sm text-white/80 leading-relaxed mb-4">{slide.desc}</p>
+                          <ul className="space-y-1.5">
+                            {slide.bullets.map(b => (
+                              <li key={b} className="flex items-center gap-2 text-xs text-white/90">
+                                <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-bold shrink-0">✓</span>
+                                {b}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
+                        <button
+                          onClick={() => setLandingSection(slide.ctaAction as "hero" | "register-campaign" | "register-driver" | "login")}
+                          className="mt-5 self-start bg-white/15 hover:bg-white/25 border border-white/30 text-white font-black text-xs px-5 py-2.5 rounded-lg transition"
+                        >
+                          {slide.cta} →
+                        </button>
                       </div>
                     ))}
                   </div>
-                  {/* CTA strip */}
+                  {/* Dot indicators + prev/next */}
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex gap-1.5">
+                      {[0,1,2,3].map(i => (
+                        <button
+                          key={i}
+                          onClick={() => setHeroSlide(i)}
+                          className={`rounded-full transition-all ${heroSlide === i ? "w-6 h-2 bg-[#166534]" : "w-2 h-2 bg-slate-300"}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => setHeroSlide(s => (s + 3) % 4)} className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs transition">‹</button>
+                      <button onClick={() => setHeroSlide(s => (s + 1) % 4)} className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs transition">›</button>
+                    </div>
+                  </div>
+                  {/* Bottom CTA strip */}
                   <div className="bg-[#0B1F4D] rounded-2xl px-5 py-3 flex items-center justify-between">
                     <div>
                       <div className="text-white font-black text-sm">Ready to start?</div>
-                      <div className="text-white/60 text-[10px] font-mono">Call: 76030-64791</div>
+                      <div className="text-white/50 text-[10px] font-mono">📞 76030-64791 · autoadz.in</div>
                     </div>
                     <button onClick={() => setLandingSection("register-campaign")}
                       className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-xs px-4 py-2 rounded-lg transition shrink-0">
