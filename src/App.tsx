@@ -852,9 +852,9 @@ export default function App() {
               setLastCoords({ lat: latitude, lng: longitude });
               if (loggedInDriver) {
                 setDriverPositions(prev => ({ ...prev, [loggedInDriver.id]: { ...prev[loggedInDriver.id], lat: latitude, lng: longitude, state: "tracking" } }));
-                // Push real GPS to server every 10s so advertiser map updates
+                // Push real GPS to server every 3s so advertiser map updates promptly
                 const nowMs = Date.now();
-                if (nowMs - lastLocationSentRef.current > 10000) {
+                if (nowMs - lastLocationSentRef.current > 3000) {
                   lastLocationSentRef.current = nowMs;
                   fetch(`/api/drivers/${loggedInDriver.id}/location`, {
                     method: "POST",
@@ -1436,7 +1436,7 @@ export default function App() {
       try {
         const campIds = campaigns.filter(c => c.status === "active").map(c => c.id);
         if (campIds.length === 0) return;
-        const res = await fetch(`/api/drivers/live-locations?campaign_ids=${campIds.join(",")}`);
+        const res = await fetch(`/api/drivers/live-locations?campaign_ids=${campIds.join(",")}&_t=${Date.now()}`);
         if (!res.ok) return;
         const liveDrivers: any[] = await res.json();
         if (liveDrivers.length > 0) {
@@ -1453,7 +1453,7 @@ export default function App() {
       } catch {}
     };
     pollLiveLocations();
-    const interval = setInterval(pollLiveLocations, 8000);
+    const interval = setInterval(pollLiveLocations, 3000);
     return () => clearInterval(interval);
   }, [userSession, advertiserTab, campaigns]);
 

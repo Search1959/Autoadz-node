@@ -237,6 +237,8 @@ app.post("/api/drivers/:id/location", async (req, res) => {
 
 // Advertiser polls this — returns drivers active on given campaign IDs with recent GPS
 app.get("/api/drivers/live-locations", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
   try {
     const { campaign_ids } = req.query;
     let rows;
