@@ -2172,13 +2172,14 @@ export default function App() {
         <nav className="w-full border-b border-slate-100 bg-white sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-sm">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="38" height="38" rx="10" fill="#166534"/>
-              <path d="M10 27L19 11L28 27" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M13.5 22H24.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="14" cy="29" r="2" fill="#FF9800"/>
-              <circle cx="24" cy="29" r="2" fill="#FF9800"/>
-              <rect x="12" y="26" width="14" height="3" rx="1" fill="white" opacity="0.3"/>
+            <svg width="42" height="42" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="32,3 5,61 17,61 32,22" fill="#0B1F4D"/>
+              <polygon points="32,3 59,61 47,61 32,22" fill="#166534"/>
+              <rect x="17" y="37" width="30" height="6" rx="1" fill="#166534"/>
+              <line x1="32" y1="28" x2="27" y2="50" stroke="white" strokeWidth="1.5" strokeDasharray="3,3" strokeLinecap="round"/>
+              <rect x="24" y="45" width="16" height="9" rx="2" fill="#166534"/>
+              <circle cx="27" cy="56" r="2.5" fill="#FF9800"/>
+              <circle cx="37" cy="56" r="2.5" fill="#FF9800"/>
             </svg>
             <div>
               <span className="text-lg font-display font-black tracking-tight text-[#166534]">AutoAdz</span>
@@ -2279,20 +2280,16 @@ export default function App() {
                     <span>✓ Real-time Dashboard</span>
                   </div>
                 </div>
-                {/* Live Platform Stats Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { icon: "🛺", value: drivers.length || "50+", label: "Auto Partners", color: "text-[#166534]" },
-                    { icon: "📍", value: `${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label: "KM Covered", color: "text-[#FF9800]" },
-                    { icon: "📣", value: campaigns.length || "10+", label: "Campaigns Live", color: "text-[#166534]" },
-                    { icon: "📲", value: totalScansAll || "500+", label: "QR Scans", color: "text-[#FF9800]" },
-                  ].map((s, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center">
-                      <span className="text-2xl mb-2">{s.icon}</span>
-                      <span className={`text-3xl font-display font-black ${s.color}`}>{s.value}</span>
-                      <span className="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-wider">{s.label}</span>
-                    </div>
-                  ))}
+                {/* Tracking Workflow Infographic */}
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/workflow.png"
+                    alt="AutoAdz Tracking Workflow"
+                    className="w-full max-w-xl rounded-2xl shadow-lg"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
                 </div>
               </div>
             </section>
