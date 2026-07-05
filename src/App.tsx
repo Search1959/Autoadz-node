@@ -287,7 +287,7 @@ export default function App() {
       {
         category: "General",
         question: "How do I contact AutoAdz support?",
-        answer: "📞 Call / WhatsApp: +91 98361-30393 or +91 74392-65589\n✉️ Email: deinrimsolutionss@gmail.com\n🌐 Website: autoadz.in\n📍 Office: 27/3B Jugal Kishor Das Lane, Kolkata – 700 006\nSupport hours: Monday–Saturday, 10 AM – 7 PM."
+        answer: "📞 Call / WhatsApp: +91 98361-30393 or +91 76030-64791\n✉️ Email: deinrimsolutionss@gmail.com\n🌐 Website: autoadz.in\n📍 Office: 27/3B Jugal Kishor Das Lane, Kolkata – 700 006\nSupport hours: Monday–Saturday, 10 AM – 7 PM."
       },
 
       // ── ADVERTISERS ──────────────────────────────────────────────────────
@@ -2232,502 +2232,265 @@ export default function App() {
         {/* LANDING PAGE HERO / PLATFORM INFO SECTION */}
         {landingSection === "hero" && (
           <div className="relative w-full overflow-hidden flex-1 flex flex-col justify-start">
+            <main className="flex-1 flex flex-col w-full relative">
 
-            <main className="flex-1 flex flex-col py-10 px-4 md:px-8 max-w-7xl mx-auto z-10 space-y-12 w-full relative">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              {/* Hero Left Intro */}
-              <div className="lg:col-span-7 space-y-6 text-left">
-                <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-extrabold tracking-widest ${darkMode ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/25" : "text-emerald-800 bg-emerald-500/10 border-emerald-500/20"} rounded-full px-3 py-1 uppercase`}>
-                  NEXT-GEN TRANSIT OUT-OF-HOME (OOH) SAAS
-                </span>
-                <h2 className={`text-4xl md:text-5xl lg:text-6xl font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} leading-none tracking-tight`}>
-                  India's Hyperlocal <span className="text-[#10B981]">GPS-Tracked</span> Auto Advertising Platform
-                </h2>
-                <p className={`text-sm md:text-base ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed max-w-2xl`}>
-                  Connect with local target audiences by pasting high-impact brand designs on auto-rickshaw backhoods. Plan campaigns, predict hyperlocal CPM impressions, track driver live locations, and verify proof of work with absolute precision.
-                </p>
-
-                {/* Database Metrics Grid - Real Database Counts! */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
-                  {/* Card 1: Total Campaigns */}
-                  <div className={`p-5 rounded-3xl border flex flex-col items-center justify-center text-center space-y-2.5 ${
-                    darkMode ? "bg-[#0B1F4D]/40 backdrop-blur-md border-white/10 shadow-lg" : "bg-white border-slate-150 shadow-3xs"
-                  }`}>
-                    <Rocket className="text-emerald-400" size={22} />
-                    <div className="space-y-0.5">
-                      <p className={`text-3xl font-black leading-none ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>{campaigns.length}</p>
-                      <p className={`text-[9px] ${darkMode ? "text-slate-300 font-medium" : "text-slate-500 font-bold"} uppercase tracking-wider`}>Total Campaigns</p>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Rickshaws Linked */}
-                  <div className={`p-5 rounded-3xl border flex flex-col items-center justify-center text-center space-y-2.5 ${
-                    darkMode ? "bg-[#0B1F4D]/40 backdrop-blur-md border-white/10 shadow-lg" : "bg-white border-slate-150 shadow-3xs"
-                  }`}>
-                    <Truck className="text-blue-400" size={22} />
-                    <div className="space-y-0.5">
-                      <p className={`text-3xl font-black leading-none ${darkMode ? "text-white" : "text-[#10B981]"}`}>{drivers.length}</p>
-                      <p className={`text-[9px] ${darkMode ? "text-slate-300 font-medium" : "text-slate-500 font-bold"} uppercase tracking-wider`}>Rickshaws Linked</p>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Live KMs Logged */}
-                  <div className={`p-5 rounded-3xl border flex flex-col items-center justify-center text-center space-y-2.5 ${
-                    darkMode ? "bg-[#0B1F4D]/40 backdrop-blur-md border-white/10 shadow-lg" : "bg-white border-slate-150 shadow-3xs"
-                  }`}>
-                    <Activity className="text-orange-400" size={22} />
-                    <div className="space-y-0.5">
-                      <p className={`text-3xl font-black leading-none ${darkMode ? "text-white" : "text-indigo-600"}`}>{(totalKmsAll + simulatedKmsTotal).toLocaleString(undefined, { maximumFractionDigits: 0 })}+</p>
-                      <p className={`text-[9px] ${darkMode ? "text-slate-300 font-medium" : "text-slate-500 font-bold"} uppercase tracking-wider`}>Live KMs Logged</p>
-                    </div>
-                  </div>
-
-                  {/* Card 4: QR Scans Tracked */}
-                  <div className={`p-5 rounded-3xl border flex flex-col items-center justify-center text-center space-y-2.5 ${
-                    darkMode ? "bg-[#0B1F4D]/40 backdrop-blur-md border-white/10 shadow-lg" : "bg-white border-slate-150 shadow-3xs"
-                  }`}>
-                    <QrCode className="text-pink-400" size={22} />
-                    <div className="space-y-0.5">
-                      <p className={`text-3xl font-black leading-none ${darkMode ? "text-white" : "text-purple-600"}`}>{totalScansAll.toLocaleString()}</p>
-                      <p className={`text-[9px] ${darkMode ? "text-slate-300 font-medium" : "text-slate-500 font-bold"} uppercase tracking-wider`}>QR Scans Tracked</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-3.5 pt-2">
-                  <button 
-                    onClick={() => setLandingSection("register-campaign")} 
-                    className="bg-[#10B981] hover:bg-emerald-600 text-white font-bold font-mono text-xs px-6 py-3.5 rounded-2xl shadow-md transition flex items-center gap-2"
-                  >
-                    <Plus size={16} /> LAUNCH BRAND CAMPAIGN
-                  </button>
-                  <button 
-                    onClick={() => setLandingSection("register-driver")} 
-                    className={`border ${darkMode ? "border-white/10 bg-[#0B1F4D]/40 text-slate-300 hover:bg-white/10 hover:text-white" : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"} font-bold font-mono text-xs px-6 py-3.5 rounded-2xl transition flex items-center gap-2`}
-                  >
-                    <Smartphone size={16} /> BECOME A DRIVER PARTNER
-                  </button>
-                </div>
-              </div>
-
-              {/* Hero Right Interactive Display Card */}
-              <div className="lg:col-span-5 relative">
-                {/* Floating ambient badge */}
-                <div className={`absolute -top-4 -left-4 ${darkMode ? "bg-[#0b1f4d] border-white/15 text-white" : "bg-white border-slate-150 text-[#0B1F4D]"} border p-3 rounded-2xl shadow-md flex items-center gap-2.5 z-20 font-mono animate-pulse`}>
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                  <div className="text-left">
-                    <p className={`text-[9px] font-black ${darkMode ? "text-slate-200" : "text-[#0B1F4D]"}`}>AUTO ADZ TELEMETRY</p>
-                    <p className="text-[8px] text-[#10B981] font-bold">LIVE TRANSIT STREAM</p>
-                  </div>
-                </div>
-
-                {/* Auto Rickshaw Billboard Mockup */}
-                <div className={`${darkMode ? "bg-[#0B1F4D]/60 border-white/10" : "bg-white border-slate-150"} border p-5 rounded-4xl shadow-xl relative overflow-hidden text-left`}>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
-                  
-                  <div className={`flex justify-between items-center pb-3 border-b ${darkMode ? "border-white/10" : "border-slate-100"} mb-4`}>
-                    <h4 className="text-[10px] font-black font-mono text-slate-400 uppercase">Interactive Transit Preview</h4>
-                    <span className={`text-[8px] font-bold font-mono ${darkMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" : "bg-emerald-50 text-emerald-700 border-emerald-100"} px-2 py-0.5 rounded border`}>BACK-HOOD BANNER FORMAT</span>
-                  </div>
-
-                  <div className={`rounded-2xl overflow-hidden relative border ${darkMode ? "border-white/10" : "border-slate-200"} mb-4 shadow-sm`}>
-                    <img
-                      src={campaigns.find(c => c.status === "active")?.creativeUrl || campaigns[0]?.creativeUrl || "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&q=80&w=800"}
-                      alt="Campaign Creative"
-                      className="w-full h-44 object-cover brightness-95"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className={`absolute bottom-3 left-3 ${darkMode ? "bg-slate-900/90 text-white border-white/15" : "bg-white/95 text-[#0B1F4D] border-slate-150"} text-[9px] font-mono font-bold px-2.5 py-1 rounded-lg border shadow-xs`}>
-                      📍 {campaigns.find(c => c.status === "active")?.title || "DIGITAL-READY BANNER"}
-                    </div>
-                  </div>
-
-                  {/* Tracking Map Mockup inside Hero */}
-                  <div className={`${darkMode ? "bg-slate-950/50 border-white/10" : "bg-slate-50 border-slate-150"} border rounded-2xl p-3.5 space-y-2.5 font-mono text-xs`}>
-                    <div className="flex justify-between items-center">
-                      <span className={`${darkMode ? "text-slate-400" : "text-slate-500"} font-bold`}>Active Campaign:</span>
-                      <span className="text-[#10B981] font-black">
-                        {campaigns.length > 0 ? campaigns[0].title : "Launch Campaign First"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className={`${darkMode ? "text-slate-400" : "text-slate-500"} font-bold`}>Fleet Size Allocation:</span>
-                      <span className={`${darkMode ? "text-indigo-400" : "text-indigo-600"} font-black`}>
-                        {campaigns.length > 0 ? `${campaigns[0].autosCount} Rickshaws Live` : "No Fleet Active"}
-                      </span>
-                    </div>
-                    <div className={`h-2 ${darkMode ? "bg-slate-800" : "bg-slate-200"} rounded-full overflow-hidden`}>
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
-                        style={{ width: campaigns.length > 0 ? "100%" : "20%" }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Campaign Calculator Section (CMP / Target slider integration) */}
-            <div className={`rounded-4xl p-6 md:p-8 border space-y-6 text-left ${darkMode ? "bg-[#0b1f4d]/40 backdrop-blur-md border-white/10 text-white" : "bg-white border-slate-150 shadow-sm"}`}>
-              <div>
-                <span className={`text-[9px] font-mono font-black uppercase tracking-widest px-2.5 py-1 rounded border ${darkMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>Interactive SaaS Pricing tool</span>
-                <h3 className={`text-2xl font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} mt-2`}>Calculate Your Campaign ROI Instantly</h3>
-                <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-400"} mt-1`}>Adjust the sliders to estimate reach, CPM impressions, and vehicle numbers for your specific business niche.</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Sliders Input */}
-                <div className="lg:col-span-6 space-y-5">
-                  <div className="space-y-2">
-                    <div className="flex justify-between font-mono text-xs">
-                      <span className={`${darkMode ? "text-slate-300" : "text-slate-500"} font-bold uppercase`}>Select Operating City</span>
-                      <span className="text-[#10B981] font-bold">Kolkata/Delhi/Bangalore</span>
-                    </div>
-                    <select
-                      value={newCampCity}
-                      onChange={(e) => setNewCampCity(e.target.value)}
-                      className={`w-full ${darkMode ? "bg-slate-900 border-white/15 text-white" : "bg-slate-50 border-slate-200 text-[#0B1F4D]"} rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#10B981]`}
-                    >
-                      <option value="Kolkata">Kolkata (₹18 / auto / day)</option>
-                      <option value="Delhi">Delhi NCR (₹20 / auto / day)</option>
-                      <option value="Bangalore">Bangalore (₹22 / auto / day)</option>
-                      <option value="Mumbai">Mumbai (₹25 / auto / day)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between font-mono text-xs">
-                      <span className={`${darkMode ? "text-slate-300" : "text-slate-500"} font-bold uppercase`}>Allocated Daily Budget</span>
-                      <span className="text-[#10B981] font-extrabold">₹{calcBudget.toLocaleString()}</span>
-                    </div>
-                    <input 
-                      type="range"
-                      min={10000}
-                      max={300000}
-                      step={5000}
-                      value={calcBudget}
-                      onChange={(e) => setCalcBudget(Number(e.target.value))}
-                      className="w-full accent-[#10B981]"
-                    />
-                    <div className={`flex justify-between text-[10px] ${darkMode ? "text-slate-400" : "text-slate-400"} font-mono`}>
-                      <span>₹10,000 min</span>
-                      <span>₹3,00,000 max</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between font-mono text-xs">
-                      <span className={`${darkMode ? "text-slate-300" : "text-slate-500"} font-bold uppercase`}>Fleet Size Allocation</span>
-                      <span className="text-[#10B981] font-extrabold">{calcVehicles} Autos</span>
-                    </div>
-                    <input 
-                      type="range"
-                      min={5}
-                      max={150}
-                      step={5}
-                      value={calcVehicles}
-                      onChange={(e) => setCalcVehicles(Number(e.target.value))}
-                      className="w-full accent-[#10B981]"
-                    />
-                    <div className={`flex justify-between text-[10px] ${darkMode ? "text-slate-400" : "text-slate-400"} font-mono`}>
-                      <span>5 Autos min</span>
-                      <span>150 Autos max</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* KPI Estimates output card */}
-                <div className="lg:col-span-6 bg-[#0B1F4D] text-white rounded-3xl p-6 flex flex-col justify-between space-y-5">
-                  <div className="space-y-1.5 pb-2 border-b border-white/10">
-                    <h5 className="font-mono text-[9px] text-emerald-300 font-black tracking-widest uppercase">Estimated Output Outcomes</h5>
-                    <p className="text-xs text-slate-300">Based on verified hyperlocal CPM databases across operating hotspots.</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-white/5 rounded-2xl">
-                      <span className="text-[9px] text-emerald-300 font-mono block font-bold">TOTAL ESTIMATED REACH</span>
-                      <strong className="text-xl font-display font-extrabold">{(calcVehicles * 8800).toLocaleString()}+ Views / Day</strong>
-                    </div>
-
-                    <div className="p-3 bg-white/5 rounded-2xl">
-                      <span className="text-[9px] text-emerald-300 font-mono block font-bold">MONTHLY ESTIMATED IMPRESSIONS</span>
-                      <strong className="text-xl font-display font-extrabold">{(calcVehicles * 8800 * 30 / 100000).toFixed(1)} Lakhs / Mo</strong>
-                    </div>
-
-                    <div className="p-3 bg-white/5 rounded-2xl">
-                      <span className="text-[9px] text-emerald-300 font-mono block font-bold font-sans">DAILY OPERATING COST</span>
-                      <strong className="text-xl font-display font-extrabold">₹{(calcVehicles * (newCampCity === "Mumbai" ? 25 : newCampCity === "Bangalore" ? 22 : newCampCity === "Delhi" ? 20 : 18)).toLocaleString()}</strong>
-                    </div>
-
-                    <div className="p-3 bg-white/5 rounded-2xl">
-                      <span className="text-[9px] text-emerald-300 font-mono block font-bold">ESTIMATED RUN DAYS COVERED</span>
-                      <strong className="text-xl font-display font-extrabold">
-                        {Math.floor(calcBudget / (calcVehicles * (newCampCity === "Mumbai" ? 25 : newCampCity === "Bangalore" ? 22 : newCampCity === "Delhi" ? 20 : 18)))} Days
-                      </strong>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <button 
-                      onClick={() => {
-                        setNewCampCity(newCampCity);
-                        setNewCampAutos(calcVehicles);
-                        setNewCampBudget(calcBudget);
-                        setLandingSection("register-campaign");
-                      }}
-                      className="w-full bg-[#10B981] hover:bg-emerald-600 text-white py-2.5 rounded-xl text-xs font-mono font-black tracking-wider transition uppercase"
-                    >
-                      🚀 LOCK IN THese SPECIFICATIONS & SUBMIT
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* SEO HYPERLOCAL OPERATING CITIES AND NICHE SUBPAGES */}
-            <div className="space-y-6 text-left">
-              <div>
-                <span className={`text-[9px] font-mono font-black uppercase tracking-widest px-2.5 py-1 rounded border ${darkMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>Localized SEO Hub</span>
-                <h3 className={`text-2xl font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} mt-2`}>Dynamic Hyperlocal City & Niche Operating Guides</h3>
-                <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-400"} mt-1`}>Explore specific local marketing hotspots, average daily trip durations, and AI recommendations tailored to your industry.</p>
-              </div>
-
-              {/* Selection button grids */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Cities */}
-                <div className={`border p-5 rounded-3xl space-y-3 ${darkMode ? "bg-[#0b1f4d]/40 border-white/10 text-white" : "bg-white border-slate-150 shadow-xs"}`}>
-                  <h4 className={`font-bold text-xs uppercase font-mono tracking-wider ${darkMode ? "text-slate-300" : "text-[#0B1F4D]"}`}>🏙️ SELECT LOCALIZED CITY GUIDE</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={() => { setSelectedSeoCity("Kolkata"); setSelectedSeoIndustry(null); }}
-                      className={`p-3 border rounded-xl text-xs font-bold text-left transition ${darkMode ? "bg-slate-900/50 border-white/10 text-white hover:bg-emerald-500/10 hover:border-[#10B981]" : "bg-slate-50 hover:bg-emerald-50 border-slate-200 hover:border-[#10B981] text-slate-800"}`}
-                    >
-                      Kolkata Guide
-                      <span className={`text-[9px] block ${darkMode ? "text-slate-400" : "text-slate-400"} font-mono font-medium mt-0.5`}>Shyambazar, Gariahat</span>
-                    </button>
-                    <button 
-                      onClick={() => { setSelectedSeoCity("Delhi"); setSelectedSeoIndustry(null); }}
-                      className={`p-3 border rounded-xl text-xs font-bold text-left transition ${darkMode ? "bg-slate-900/50 border-white/10 text-white hover:bg-emerald-500/10 hover:border-[#10B981]" : "bg-slate-50 hover:bg-emerald-50 border-slate-200 hover:border-[#10B981] text-slate-800"}`}
-                    >
-                      Delhi NCR Guide
-                      <span className={`text-[9px] block ${darkMode ? "text-slate-400" : "text-slate-400"} font-mono font-medium mt-0.5`}>Karol Bagh, Noida Sec 62</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Industries */}
-                <div className={`border p-5 rounded-3xl space-y-3 ${darkMode ? "bg-[#0b1f4d]/40 border-white/10 text-white" : "bg-white border-slate-150 shadow-xs"}`}>
-                  <h4 className={`font-bold text-xs uppercase font-mono tracking-wider ${darkMode ? "text-slate-300" : "text-[#0B1F4D]"}`}>🩺 SELECT INDUSTRY NICHE SPECIFIC ADV</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={() => { setSelectedSeoIndustry("Restaurant"); setSelectedSeoCity(null); }}
-                      className={`p-3 border rounded-xl text-xs font-bold text-left transition ${darkMode ? "bg-slate-900/50 border-white/10 text-white hover:bg-emerald-500/10 hover:border-[#10B981]" : "bg-slate-50 hover:bg-emerald-50 border-slate-200 hover:border-[#10B981] text-slate-800"}`}
-                    >
-                      Restaurants & Cafes
-                      <span className={`text-[9px] block ${darkMode ? "text-slate-400" : "text-slate-400"} font-mono font-medium mt-0.5`}>Menu hooks, QR deals</span>
-                    </button>
-                    <button 
-                      onClick={() => { setSelectedSeoIndustry("Clinic"); setSelectedSeoCity(null); }}
-                      className={`p-3 border rounded-xl text-xs font-bold text-left transition ${darkMode ? "bg-slate-900/50 border-white/10 text-white hover:bg-emerald-500/10 hover:border-[#10B981]" : "bg-slate-50 hover:bg-emerald-50 border-slate-200 hover:border-[#10B981] text-slate-800"}`}
-                    >
-                      Dental Clinics & Hospitals
-                      <span className={`text-[9px] block ${darkMode ? "text-slate-400" : "text-slate-400"} font-mono font-medium mt-0.5`}>Check-up promos, localtrust</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Localized Guide dynamic rendering */}
-              {selectedSeoCity && (
-                <div className="bg-emerald-500/5 border-2 border-[#10B981]/20 rounded-3xl p-6 space-y-4 animate-fadeIn">
-                  <div className={`flex justify-between items-center pb-2 border-b ${darkMode ? "border-white/10" : "border-slate-200"}`}>
-                    <h4 className={`font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} text-base`}>🏙️ AutoAdz Hyperlocal Guide: Operating in {selectedSeoCity}</h4>
-                    <button 
-                      onClick={() => setSelectedSeoCity(null)}
-                      className={`text-slate-400 ${darkMode ? "hover:text-white" : "hover:text-slate-800"} text-xs font-bold font-mono`}
-                    >
-                      Close Guide [X]
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div className={`p-3 rounded-xl border space-y-1 ${darkMode ? "bg-slate-900/40 border-white/10 text-white" : "bg-white border-slate-200"}`}>
-                      <strong className={`block uppercase font-mono tracking-wide text-[9px] ${darkMode ? "text-emerald-400" : "text-[#10B981]"}`}>High Traffic hotspots</strong>
-                      <p className={`${darkMode ? "text-slate-300" : "text-slate-600"} leading-relaxed font-bold`}>
-                        {selectedSeoCity === "Kolkata" 
-                          ? "Shyambazar Crossing, Gariahat Market, Salt Lake Sector V, Howrah Station Road, Garia Crossing" 
-                          : "Connaught Place Radial Roads, Karol Bagh Market, Noida Sector 62 IT Hub, Karol Bagh Metro, GK M-Block"
-                        }
-                      </p>
-                    </div>
-
-                    <div className={`p-3 rounded-xl border space-y-1 ${darkMode ? "bg-slate-900/40 border-white/10 text-white" : "bg-white border-slate-200"}`}>
-                      <strong className={`block uppercase font-mono tracking-wide text-[9px] ${darkMode ? "text-indigo-400" : "text-indigo-600"}`}>Avg Daily Run Telemetry</strong>
-                      <p className={`${darkMode ? "text-slate-300" : "text-slate-600"} leading-relaxed`}>
-                        {selectedSeoCity === "Kolkata" 
-                          ? "62.4 KM/day average trip distance across highly congested North and Central transit hubs." 
-                          : "74.8 KM/day average trip distance crossing high-speed ring roads and sub-city sectors."
-                        }
-                      </p>
-                    </div>
-
-                    <div className={`p-3 rounded-xl border space-y-1 ${darkMode ? "bg-slate-900/40 border-white/10 text-white" : "bg-white border-slate-200"}`}>
-                      <strong className={`block uppercase font-mono tracking-wide text-[9px] ${darkMode ? "text-orange-400" : "text-orange-600"}`}>AI campaign advice</strong>
-                      <p className={`${darkMode ? "text-slate-300" : "text-slate-600"} leading-relaxed italic`}>
-                        {selectedSeoCity === "Kolkata" 
-                          ? "High saturation of 25-35 autos delivers maximum visibility in crowded local markets. Perfect for local sweet shops, jewellery brands, and coaching institutions." 
-                          : "Deploy 40+ auto banners to cover the wider NCR geographical grid. High conversion rates for real-estate launches, medical diagnostics, and food delivery deals."
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedSeoIndustry && (
-                <div className="bg-emerald-500/5 border-2 border-[#10B981]/20 rounded-3xl p-6 space-y-4 animate-fadeIn">
-                  <div className={`flex justify-between items-center pb-2 border-b ${darkMode ? "border-white/10" : "border-slate-200"}`}>
-                    <h4 className={`font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} text-base`}>🩺 AutoAdz Industry Guide: Transit Marketing for {selectedSeoIndustry}s</h4>
-                    <button 
-                      onClick={() => setSelectedSeoIndustry(null)}
-                      className={`text-slate-400 ${darkMode ? "hover:text-white" : "hover:text-slate-800"} text-xs font-bold font-mono`}
-                    >
-                      Close Guide [X]
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div className={`p-3 rounded-xl border space-y-1 ${darkMode ? "bg-slate-900/40 border-white/10 text-white" : "bg-white border-slate-200"}`}>
-                      <strong className={`block uppercase font-mono tracking-wide text-[9px] ${darkMode ? "text-emerald-400" : "text-[#10B981]"}`}>High Conversion formats</strong>
-                      <p className={`${darkMode ? "text-slate-300" : "text-slate-600"} leading-relaxed font-bold`}>
-                        {selectedSeoIndustry === "Restaurant" 
-                          ? "Back-Hood Menu Highlights + Custom QR Coupon Scans with 15% off instant billing hooks." 
-                          : "Trust-building healthcare slogans + Free Check-up Campaign activation with QR Booking slots."
-                        }
-                      </p>
-                    </div>
-
-                    <div className={`p-3 rounded-xl border space-y-1 ${darkMode ? "bg-slate-900/40 border-white/10 text-white" : "bg-white border-slate-200"}`}>
-                      <strong className={`block uppercase font-mono tracking-wide text-[9px] ${darkMode ? "text-indigo-400" : "text-indigo-600"}`}>Core Targeted Localities</strong>
-                      <p className={`${darkMode ? "text-slate-300" : "text-slate-600"} leading-relaxed`}>
-                        {selectedSeoIndustry === "Restaurant" 
-                          ? "Deploy fleets within 3-5 KM radius of your cloud kitchens or dine-in spaces for localized food delivery surge." 
-                          : "Place banners in local residential sectors, high-density residential high-rises, and near local schools/colleges."
-                        }
-                      </p>
-                    </div>
-
-                    <div className={`p-3 rounded-xl border space-y-1 ${darkMode ? "bg-slate-900/40 border-white/10 text-white" : "bg-white border-slate-200"}`}>
-                      <strong className={`block uppercase font-mono tracking-wide text-[9px] ${darkMode ? "text-orange-400" : "text-orange-600"}`}>AI campaign hook suggestions</strong>
-                      <p className={`${darkMode ? "text-slate-300" : "text-slate-600"} leading-relaxed italic font-mono`}>
-                        {selectedSeoIndustry === "Restaurant" 
-                          ? "\"Hungry in traffic? Scan this QR code and get hot pizza delivered to your doorstep in 15 minutes! Use Code AUTODEAL.\"" 
-                          : "\"Your smile deserves the best. Scan to book a comprehensive dental consultation at Dr. Sen Clinic for just ₹99!\""
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Platform Services & Fleet Formats Grid */}
-            <div className="space-y-6 text-left">
-              <div>
-                <span className={`text-[9px] font-mono font-black uppercase tracking-widest px-2.5 py-1 rounded border ${darkMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>Comprehensive format suite</span>
-                <h3 className={`text-2xl font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} mt-2`}>Premium Transit Branding Formats</h3>
-                <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-400"} mt-1`}>Select from multiple highly durable print formats styled on thousands of active passenger auto-rickshaws.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Format 1 */}
-                <div className={`border p-5 rounded-3xl space-y-3 flex flex-col justify-between ${darkMode ? "bg-[#0b1f4d]/40 border-white/10 text-white" : "bg-white border-slate-150 shadow-3xs"}`}>
-                  <div className="space-y-2">
-                    <div className={`w-10 h-10 ${darkMode ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-500/10 text-emerald-600"} flex items-center justify-center rounded-2xl`}>
-                      <Layers size={18} />
-                    </div>
-                    <h4 className={`font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} text-sm`}>Full Back Hood Vinyl Banners</h4>
-                    <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                      Our most popular transit layout. Spans the entire back hood of the auto, ensuring 100% readability for vehicles waiting behind in dense traffic signals.
-                    </p>
-                  </div>
-                  <button onClick={() => setLandingSection("register-campaign")} className={`text-xs text-[#10B981] font-bold font-mono hover:underline flex items-center gap-1 pt-3 border-t ${darkMode ? "border-white/10" : "border-slate-100"}`}>
-                    Book Back Hoods <ChevronRight size={12} />
-                  </button>
-                </div>
-
-                {/* Format 2 */}
-                <div className={`border p-5 rounded-3xl space-y-3 flex flex-col justify-between ${darkMode ? "bg-[#0b1f4d]/40 border-white/10 text-white" : "bg-white border-slate-150 shadow-3xs"}`}>
-                  <div className="space-y-2">
-                    <div className={`w-10 h-10 ${darkMode ? "bg-indigo-500/15 text-indigo-400" : "bg-indigo-500/10 text-indigo-600"} flex items-center justify-center rounded-2xl`}>
-                      <Smartphone size={18} />
-                    </div>
-                    <h4 className={`font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} text-sm`}>QR Coupon Activation Stickers</h4>
-                    <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                      Includes a highly readable custom QR code sticker printed alongside the brand creative. Passengers and pedestrians scan to trigger direct app downloads or coupon activation.
-                    </p>
-                  </div>
-                  <button onClick={() => setLandingSection("register-campaign")} className={`text-xs text-[#10B981] font-bold font-mono hover:underline flex items-center gap-1 pt-3 border-t ${darkMode ? "border-white/10" : "border-slate-100"}`}>
-                    Deploy QR Hooks <ChevronRight size={12} />
-                  </button>
-                </div>
-
-                {/* Format 3 */}
-                <div className={`border p-5 rounded-3xl space-y-3 flex flex-col justify-between ${darkMode ? "bg-[#0b1f4d]/40 border-white/10 text-white" : "bg-white border-slate-150 shadow-3xs"}`}>
-                  <div className="space-y-2">
-                    <div className={`w-10 h-10 ${darkMode ? "bg-orange-500/15 text-orange-400" : "bg-orange-500/10 text-orange-600"} flex items-center justify-center rounded-2xl`}>
-                      <MapPin size={18} />
-                    </div>
-                    <h4 className={`font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} text-sm`}>Hyperlocal Pincode Targeting</h4>
-                    <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                      Filter auto allocations down to specific pincodes, subway nodes, or local markets. Ensures zero spillover and premium conversion for localized retail outlets.
-                    </p>
-                  </div>
-                  <button onClick={() => setLandingSection("register-campaign")} className={`text-xs text-[#10B981] font-bold font-mono hover:underline flex items-center gap-1 pt-3 border-t ${darkMode ? "border-white/10" : "border-slate-100"}`}>
-                    Target Local Pincodes <ChevronRight size={12} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* FREQUENTLY ASKED QUESTIONS SECTION */}
-            <div className={`rounded-4xl p-6 md:p-8 border space-y-6 text-left ${darkMode ? "bg-[#0b1f4d]/40 backdrop-blur-md border-white/10 text-white" : "bg-white border-slate-150 shadow-sm"}`}>
-              <div>
-                <span className={`text-[9px] font-mono font-black uppercase tracking-widest px-2.5 py-1 rounded border ${darkMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>Help center</span>
-                <h3 className={`text-2xl font-display font-extrabold ${darkMode ? "text-white" : "text-[#0B1F4D]"} mt-2`}>Frequently Answered Queries</h3>
-                <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-400"} mt-1`}>Everything you need to know about setting up auto-rickshaw marketing campaigns.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`p-4 border rounded-2xl space-y-1 ${darkMode ? "bg-[#05132f]/60 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                  <h5 className={`font-bold text-xs ${darkMode ? "text-emerald-400" : "text-[#0B1F4D]"}`}>How is the live transit mileage tracked?</h5>
-                  <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                    Auto-rickshaw driver partners keep their GPS meters running via the AutoAdz Driver Partner Mobile App. Telemetry is automatically streamed back to our operations desk.
+            {/* ── HERO ─────────────────────────────────────────────────── */}
+            <section className={`w-full py-16 px-4 md:px-10 ${darkMode ? "bg-[#05132f]" : "bg-[#0B1F4D]"}`}>
+              <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div className="space-y-6 text-white">
+                  <span className="inline-block text-[10px] font-mono font-bold tracking-widest bg-[#FF9800]/20 text-[#FF9800] border border-[#FF9800]/30 px-3 py-1 rounded-full uppercase">
+                    GPS-Tracked Transit Advertising · Kolkata
+                  </span>
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-black leading-tight">
+                    Every Auto is a<br />
+                    <span className="text-[#FF9800]">Moving Billboard</span>
+                  </h1>
+                  <p className="text-slate-300 text-base leading-relaxed max-w-lg">
+                    Connect your brand with thousands of daily commuters across Kolkata's busiest routes. Pay only per verified GPS kilometre — zero wastage, 100% measurable.
                   </p>
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <button onClick={() => setLandingSection("register-campaign")}
+                      className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm px-7 py-3.5 rounded-xl shadow-lg transition">
+                      Start a Campaign →
+                    </button>
+                    <button onClick={() => setLandingSection("register-driver")}
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold text-sm px-7 py-3.5 rounded-xl border border-white/20 transition">
+                      Join as Driver Partner
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-6 pt-2 text-white/70 text-xs font-mono">
+                    <span>✓ Live GPS Tracking</span>
+                    <span>✓ Photo Proof Verification</span>
+                    <span>✓ Weekly Driver Billing</span>
+                    <span>✓ Real-time Dashboard</span>
+                  </div>
                 </div>
-
-                <div className={`p-4 border rounded-2xl space-y-1 ${darkMode ? "bg-[#05132f]/60 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                  <h5 className={`font-bold text-xs ${darkMode ? "text-emerald-400" : "text-[#0B1F4D]"}`}>How are drivers paid and verified?</h5>
-                  <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                    Drivers must upload daily check-in photos of their auto-rickshaw backhoods. Once approved by our audit team, supplementary payouts are instantly credited to their local digital wallets.
-                  </p>
-                </div>
-
-                <div className={`p-4 border rounded-2xl space-y-1 ${darkMode ? "bg-[#05132f]/60 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                  <h5 className={`font-bold text-xs ${darkMode ? "text-emerald-400" : "text-[#0B1F4D]"}`}>Can I choose specific areas within Kolkata or Bangalore?</h5>
-                  <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                    Absolutely. Advertisers can choose specific localities (like Salt Lake in Kolkata, or Indiranagar in Bangalore) to ensure concentrated exposure in targeted high-traffic zones.
-                  </p>
-                </div>
-
-                <div className={`p-4 border rounded-2xl space-y-1 ${darkMode ? "bg-[#05132f]/60 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                  <h5 className={`font-bold text-xs ${darkMode ? "text-emerald-400" : "text-[#0B1F4D]"}`}>How long does a campaign take to go live?</h5>
-                  <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-500"} leading-relaxed`}>
-                    Campaign printing and mounting takes 48 hours post creative design approval. Banners are mounted securely by our operations agents at regional auto hubs.
-                  </p>
+                {/* Live Platform Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { icon: "🛺", value: drivers.length || "50+", label: "Auto Partners", color: "text-[#FF9800]" },
+                    { icon: "📍", value: `${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label: "KMs Tracked", color: "text-emerald-400" },
+                    { icon: "📣", value: campaigns.length || "10+", label: "Campaigns Live", color: "text-blue-400" },
+                    { icon: "📲", value: totalScansAll || "500+", label: "QR Scans", color: "text-pink-400" },
+                  ].map((s, i) => (
+                    <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+                      <div className="text-2xl mb-1">{s.icon}</div>
+                      <div className={`text-3xl font-black font-mono ${s.color}`}>{s.value}</div>
+                      <div className="text-white/50 text-[11px] font-mono mt-1 uppercase">{s.label}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            </section>
+
+            {/* ── HOW IT WORKS ─────────────────────────────────────────── */}
+            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#080f2a]" : "bg-white"}`}>
+              <div className="max-w-5xl mx-auto space-y-8">
+                <div className="text-center space-y-2">
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF9800] uppercase">Seamless 3-Step Process</span>
+                  <h2 className={`text-3xl font-display font-black ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>How AutoAdz Works</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+                  {[
+                    { step: "01", icon: "🎨", title: "Upload Your Creative", desc: "Submit your brand banner design. Our team reviews and prints it on vinyl for auto backhood mounting." },
+                    { step: "02", icon: "📍", title: "We Assign the Fleet", desc: "Admin assigns verified autos in your target zones. Driver photo-proves installation before campaign starts." },
+                    { step: "03", icon: "📊", title: "Pay Per Verified KM", desc: "Live GPS tracks every route. You see the map, the KMs, and pay only for what's actually driven." },
+                  ].map((item, i) => (
+                    <div key={i} className={`rounded-2xl p-6 space-y-3 border-2 ${darkMode ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200"}`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{item.icon}</span>
+                        <span className="text-[#FF9800] font-black font-mono text-sm">{item.step}</span>
+                      </div>
+                      <h3 className={`font-bold text-base ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>{item.title}</h3>
+                      <p className={`text-sm leading-relaxed ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* ── FOR ADVERTISERS | FOR DRIVERS ───────────────────────── */}
+            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#05132f]" : "bg-slate-50"}`}>
+              <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Advertisers */}
+                <div className="bg-[#0B1F4D] rounded-2xl p-7 space-y-4 text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#FF9800] rounded-xl flex items-center justify-center text-xl">🏢</div>
+                    <div>
+                      <p className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-wide">For Brands & Businesses</p>
+                      <h3 className="font-black text-lg">Advertise Smarter</h3>
+                    </div>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {["Hyperlocal targeting by area & route", "GPS-verified KM-based billing — pay for results", "Live map dashboard with real-time tracking", "Photo proof of installation on every auto", "Weekly campaign reports & QR scan analytics"].map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                        <span className="text-[#FF9800] mt-0.5 flex-shrink-0">✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button onClick={() => setLandingSection("register-campaign")}
+                    className="w-full mt-2 bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm py-3 rounded-xl transition">
+                    Launch a Campaign →
+                  </button>
+                </div>
+                {/* Drivers */}
+                <div className={`rounded-2xl p-7 space-y-4 border-2 ${darkMode ? "bg-white/5 border-white/10 text-white" : "bg-white border-slate-200 text-[#0B1F4D]"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-xl">🛺</div>
+                    <div>
+                      <p className="text-[10px] font-mono text-emerald-500 font-bold uppercase tracking-wide">For Auto Drivers</p>
+                      <h3 className={`font-black text-lg ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>Earn While You Drive</h3>
+                    </div>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {["Extra income on top of your normal fares", "Simple app — just drive, GPS does the rest", "Weekly automatic payment straight to account", "No target, no pressure — earn at your pace", "Kolkata-wide support team, easy onboarding"].map((f, i) => (
+                      <li key={i} className={`flex items-start gap-2 text-sm ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
+                        <span className="text-emerald-500 mt-0.5 flex-shrink-0">✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button onClick={() => setLandingSection("register-driver")}
+                    className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm py-3 rounded-xl transition">
+                    Join as Driver Partner →
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* ── WHY AUTOADZ (Comparison) ─────────────────────────────── */}
+            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#080f2a]" : "bg-white"}`}>
+              <div className="max-w-5xl mx-auto space-y-8">
+                <div className="text-center space-y-2">
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF9800] uppercase">Why Choose AutoAdz</span>
+                  <h2 className={`text-3xl font-display font-black ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>Better Than Hoardings. Smarter Than Digital.</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className={`border-b-2 ${darkMode ? "border-white/10" : "border-slate-200"}`}>
+                        <th className={`py-3 px-4 text-left font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Feature</th>
+                        {["Hoardings", "Digital Ads", "AutoAdz"].map(h => (
+                          <th key={h} className={`py-3 px-4 text-center font-black ${h === "AutoAdz" ? "text-[#FF9800]" : darkMode ? "text-slate-400" : "text-slate-500"}`}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${darkMode ? "divide-white/5" : "divide-slate-100"}`}>
+                      {[
+                        ["GPS-Verified KMs", "✗", "✗", "✓"],
+                        ["Hyperlocal Area Targeting", "✗", "Partial", "✓"],
+                        ["Photo Proof of Display", "✗", "✗", "✓"],
+                        ["Real-time Live Tracking", "✗", "✗", "✓"],
+                        ["Pay-for-Performance", "✗", "Varies", "✓"],
+                        ["Cost Efficiency", "Low", "Medium", "High"],
+                      ].map(([feat, h, d, a], i) => (
+                        <tr key={i} className={`${darkMode ? "hover:bg-white/3" : "hover:bg-slate-50"} transition`}>
+                          <td className={`py-3 px-4 font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{feat}</td>
+                          <td className="py-3 px-4 text-center text-rose-500 font-bold">{h}</td>
+                          <td className={`py-3 px-4 text-center font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{d}</td>
+                          <td className="py-3 px-4 text-center text-emerald-500 font-black">{a}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            {/* ── CAMPAIGN CALCULATOR ──────────────────────────────────── */}
+            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#05132f]" : "bg-slate-50"}`}>
+              <div className="max-w-5xl mx-auto space-y-6">
+                <div className="text-center space-y-1">
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF9800] uppercase">Instant ROI Tool</span>
+                  <h2 className={`text-3xl font-display font-black ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>Calculate Your Campaign Reach</h2>
+                </div>
+                <div className={`rounded-2xl border-2 p-6 md:p-8 ${darkMode ? "bg-white/5 border-white/10" : "bg-white border-slate-200"}`}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Inputs */}
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono font-bold">
+                          <span className={darkMode ? "text-slate-300" : "text-slate-600"}>City</span>
+                          <span className="text-[#FF9800]">{newCampCity}</span>
+                        </div>
+                        <select value={newCampCity} onChange={(e) => setNewCampCity(e.target.value)}
+                          className={`w-full rounded-xl p-2.5 text-sm font-bold focus:outline-none border-2 ${darkMode ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-[#0B1F4D]"}`}>
+                          <option value="Kolkata">Kolkata — ₹18 / auto / day</option>
+                          <option value="Delhi">Delhi NCR — ₹20 / auto / day</option>
+                          <option value="Bangalore">Bangalore — ₹22 / auto / day</option>
+                          <option value="Mumbai">Mumbai — ₹25 / auto / day</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono font-bold">
+                          <span className={darkMode ? "text-slate-300" : "text-slate-600"}>Daily Budget</span>
+                          <span className="text-[#FF9800]">₹{calcBudget.toLocaleString()}</span>
+                        </div>
+                        <input type="range" min={10000} max={300000} step={5000} value={calcBudget}
+                          onChange={(e) => setCalcBudget(Number(e.target.value))} className="w-full accent-[#FF9800]" />
+                        <div className="flex justify-between text-[10px] text-slate-400 font-mono"><span>₹10,000</span><span>₹3,00,000</span></div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono font-bold">
+                          <span className={darkMode ? "text-slate-300" : "text-slate-600"}>Fleet Size</span>
+                          <span className="text-[#FF9800]">{calcVehicles} Autos</span>
+                        </div>
+                        <input type="range" min={5} max={150} step={5} value={calcVehicles}
+                          onChange={(e) => setCalcVehicles(Number(e.target.value))} className="w-full accent-[#FF9800]" />
+                        <div className="flex justify-between text-[10px] text-slate-400 font-mono"><span>5 Autos</span><span>150 Autos</span></div>
+                      </div>
+                    </div>
+                    {/* Output */}
+                    <div className="bg-[#0B1F4D] rounded-2xl p-6 text-white space-y-4">
+                      <h5 className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-widest">Estimated Results</h5>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { label: "Daily Views", value: `${(calcVehicles * 8800).toLocaleString()}+` },
+                          { label: "Monthly Impressions", value: `${(calcVehicles * 8800 * 30 / 100000).toFixed(1)} Lakh` },
+                          { label: "Daily Cost", value: `₹${(calcVehicles * (newCampCity === "Mumbai" ? 25 : newCampCity === "Bangalore" ? 22 : newCampCity === "Delhi" ? 20 : 18)).toLocaleString()}` },
+                          { label: "Campaign Days", value: `${Math.floor(calcBudget / (calcVehicles * (newCampCity === "Mumbai" ? 25 : newCampCity === "Bangalore" ? 22 : newCampCity === "Delhi" ? 20 : 18)))} Days` },
+                        ].map((kpi, i) => (
+                          <div key={i} className="bg-white/5 rounded-xl p-3">
+                            <span className="text-[9px] text-slate-400 font-mono block">{kpi.label}</span>
+                            <span className="text-lg font-black text-[#FF9800]">{kpi.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={() => { setNewCampAutos(calcVehicles); setNewCampBudget(calcBudget); setLandingSection("register-campaign"); }}
+                        className="w-full bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm py-3 rounded-xl transition mt-2">
+                        Book This Campaign →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── CONTACT / CTA BANNER ─────────────────────────────────── */}
+            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#0B1F4D]" : "bg-[#0B1F4D]"}`}>
+              <div className="max-w-5xl mx-auto text-center space-y-6">
+                <h2 className="text-3xl md:text-4xl font-display font-black text-white">Ready to Put Your Brand on the Move?</h2>
+                <p className="text-slate-300 text-base max-w-xl mx-auto">Join 50+ brands and 100+ drivers already on the AutoAdz platform. Launch your first campaign today.</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button onClick={() => setLandingSection("register-campaign")}
+                    className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm px-8 py-3.5 rounded-xl shadow-lg transition">
+                    Start a Campaign →
+                  </button>
+                  <a href="tel:+919836130393" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-sm px-8 py-3.5 rounded-xl border border-white/20 transition">
+                    📞 +91 98361-30393
+                  </a>
+                  <a href={`https://wa.me/919836130393?text=${encodeURIComponent("Hi, I want to learn more about AutoAdz advertising campaigns.")}`} target="_blank" rel="noreferrer"
+                    className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5b] text-white font-bold text-sm px-8 py-3.5 rounded-xl transition">
+                    WhatsApp Us
+                  </a>
+                </div>
+                <div className="flex flex-wrap justify-center gap-6 text-white/50 text-xs font-mono pt-4">
+                  <span>📍 27/3B Jugal Kishor Das Lane, Kolkata – 700 006</span>
+                  <span>✉️ deinrimsolutionss@gmail.com</span>
+                  <span>🌐 autoadz.in</span>
+                </div>
+              </div>
+            </section>
+
           </main>
           </div>
         )}
