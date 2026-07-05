@@ -2241,7 +2241,7 @@ export default function App() {
             <main className="flex-1 flex flex-col w-full relative">
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
-            <section className="w-full bg-white py-16 px-4 md:px-10 border-b border-slate-100">
+            <section className="w-full bg-white pt-8 pb-16 px-4 md:px-10 border-b border-slate-100">
               <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
                   <span className="inline-block text-[10px] font-mono font-bold tracking-widest bg-[#166534]/10 text-[#166534] px-3 py-1 rounded-full">
