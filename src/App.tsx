@@ -34,7 +34,7 @@ export default function App() {
   const [landingSection, setLandingSection] = useState<"hero" | "register-campaign" | "register-driver" | "login">("hero");
   const [heroSlide, setHeroSlide] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setHeroSlide(s => (s + 1) % 4), 3500);
+    const t = setInterval(() => setHeroSlide(s => (s + 1) % 4), 6000);
     return () => clearInterval(t);
   }, []);
   const [heroBgVisibility, setHeroBgVisibility] = useState<"none" | "light" | "medium" | "full">("light");
