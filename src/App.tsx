@@ -2718,6 +2718,7 @@ export default function App() {
                     setCampaignSuccessMsg(`Account created & campaign submitted! Login with ${newCampEmail} to track your campaign.`);
                     setNewCampTitle(""); setNewCampClient(""); setNewCampArea(""); setNewCampEmail(""); setNewCampPassword(""); setNewCampPasswordConfirm(""); setNewCampContact("");
                     setCampRegStep(1);
+                    setShowAdvRegister(false);
                     setLandingSection("login");
                     setActiveLoginSubTab("advertiser");
                     setTimeout(() => setCampaignSuccessMsg(""), 8000);
