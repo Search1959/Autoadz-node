@@ -2166,117 +2166,131 @@ export default function App() {
   // Early return for secure login screen if no user is authenticated
   if (userSession === null) {
     return (
-      <div className={`min-h-screen ${darkMode ? "dark dark-theme-active bg-[#05132f] text-slate-100" : "bg-slate-50 text-slate-900"} flex flex-col relative overflow-hidden font-sans selection:bg-[#10B981] selection:text-white`}>
-        {/* Decorative background grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+      <div className="min-h-screen bg-white text-slate-900 flex flex-col relative font-sans">
 
         {/* Dynamic Top Navigation Bar */}
-        <nav className={`w-full border-b ${darkMode ? "border-white/10 bg-[#05132f]/85 text-white" : "border-slate-200 bg-white/90"} backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between shadow-3xs`}>
+        <nav className="w-full border-b border-slate-100 bg-white sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-sm">
+          {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-[#10B981] rounded-xl flex items-center justify-center font-display font-black text-lg text-white shadow-md shadow-emerald-500/10">
-              A
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="38" height="38" rx="10" fill="#166534"/>
+              <path d="M10 27L19 11L28 27" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M13.5 22H24.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="14" cy="29" r="2" fill="#FF9800"/>
+              <circle cx="24" cy="29" r="2" fill="#FF9800"/>
+              <rect x="12" y="26" width="14" height="3" rx="1" fill="white" opacity="0.3"/>
+            </svg>
+            <div>
+              <span className="text-lg font-display font-black tracking-tight text-[#166534]">AutoAdz</span>
+              <span className="text-[9px] text-slate-400 font-mono block leading-none">.in</span>
             </div>
-            <span className={`text-xl font-display font-black tracking-tight ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>AutoAdz.in</span>
-            <span className={`text-[10px] font-mono ${darkMode ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"} px-2 py-0.5 rounded border font-bold`}>2.0 SAAS</span>
           </div>
 
-          <div className={`hidden md:flex items-center gap-6 text-xs font-bold ${darkMode ? "text-slate-300" : "text-slate-600"} uppercase font-mono tracking-wider`}>
-            <button onClick={() => setLandingSection("hero")} className={`transition hover:text-[#10B981] ${landingSection === "hero" ? "text-[#10B981]" : ""}`}>Platform Info</button>
-            <button onClick={() => setLandingSection("register-campaign")} className={`transition hover:text-[#10B981] ${landingSection === "register-campaign" ? "text-[#10B981]" : ""}`}>Start a Campaign</button>
-            <button onClick={() => setLandingSection("register-driver")} className={`transition hover:text-[#10B981] ${landingSection === "register-driver" ? "text-[#10B981]" : ""}`}>Become a Driver Partner</button>
-            <button onClick={() => setLandingSection("login")} className={`transition hover:text-[#10B981] ${landingSection === "login" ? "text-[#10B981]" : ""}`}>Portal Login</button>
+          <div className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 uppercase font-mono tracking-wider">
+            <button onClick={() => setLandingSection("hero")} className={`transition hover:text-[#166534] ${landingSection === "hero" ? "text-[#166534]" : ""}`}>Platform</button>
+            <button onClick={() => setLandingSection("register-campaign")} className={`transition hover:text-[#166534] ${landingSection === "register-campaign" ? "text-[#166534]" : ""}`}>Start a Campaign</button>
+            <button onClick={() => setLandingSection("register-driver")} className={`transition hover:text-[#166534] ${landingSection === "register-driver" ? "text-[#166534]" : ""}`}>Become a Driver</button>
+            <button onClick={() => setLandingSection("login")} className={`transition hover:text-[#166534] ${landingSection === "login" ? "text-[#166534]" : ""}`}>Login</button>
           </div>
 
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setShowHelpModal(true)}
-              className={`flex items-center gap-1.5 text-[10px] font-bold font-mono px-3 py-1.5 rounded-lg ${darkMode ? "text-emerald-400 bg-emerald-500/15 border-emerald-500/30" : "text-emerald-700 bg-emerald-500/10 border-emerald-500/10"} hover:bg-[#10B981] hover:text-white transition duration-200 border`}
-            >
-              <HelpCircle size={12} />
-              HELP & FAQ
+            <button onClick={() => setShowHelpModal(true)}
+              className="flex items-center gap-1.5 text-[10px] font-bold font-mono px-3 py-1.5 rounded-lg text-[#166534] bg-[#166534]/10 border border-[#166534]/20 hover:bg-[#166534] hover:text-white transition">
+              <HelpCircle size={12} /> FAQ
             </button>
-
             {landingSection !== "login" ? (
-              <button 
-                onClick={() => setLandingSection("login")}
-                className="bg-[#10B981] hover:bg-emerald-600 text-white text-[10px] font-bold font-mono px-3.5 py-1.5 rounded-lg shadow-sm transition"
-              >
-                ACCESS PORTALS
+              <button onClick={() => setLandingSection("login")}
+                className="bg-[#166534] hover:bg-[#14532d] text-white text-[10px] font-bold font-mono px-4 py-1.5 rounded-lg shadow-sm transition">
+                ACCESS PORTAL
               </button>
             ) : (
-              <button 
-                onClick={() => setLandingSection("hero")}
-                className={`border ${darkMode ? "border-white/20 hover:bg-white/10 text-white" : "border-slate-200 hover:bg-slate-100 text-slate-800"} text-[10px] font-bold font-mono px-3.5 py-1.5 rounded-lg transition`}
-              >
-                BACK TO INFO
+              <button onClick={() => setLandingSection("hero")}
+                className="border border-slate-200 hover:bg-slate-100 text-slate-700 text-[10px] font-bold font-mono px-4 py-1.5 rounded-lg transition">
+                ← Back
               </button>
             )}
           </div>
         </nav>
 
-        {/* SUCCESS NOTIFICATIONS (Floating Toast) */}
+        {/* SUCCESS NOTIFICATIONS */}
         {(campaignSuccessMsg || driverSuccessMsg) && (
-          <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border-2 border-[#10B981]/30 text-white p-4 rounded-2xl shadow-2xl max-w-sm animate-bounce">
+          <div className="fixed bottom-6 right-6 z-50 bg-[#166534] border-2 border-[#166534] text-white p-4 rounded-2xl shadow-2xl max-w-sm">
             <div className="flex gap-2 items-start">
-              <CheckCircle className="text-[#10B981] shrink-0 mt-0.5" size={18} />
+              <CheckCircle className="text-white shrink-0 mt-0.5" size={18} />
               <div>
-                <h5 className="font-bold text-xs text-emerald-400 font-mono">ACTION SUCCESSFUL</h5>
-                <p className="text-[11px] text-slate-300 mt-1">{campaignSuccessMsg || driverSuccessMsg}</p>
+                <h5 className="font-bold text-xs font-mono">SUCCESS</h5>
+                <p className="text-[11px] text-white/80 mt-1">{campaignSuccessMsg || driverSuccessMsg}</p>
               </div>
             </div>
           </div>
         )}
 
+        {/* ── MOBILE HAMBURGER NAV ───────────────────────────── */}
+        <div className="md:hidden flex gap-1 overflow-x-auto px-4 py-2 border-b border-slate-100 bg-slate-50 text-[10px] font-bold font-mono text-slate-600">
+          <button onClick={() => setLandingSection("hero")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="hero"?"bg-[#166534] text-white":""}`}>Platform</button>
+          <button onClick={() => setLandingSection("register-campaign")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="register-campaign"?"bg-[#166534] text-white":""}`}>Campaign</button>
+          <button onClick={() => setLandingSection("register-driver")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="register-driver"?"bg-[#166534] text-white":""}`}>Driver</button>
+          <button onClick={() => setLandingSection("login")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="login"?"bg-[#166534] text-white":""}`}>Login</button>
+        </div>
+
+
         {/* LANDING PAGE HERO / PLATFORM INFO SECTION */}
         {landingSection === "hero" && (
           <div className="relative w-full overflow-hidden flex-1 flex flex-col justify-start">
+            {/* ── STATS TICKER BAR ─────────────────────────────────────── */}
+            <div className="w-full bg-[#166534] text-white text-[10px] font-mono font-bold tracking-wider px-6 py-1.5 flex items-center gap-8 overflow-x-auto">
+              <span className="shrink-0">🛺 {drivers.length || 50}+ Autos Live</span>
+              <span className="shrink-0">📍 {(totalKmsAll + simulatedKmsTotal).toFixed(0)}+ KM Covered</span>
+              <span className="shrink-0">📣 {campaigns.length || 10}+ Campaigns Active</span>
+              <span className="shrink-0">📲 {totalScansAll || 500}+ QR Scans</span>
+              <span className="shrink-0 ml-auto">📞 76030-64791</span>
+            </div>
+
             <main className="flex-1 flex flex-col w-full relative">
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
-            <section className={`w-full py-16 px-4 md:px-10 ${darkMode ? "bg-[#05132f]" : "bg-[#0B1F4D]"}`}>
+            <section className="w-full bg-white py-16 px-4 md:px-10 border-b border-slate-100">
               <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-6 text-white">
-                  <span className="inline-block text-[10px] font-mono font-bold tracking-widest bg-[#FF9800]/20 text-[#FF9800] border border-[#FF9800]/30 px-3 py-1 rounded-full uppercase">
+                <div className="space-y-6">
+                  <span className="inline-block text-[10px] font-mono font-bold tracking-widest bg-[#166534]/10 text-[#166534] px-3 py-1 rounded-full">
                     GPS-Tracked Transit Advertising · Kolkata
                   </span>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-black leading-tight">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-black leading-tight text-slate-900">
                     Every Auto is a<br />
                     <span className="text-[#FF9800]">Moving Billboard</span>
                   </h1>
-                  <p className="text-slate-300 text-base leading-relaxed max-w-lg">
-                    Connect your brand with thousands of daily commuters across Kolkata's busiest routes. Pay only per verified GPS kilometre — zero wastage, 100% measurable.
+                  <p className="text-slate-600 text-base leading-relaxed max-w-lg">
+                    Connect your brand with thousands of daily commuters across Kolkata's busiest routes. AutoAdz delivers hyperlocal ad reach — GPS-verified, proof-backed, and built for results.
                   </p>
                   <div className="flex flex-wrap gap-3 pt-2">
                     <button onClick={() => setLandingSection("register-campaign")}
-                      className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm px-7 py-3.5 rounded-xl shadow-lg transition">
+                      className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-7 py-3 rounded-lg shadow-md transition">
                       Start a Campaign →
                     </button>
                     <button onClick={() => setLandingSection("register-driver")}
-                      className="bg-white/10 hover:bg-white/20 text-white font-bold text-sm px-7 py-3.5 rounded-xl border border-white/20 transition">
+                      className="border-2 border-[#166534] text-[#166534] hover:bg-[#166534] hover:text-white font-bold text-sm px-7 py-3 rounded-lg transition">
                       Join as Driver Partner
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-6 pt-2 text-white/70 text-xs font-mono">
+                  <div className="flex flex-wrap gap-6 pt-2 text-slate-500 text-xs font-mono">
                     <span>✓ Live GPS Tracking</span>
                     <span>✓ Photo Proof Verification</span>
                     <span>✓ Weekly Driver Billing</span>
                     <span>✓ Real-time Dashboard</span>
                   </div>
                 </div>
-                {/* Live Platform Stats */}
+                {/* Live Platform Stats Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { icon: "🛺", value: drivers.length || "50+", label: "Auto Partners", color: "text-[#FF9800]" },
-                    { icon: "📍", value: `${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label: "KMs Tracked", color: "text-emerald-400" },
-                    { icon: "📣", value: campaigns.length || "10+", label: "Campaigns Live", color: "text-blue-400" },
-                    { icon: "📲", value: totalScansAll || "500+", label: "QR Scans", color: "text-pink-400" },
+                    { icon: "🛺", value: drivers.length || "50+", label: "Auto Partners", color: "text-[#166534]" },
+                    { icon: "📍", value: `${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label: "KM Covered", color: "text-[#FF9800]" },
+                    { icon: "📣", value: campaigns.length || "10+", label: "Campaigns Live", color: "text-[#166534]" },
+                    { icon: "📲", value: totalScansAll || "500+", label: "QR Scans", color: "text-[#FF9800]" },
                   ].map((s, i) => (
-                    <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
-                      <div className="text-2xl mb-1">{s.icon}</div>
-                      <div className={`text-3xl font-black font-mono ${s.color}`}>{s.value}</div>
-                      <div className="text-white/50 text-[11px] font-mono mt-1 uppercase">{s.label}</div>
+                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center">
+                      <span className="text-2xl mb-2">{s.icon}</span>
+                      <span className={`text-3xl font-display font-black ${s.color}`}>{s.value}</span>
+                      <span className="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-wider">{s.label}</span>
                     </div>
                   ))}
                 </div>
@@ -2284,25 +2298,24 @@ export default function App() {
             </section>
 
             {/* ── HOW IT WORKS ─────────────────────────────────────────── */}
-            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#080f2a]" : "bg-white"}`}>
-              <div className="max-w-5xl mx-auto space-y-8">
-                <div className="text-center space-y-2">
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF9800] uppercase">Seamless 3-Step Process</span>
-                  <h2 className={`text-3xl font-display font-black ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>How AutoAdz Works</h2>
+            <section className="w-full bg-[#f8fdf9] py-14 px-4 md:px-10 border-b border-slate-100">
+              <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-10">
+                  <span className="text-[10px] font-mono font-bold text-[#166534] tracking-widest uppercase">Platform Workflow</span>
+                  <h2 className="text-3xl font-display font-black text-slate-900 mt-1">How AutoAdz Works</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {[
-                    { step: "01", icon: "🎨", title: "Upload Your Creative", desc: "Submit your brand banner design. Our team reviews and prints it on vinyl for auto backhood mounting." },
-                    { step: "02", icon: "📍", title: "We Assign the Fleet", desc: "Admin assigns verified autos in your target zones. Driver photo-proves installation before campaign starts." },
-                    { step: "03", icon: "📊", title: "Pay Per Verified KM", desc: "Live GPS tracks every route. You see the map, the KMs, and pay only for what's actually driven." },
-                  ].map((item, i) => (
-                    <div key={i} className={`rounded-2xl p-6 space-y-3 border-2 ${darkMode ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200"}`}>
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{item.icon}</span>
-                        <span className="text-[#FF9800] font-black font-mono text-sm">{item.step}</span>
-                      </div>
-                      <h3 className={`font-bold text-base ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>{item.title}</h3>
-                      <p className={`text-sm leading-relaxed ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{item.desc}</p>
+                    { step: "01", title: "Brand Books", desc: "Advertiser registers a campaign with target area, duration, and budget.", icon: "📋" },
+                    { step: "02", title: "Auto Verified", desc: "Driver installs branded wrap — photo proof submitted and admin-approved.", icon: "✅" },
+                    { step: "03", title: "GPS Tracked", desc: "Real-time location data records every km driven through the campaign zone.", icon: "📍" },
+                    { step: "04", title: "Pay by km", desc: "Driver earns by city rate per km. Advertiser gets verified reach reports.", icon: "💰" },
+                  ].map((s) => (
+                    <div key={s.step} className="bg-white border border-slate-200 rounded-2xl p-6 relative">
+                      <span className="absolute top-4 right-4 text-[10px] font-mono font-bold text-[#FF9800] bg-orange-50 px-2 py-0.5 rounded-full">{s.step}</span>
+                      <span className="text-3xl mb-3 block">{s.icon}</span>
+                      <h3 className="font-display font-black text-slate-900 text-base mb-1">{s.title}</h3>
+                      <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -2310,47 +2323,39 @@ export default function App() {
             </section>
 
             {/* ── FOR ADVERTISERS | FOR DRIVERS ───────────────────────── */}
-            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#05132f]" : "bg-slate-50"}`}>
-              <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Advertisers */}
-                <div className="bg-[#0B1F4D] rounded-2xl p-7 space-y-4 text-white">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#FF9800] rounded-xl flex items-center justify-center text-xl">🏢</div>
-                    <div>
-                      <p className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-wide">For Brands & Businesses</p>
-                      <h3 className="font-black text-lg">Advertise Smarter</h3>
-                    </div>
-                  </div>
-                  <ul className="space-y-2.5">
-                    {["Hyperlocal targeting by area & route", "GPS-verified KM-based billing — pay for results", "Live map dashboard with real-time tracking", "Photo proof of installation on every auto", "Weekly campaign reports & QR scan analytics"].map((f, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                        <span className="text-[#FF9800] mt-0.5 flex-shrink-0">✓</span> {f}
-                      </li>
-                    ))}
+            <section className="w-full bg-white py-14 px-4 md:px-10 border-b border-slate-100">
+              <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-[#166534] rounded-2xl p-8 text-white">
+                  <span className="text-[10px] font-mono font-bold text-white/60 tracking-widest uppercase">For Brands</span>
+                  <h2 className="text-2xl font-display font-black mt-2 mb-4">Advertise on Moving Autos</h2>
+                  <ul className="space-y-3 text-sm">
+                    {[
+                      "GPS-verified reach — pay for actual km covered",
+                      "Hyperlocal targeting by neighbourhood or route",
+                      "Photo proof of installation before billing starts",
+                      "Real-time dashboard — track active autos on map",
+                      "QR scan analytics — know who engaged",
+                    ].map((b, i) => <li key={i} className="flex gap-2"><span className="text-[#FF9800] shrink-0">✓</span>{b}</li>)}
                   </ul>
                   <button onClick={() => setLandingSection("register-campaign")}
-                    className="w-full mt-2 bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm py-3 rounded-xl transition">
+                    className="mt-6 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-6 py-2.5 rounded-lg transition">
                     Launch a Campaign →
                   </button>
                 </div>
-                {/* Drivers */}
-                <div className={`rounded-2xl p-7 space-y-4 border-2 ${darkMode ? "bg-white/5 border-white/10 text-white" : "bg-white border-slate-200 text-[#0B1F4D]"}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-xl">🛺</div>
-                    <div>
-                      <p className="text-[10px] font-mono text-emerald-500 font-bold uppercase tracking-wide">For Auto Drivers</p>
-                      <h3 className={`font-black text-lg ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>Earn While You Drive</h3>
-                    </div>
-                  </div>
-                  <ul className="space-y-2.5">
-                    {["Extra income on top of your normal fares", "Simple app — just drive, GPS does the rest", "Weekly automatic payment straight to account", "No target, no pressure — earn at your pace", "Kolkata-wide support team, easy onboarding"].map((f, i) => (
-                      <li key={i} className={`flex items-start gap-2 text-sm ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
-                        <span className="text-emerald-500 mt-0.5 flex-shrink-0">✓</span> {f}
-                      </li>
-                    ))}
+                <div className="bg-slate-900 rounded-2xl p-8 text-white">
+                  <span className="text-[10px] font-mono font-bold text-white/60 tracking-widest uppercase">For Auto Drivers</span>
+                  <h2 className="text-2xl font-display font-black mt-2 mb-4">Earn While You Drive</h2>
+                  <ul className="space-y-3 text-sm">
+                    {[
+                      "Earn ₹5–₹10 per km — on top of your regular income",
+                      "Free branding installation — no cost to you",
+                      "Weekly automatic billing every Monday",
+                      "Track your earnings in your own driver portal",
+                      "WhatsApp payment confirmation every week",
+                    ].map((b, i) => <li key={i} className="flex gap-2"><span className="text-[#FF9800] shrink-0">✓</span>{b}</li>)}
                   </ul>
                   <button onClick={() => setLandingSection("register-driver")}
-                    className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm py-3 rounded-xl transition">
+                    className="mt-6 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-6 py-2.5 rounded-lg transition">
                     Join as Driver Partner →
                   </button>
                 </div>
@@ -2358,36 +2363,34 @@ export default function App() {
             </section>
 
             {/* ── WHY AUTOADZ (Comparison) ─────────────────────────────── */}
-            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#080f2a]" : "bg-white"}`}>
-              <div className="max-w-5xl mx-auto space-y-8">
-                <div className="text-center space-y-2">
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF9800] uppercase">Why Choose AutoAdz</span>
-                  <h2 className={`text-3xl font-display font-black ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>Better Than Hoardings. Smarter Than Digital.</h2>
+            <section className="w-full bg-[#f8fdf9] py-14 px-4 md:px-10 border-b border-slate-100">
+              <div className="max-w-5xl mx-auto">
+                <div className="text-center mb-10">
+                  <span className="text-[10px] font-mono font-bold text-[#166534] tracking-widest uppercase">Competitive Edge</span>
+                  <h2 className="text-3xl font-display font-black text-slate-900 mt-1">AutoAdz vs Traditional OOH</h2>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm border-collapse">
                     <thead>
-                      <tr className={`border-b-2 ${darkMode ? "border-white/10" : "border-slate-200"}`}>
-                        <th className={`py-3 px-4 text-left font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Feature</th>
-                        {["Hoardings", "Digital Ads", "AutoAdz"].map(h => (
-                          <th key={h} className={`py-3 px-4 text-center font-black ${h === "AutoAdz" ? "text-[#FF9800]" : darkMode ? "text-slate-400" : "text-slate-500"}`}>{h}</th>
-                        ))}
+                      <tr className="bg-[#166534] text-white">
+                        <th className="text-left px-4 py-3 font-mono font-bold rounded-tl-xl">Feature</th>
+                        <th className="text-center px-4 py-3 font-mono font-bold">AutoAdz</th>
+                        <th className="text-center px-4 py-3 font-mono font-bold rounded-tr-xl">Billboard / Hoarding</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${darkMode ? "divide-white/5" : "divide-slate-100"}`}>
+                    <tbody>
                       {[
-                        ["GPS-Verified KMs", "✗", "✗", "✓"],
-                        ["Hyperlocal Area Targeting", "✗", "Partial", "✓"],
-                        ["Photo Proof of Display", "✗", "✗", "✓"],
-                        ["Real-time Live Tracking", "✗", "✗", "✓"],
-                        ["Pay-for-Performance", "✗", "Varies", "✓"],
-                        ["Cost Efficiency", "Low", "Medium", "High"],
-                      ].map(([feat, h, d, a], i) => (
-                        <tr key={i} className={`${darkMode ? "hover:bg-white/3" : "hover:bg-slate-50"} transition`}>
-                          <td className={`py-3 px-4 font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{feat}</td>
-                          <td className="py-3 px-4 text-center text-rose-500 font-bold">{h}</td>
-                          <td className={`py-3 px-4 text-center font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{d}</td>
-                          <td className="py-3 px-4 text-center text-emerald-500 font-black">{a}</td>
+                        ["GPS Verification", "✅ Every km tracked", "❌ No tracking"],
+                        ["Photo Proof", "✅ Before & after", "❌ None"],
+                        ["Hyperlocal Targeting", "✅ Route-level", "⚠️ Fixed location only"],
+                        ["Real-time Dashboard", "✅ Live map view", "❌ Not available"],
+                        ["Engagement Analytics", "✅ QR scan data", "❌ Zero data"],
+                        ["Min. Budget", "✅ Flexible / km-based", "❌ High fixed monthly rent"],
+                      ].map(([feat, adz, alt], i) => (
+                        <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-slate-50"}>
+                          <td className="px-4 py-3 font-medium text-slate-700">{feat}</td>
+                          <td className="px-4 py-3 text-center text-[#166534] font-bold">{adz}</td>
+                          <td className="px-4 py-3 text-center text-slate-400">{alt}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -2397,101 +2400,80 @@ export default function App() {
             </section>
 
             {/* ── CAMPAIGN CALCULATOR ──────────────────────────────────── */}
-            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#05132f]" : "bg-slate-50"}`}>
-              <div className="max-w-5xl mx-auto space-y-6">
-                <div className="text-center space-y-1">
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF9800] uppercase">Instant ROI Tool</span>
-                  <h2 className={`text-3xl font-display font-black ${darkMode ? "text-white" : "text-[#0B1F4D]"}`}>Calculate Your Campaign Reach</h2>
+            <section className="w-full bg-white py-14 px-4 md:px-10 border-b border-slate-100">
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-10">
+                  <span className="text-[10px] font-mono font-bold text-[#FF9800] tracking-widest uppercase">Estimate Your Reach</span>
+                  <h2 className="text-3xl font-display font-black text-slate-900 mt-1">Campaign Reach Calculator</h2>
                 </div>
-                <div className={`rounded-2xl border-2 p-6 md:p-8 ${darkMode ? "bg-white/5 border-white/10" : "bg-white border-slate-200"}`}>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Inputs */}
-                    <div className="space-y-5">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-mono font-bold">
-                          <span className={darkMode ? "text-slate-300" : "text-slate-600"}>City</span>
-                          <span className="text-[#FF9800]">{newCampCity}</span>
-                        </div>
-                        <select value={newCampCity} onChange={(e) => setNewCampCity(e.target.value)}
-                          className={`w-full rounded-xl p-2.5 text-sm font-bold focus:outline-none border-2 ${darkMode ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-[#0B1F4D]"}`}>
-                          <option value="Kolkata">Kolkata — ₹18 / auto / day</option>
-                          <option value="Delhi">Delhi NCR — ₹20 / auto / day</option>
-                          <option value="Bangalore">Bangalore — ₹22 / auto / day</option>
-                          <option value="Mumbai">Mumbai — ₹25 / auto / day</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-mono font-bold">
-                          <span className={darkMode ? "text-slate-300" : "text-slate-600"}>Daily Budget</span>
-                          <span className="text-[#FF9800]">₹{calcBudget.toLocaleString()}</span>
-                        </div>
-                        <input type="range" min={10000} max={300000} step={5000} value={calcBudget}
-                          onChange={(e) => setCalcBudget(Number(e.target.value))} className="w-full accent-[#FF9800]" />
-                        <div className="flex justify-between text-[10px] text-slate-400 font-mono"><span>₹10,000</span><span>₹3,00,000</span></div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-mono font-bold">
-                          <span className={darkMode ? "text-slate-300" : "text-slate-600"}>Fleet Size</span>
-                          <span className="text-[#FF9800]">{calcVehicles} Autos</span>
-                        </div>
-                        <input type="range" min={5} max={150} step={5} value={calcVehicles}
-                          onChange={(e) => setCalcVehicles(Number(e.target.value))} className="w-full accent-[#FF9800]" />
-                        <div className="flex justify-between text-[10px] text-slate-400 font-mono"><span>5 Autos</span><span>150 Autos</span></div>
-                      </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase">Number of Autos</label>
+                      <input type="number" min={1} max={200} defaultValue={10}
+                        id="calc-autos"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#166534]"
+                        onChange={(e) => {
+                          const a = Number(e.target.value) || 10;
+                          const d = document.getElementById("calc-days") as HTMLInputElement;
+                          const days = d ? Number(d.value) || 30 : 30;
+                          const reach = document.getElementById("calc-result") as HTMLElement;
+                          if (reach) reach.textContent = `${(a * days * 60).toLocaleString()} KM · ${(a * days * 60 * 200).toLocaleString()} Impressions Est.`;
+                        }}
+                      />
                     </div>
-                    {/* Output */}
-                    <div className="bg-[#0B1F4D] rounded-2xl p-6 text-white space-y-4">
-                      <h5 className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-widest">Estimated Results</h5>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { label: "Daily Views", value: `${(calcVehicles * 8800).toLocaleString()}+` },
-                          { label: "Monthly Impressions", value: `${(calcVehicles * 8800 * 30 / 100000).toFixed(1)} Lakh` },
-                          { label: "Daily Cost", value: `₹${(calcVehicles * (newCampCity === "Mumbai" ? 25 : newCampCity === "Bangalore" ? 22 : newCampCity === "Delhi" ? 20 : 18)).toLocaleString()}` },
-                          { label: "Campaign Days", value: `${Math.floor(calcBudget / (calcVehicles * (newCampCity === "Mumbai" ? 25 : newCampCity === "Bangalore" ? 22 : newCampCity === "Delhi" ? 20 : 18)))} Days` },
-                        ].map((kpi, i) => (
-                          <div key={i} className="bg-white/5 rounded-xl p-3">
-                            <span className="text-[9px] text-slate-400 font-mono block">{kpi.label}</span>
-                            <span className="text-lg font-black text-[#FF9800]">{kpi.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <button onClick={() => { setNewCampAutos(calcVehicles); setNewCampBudget(calcBudget); setLandingSection("register-campaign"); }}
-                        className="w-full bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm py-3 rounded-xl transition mt-2">
-                        Book This Campaign →
-                      </button>
+                    <div>
+                      <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase">Campaign Duration (days)</label>
+                      <input type="number" min={7} max={365} defaultValue={30}
+                        id="calc-days"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#166534]"
+                        onChange={(e) => {
+                          const days = Number(e.target.value) || 30;
+                          const aa = document.getElementById("calc-autos") as HTMLInputElement;
+                          const a = aa ? Number(aa.value) || 10 : 10;
+                          const reach = document.getElementById("calc-result") as HTMLElement;
+                          if (reach) reach.textContent = `${(a * days * 60).toLocaleString()} KM · ${(a * days * 60 * 200).toLocaleString()} Impressions Est.`;
+                        }}
+                      />
                     </div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center bg-[#166534] rounded-xl p-6 text-white text-center">
+                    <span className="text-[10px] font-mono font-bold text-white/60 uppercase tracking-wider">Estimated Reach</span>
+                    <span id="calc-result" className="text-xl font-display font-black text-[#FF9800] mt-3 leading-tight">18,000 KM · 3,600,000 Impressions Est.</span>
+                    <span className="text-[10px] text-white/60 mt-2">Based on 60 km/day avg. per auto</span>
+                    <button onClick={() => setLandingSection("register-campaign")}
+                      className="mt-4 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-5 py-2 rounded-lg transition">
+                      Get Started →
+                    </button>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* ── CONTACT / CTA BANNER ─────────────────────────────────── */}
-            <section className={`w-full py-14 px-4 md:px-10 ${darkMode ? "bg-[#0B1F4D]" : "bg-[#0B1F4D]"}`}>
-              <div className="max-w-5xl mx-auto text-center space-y-6">
-                <h2 className="text-3xl md:text-4xl font-display font-black text-white">Ready to Put Your Brand on the Move?</h2>
-                <p className="text-slate-300 text-base max-w-xl mx-auto">Join 50+ brands and 100+ drivers already on the AutoAdz platform. Launch your first campaign today.</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <section className="w-full bg-[#166534] py-14 px-4 md:px-10">
+              <div className="max-w-4xl mx-auto text-center text-white">
+                <span className="text-[10px] font-mono font-bold text-white/60 tracking-widest uppercase">Get In Touch</span>
+                <h2 className="text-3xl font-display font-black mt-2 mb-3">Ready to Put Your Brand on Every Street?</h2>
+                <p className="text-base text-white/80 max-w-xl mx-auto mb-8">
+                  AutoAdz is Kolkata's first GPS-verified auto-rickshaw advertising platform. Talk to us about your campaign today.
+                </p>
+                <div className="flex flex-wrap justify-center gap-4">
                   <button onClick={() => setLandingSection("register-campaign")}
-                    className="bg-[#FF9800] hover:bg-orange-500 text-slate-950 font-black text-sm px-8 py-3.5 rounded-xl shadow-lg transition">
-                    Start a Campaign →
+                    className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-8 py-3 rounded-lg shadow-lg transition">
+                    Start a Campaign
                   </button>
-                  <a href="tel:+919836130393" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-sm px-8 py-3.5 rounded-xl border border-white/20 transition">
-                    📞 +91 98361-30393
-                  </a>
-                  <a href={`https://wa.me/919836130393?text=${encodeURIComponent("Hi, I want to learn more about AutoAdz advertising campaigns.")}`} target="_blank" rel="noreferrer"
-                    className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5b] text-white font-bold text-sm px-8 py-3.5 rounded-xl transition">
-                    WhatsApp Us
+                  <a href="https://wa.me/917603064791?text=Hi%20AutoAdz%20Team%2C%20I%27d%20like%20to%20know%20more%20about%20advertising%20on%20your%20platform."
+                    target="_blank" rel="noopener noreferrer"
+                    className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-sm px-8 py-3 rounded-lg transition">
+                    💬 WhatsApp Us
                   </a>
                 </div>
-                <div className="flex flex-wrap justify-center gap-6 text-white/50 text-xs font-mono pt-4">
-                  <span>📍 27/3B Jugal Kishor Das Lane, Kolkata – 700 006</span>
-                  <span>✉️ deinrimsolutionss@gmail.com</span>
-                  <span>🌐 autoadz.in</span>
-                </div>
+                <p className="text-white/50 text-xs font-mono mt-8">📞 76030-64791 · deinrimsolutionss@gmail.com · Kolkata, West Bengal</p>
               </div>
             </section>
 
-          </main>
+            </main>
           </div>
         )}
 
