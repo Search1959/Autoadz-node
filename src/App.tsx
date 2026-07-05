@@ -2241,8 +2241,39 @@ export default function App() {
             <main className="flex-1 flex flex-col w-full relative">
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
-            <section className="w-full bg-white pt-8 pb-16 px-4 md:px-10 border-b border-slate-100">
-              <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <section className="w-full bg-white pt-8 pb-16 px-4 md:px-10 border-b border-slate-100 relative overflow-hidden">
+              {/* Watermark auto-rickshaw */}
+              <svg className="absolute bottom-0 left-1/4 -translate-x-1/2 opacity-[0.04] pointer-events-none select-none" width="600" height="380" viewBox="0 0 600 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Body */}
+                <rect x="60" y="80" width="400" height="220" rx="30" fill="#166534"/>
+                {/* Roof */}
+                <rect x="40" y="40" width="380" height="80" rx="20" fill="#166534"/>
+                {/* Windshield */}
+                <rect x="80" y="55" width="200" height="55" rx="10" fill="#0B1F4D" opacity="0.5"/>
+                {/* Side windows */}
+                <rect x="200" y="100" width="100" height="60" rx="8" fill="#0B1F4D" opacity="0.4"/>
+                <rect x="320" y="100" width="100" height="60" rx="8" fill="#0B1F4D" opacity="0.4"/>
+                {/* Hood / engine */}
+                <rect x="440" y="120" width="120" height="120" rx="15" fill="#166534"/>
+                {/* Front bumper */}
+                <rect x="450" y="230" width="100" height="30" rx="8" fill="#0B1F4D"/>
+                {/* Chassis bottom */}
+                <rect x="60" y="280" width="440" height="30" rx="8" fill="#0B1F4D"/>
+                {/* Rear wheel */}
+                <circle cx="130" cy="320" r="55" fill="#0B1F4D"/>
+                <circle cx="130" cy="320" r="30" fill="#166534"/>
+                <circle cx="130" cy="320" r="12" fill="#0B1F4D"/>
+                {/* Front wheel */}
+                <circle cx="490" cy="320" r="55" fill="#0B1F4D"/>
+                <circle cx="490" cy="320" r="30" fill="#166534"/>
+                <circle cx="490" cy="320" r="12" fill="#0B1F4D"/>
+                {/* Headlight */}
+                <circle cx="555" cy="160" r="18" fill="#FF9800"/>
+                {/* Ad panel on side */}
+                <rect x="190" y="170" width="220" height="90" rx="6" fill="#FF9800" opacity="0.6"/>
+                <rect x="200" y="180" width="200" height="70" rx="4" fill="white" opacity="0.3"/>
+              </svg>
+              <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
                 <div className="space-y-6">
                   <span className="inline-block text-[10px] font-mono font-bold tracking-widest bg-[#166534]/10 text-[#166534] px-3 py-1 rounded-full">
                     GPS-Tracked Transit Advertising · Kolkata
