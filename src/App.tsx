@@ -2280,71 +2280,51 @@ export default function App() {
                     <span>✓ Real-time Dashboard</span>
                   </div>
                 </div>
-                {/* Tracking Workflow — Inline Diagram */}
-                <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden text-[11px]">
-                  {/* Header */}
-                  <div className="bg-[#0B1F4D] text-white text-center py-3 px-4">
-                    <div className="font-black text-sm tracking-wide"><span className="text-white">AUTO</span><span className="text-[#FF9800]">ADZ</span> <span className="text-[#166534] font-black">— TRACKING WORKFLOW</span></div>
-                    <div className="text-white/60 text-[9px] mt-0.5 font-mono">Transparent · Trackable · Trustworthy</div>
-                  </div>
-                  {/* 6 Steps */}
-                  <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
+                {/* Hero Right — Platform Highlights */}
+                <div className="flex flex-col gap-4">
+                  {/* Live Stats */}
+                  <div className="grid grid-cols-2 gap-3">
                     {[
-                      { n:"1", title:"Business\nBooks Ad", desc:"Advertiser creates campaign, selects area & budget.", icon:"🏪" },
-                      { n:"2", title:"Assign\nDriver + Auto", desc:"System assigns available auto & driver.", icon:"📱" },
-                      { n:"3", title:"Ad Installed\non Auto", desc:"Sticker/banner installed as per guidelines.", icon:"🛺" },
-                      { n:"4", title:"Morning\nPhoto Proof", desc:"Driver uploads clear photo of ad in app.", icon:"📸" },
-                      { n:"5", title:"System\nVerifies Photo", desc:"Team verifies. If valid, campaign starts.", icon:"✅" },
-                      { n:"6", title:"Driver\nStarts Trip", desc:"Driver starts with GPS tracking ON.", icon:"📍" },
-                    ].map((s) => (
-                      <div key={s.n} className="border-r border-b border-slate-100 p-2 flex flex-col items-center text-center last:border-r-0">
-                        <span className="w-5 h-5 rounded-full bg-[#166534] text-white text-[9px] font-black flex items-center justify-center mb-1">{s.n}</span>
-                        <span className="text-lg">{s.icon}</span>
-                        <div className="font-bold text-[#0B1F4D] text-[9px] leading-tight mt-0.5 whitespace-pre-line">{s.title}</div>
-                        <div className="text-slate-500 text-[8px] leading-tight mt-0.5">{s.desc}</div>
+                      { icon:"🛺", value: drivers.length || "50+", label:"Auto Partners Active", bg:"bg-[#166534]", text:"text-white" },
+                      { icon:"📍", value:`${(totalKmsAll + simulatedKmsTotal).toFixed(0)}+`, label:"KM GPS-Verified", bg:"bg-[#FF9800]", text:"text-white" },
+                      { icon:"📣", value: campaigns.length || "10+", label:"Campaigns Running", bg:"bg-[#0B1F4D]", text:"text-white" },
+                      { icon:"📲", value: totalScansAll || "500+", label:"QR Engagements", bg:"bg-slate-100", text:"text-slate-900" },
+                    ].map((s, i) => (
+                      <div key={i} className={`${s.bg} ${s.text} rounded-2xl p-4 flex flex-col`}>
+                        <span className="text-2xl mb-1">{s.icon}</span>
+                        <span className="text-2xl font-display font-black leading-none">{s.value}</span>
+                        <span className={`text-[10px] font-mono mt-1 ${s.bg === "bg-slate-100" ? "text-slate-500" : "text-white/70"}`}>{s.label}</span>
                       </div>
                     ))}
                   </div>
-                  {/* Daily Loop */}
-                  <div className="bg-blue-50 border-b border-slate-100 p-2">
-                    <div className="text-[#0B1F4D] font-black text-[9px] text-center mb-1.5 uppercase tracking-wider">Daily Tracking Loop</div>
-                    <div className="flex items-center justify-around text-center">
-                      {[
-                        { icon:"🌅", label:"Morning\nPhoto" },
-                        { icon:"→", label:"" },
-                        { icon:"📡", label:"GPS\nTracking" },
-                        { icon:"→", label:"" },
-                        { icon:"🔍", label:"Field\nCheck" },
-                        { icon:"→", label:"" },
-                        { icon:"🌙", label:"End of Day\nPhoto" },
-                      ].map((item, i) => (
-                        item.icon === "→"
-                          ? <span key={i} className="text-slate-400 text-xs">→</span>
-                          : <div key={i} className="flex flex-col items-center">
-                              <span className="text-base">{item.icon}</span>
-                              <span className="text-[8px] text-[#0B1F4D] font-bold whitespace-pre-line leading-tight">{item.label}</span>
-                            </div>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Bottom: Validation + Earnings */}
-                  <div className="grid grid-cols-2 border-b border-slate-100">
-                    <div className="border-r border-slate-100 p-2">
-                      <div className="font-black text-[#0B1F4D] text-[9px] uppercase mb-1">✅ System Validation</div>
-                      {["Photo verification","GPS distance","Ad visible & intact","No violation"].map(t => (
-                        <div key={t} className="text-[8px] text-slate-600 flex gap-1"><span className="text-[#166534]">•</span>{t}</div>
-                      ))}
-                    </div>
-                    <div className="p-2">
-                      <div className="font-black text-[#166534] text-[9px] uppercase mb-1">💰 Earnings Calculated</div>
-                      <div className="text-[8px] text-slate-600">Based on approved km × city rate. Payment released to driver every week.</div>
-                    </div>
-                  </div>
-                  {/* Footer badges */}
-                  <div className="bg-[#0B1F4D] flex justify-around py-1.5 px-2">
-                    {["✅ Verified Visibility","📍 Live Tracking","₹ Pay per KM","🤝 Trust & Transparency"].map(b => (
-                      <span key={b} className="text-white text-[8px] font-bold">{b}</span>
+                  {/* Key Trust Signals */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <div className="text-[10px] font-mono font-bold text-[#166534] uppercase tracking-widest">Why Brands Choose AutoAdz</div>
+                    {[
+                      { icon:"✅", title:"100% Verified Reach", desc:"Every km GPS-tracked & photo-proven before billing" },
+                      { icon:"📊", title:"Real-time Dashboard", desc:"Live map of your autos — anytime, anywhere" },
+                      { icon:"₹", title:"Pay Only for Verified KM", desc:"No fixed rent — cost scales with actual exposure" },
+                      { icon:"🔔", title:"Weekly Reports", desc:"Photos, distance, route & impressions every week" },
+                    ].map((t, i) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <span className="w-7 h-7 rounded-lg bg-[#166534]/10 text-[#166534] flex items-center justify-center text-sm shrink-0 font-bold">{t.icon}</span>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">{t.title}</div>
+                          <div className="text-[10px] text-slate-500 leading-snug">{t.desc}</div>
+                        </div>
+                      </div>
                     ))}
+                  </div>
+                  {/* CTA strip */}
+                  <div className="bg-[#0B1F4D] rounded-2xl px-5 py-3 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-black text-sm">Ready to start?</div>
+                      <div className="text-white/60 text-[10px] font-mono">Call: 76030-64791</div>
+                    </div>
+                    <button onClick={() => setLandingSection("register-campaign")}
+                      className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-xs px-4 py-2 rounded-lg transition shrink-0">
+                      Launch →
+                    </button>
                   </div>
                 </div>
               </div>
