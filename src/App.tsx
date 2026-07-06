@@ -2594,7 +2594,7 @@ export default function App() {
           </div>
         )}
 
-        {/* REGISTER NEW CAMPAIGN SECTION (Advertiser self-sign up) */}
+        {/* REGISTER BRAND ACCOUNT SECTION (Advertiser self-sign up — account only, campaigns created from dashboard) */}
         {landingSection === "register-campaign" && (
           <main className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-2xl mx-auto z-10 w-full text-left">
             {/* Header banner */}
@@ -2602,182 +2602,91 @@ export default function App() {
               <div className="w-12 h-12 rounded-xl bg-[#FF9800] flex items-center justify-center text-2xl shrink-0">📣</div>
               <div className="flex-1">
                 <div className="text-[10px] font-mono text-[#FF9800] font-bold uppercase tracking-widest mb-0.5">Brand Self Service</div>
-                <h3 className="text-2xl font-display font-black text-white leading-tight">Start a Campaign</h3>
-                <p className="text-sm text-blue-200 mt-0.5">Fill in your campaign details and create your account in 2 easy steps.</p>
-              </div>
-              {/* Step indicator in header */}
-              <div className="flex items-center gap-2 shrink-0">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${campRegStep === 1 ? "bg-[#FF9800] text-white" : "bg-white text-[#0B1F4D]"}`}>1</div>
-                <div className="w-6 h-0.5 bg-white/30"></div>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${campRegStep === 2 ? "bg-[#FF9800] text-white" : "bg-white/20 text-white/50"}`}>2</div>
+                <h3 className="text-2xl font-display font-black text-white leading-tight">Create Brand Account</h3>
+                <p className="text-sm text-blue-200 mt-0.5">Register your brand — then launch multiple campaigns from your dashboard.</p>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 w-full border border-slate-100">
 
-              {/* Step labels */}
-              <div className="flex gap-6 mb-6 border-b border-slate-100 pb-4">
-                <div className={`flex items-center gap-2 text-xs font-bold ${campRegStep === 1 ? "text-[#FF9800]" : "text-slate-400"}`}>
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${campRegStep === 1 ? "bg-[#FF9800] text-white" : "bg-slate-200 text-slate-500"}`}>1</span>
-                  CAMPAIGN DETAILS
-                </div>
-                <div className={`flex items-center gap-2 text-xs font-bold ${campRegStep === 2 ? "text-[#166534]" : "text-slate-400"}`}>
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${campRegStep === 2 ? "bg-[#166534] text-white" : "bg-slate-200 text-slate-500"}`}>2</span>
-                  CREATE YOUR ACCOUNT
-                </div>
+              {/* Info strip */}
+              <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 text-xs text-orange-800">
+                <span className="text-lg shrink-0">💡</span>
+                <p>After your account is created, you can <strong>launch as many campaigns as you need</strong> directly from your Brand Dashboard — each with its own city, budget, and autos.</p>
               </div>
 
-              {/* ── STEP 1: Campaign Details ── */}
-              {campRegStep === 1 && (
-                <form onSubmit={(e) => { e.preventDefault(); setCampRegError(""); setCampRegStep(2); }} className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Brand / Company Name <span className="text-red-500">*</span></label>
-                      <input type="text" required placeholder="e.g. Tata Motors" value={newCampClient} onChange={(e) => setNewCampClient(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Target City <span className="text-red-500">*</span></label>
-                      <select value={newCampCity} onChange={(e) => setNewCampCity(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none font-medium">
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                      </select>
-                    </div>
-                  </div>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setCampRegError("");
+                if (newCampPassword !== newCampPasswordConfirm) { setCampRegError("Passwords do not match."); return; }
+                if (newCampPassword.length < 6) { setCampRegError("Password must be at least 6 characters."); return; }
+                try {
+                  const regRes = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: newCampClient, email: newCampEmail, password: newCampPassword, company: newCampClient, phone: newCampContact }),
+                  });
+                  const regData = await regRes.json();
+                  if (!regRes.ok) { setCampRegError(regData.error || "Registration failed."); return; }
 
+                  const adminMsg = `📢 *AutoAdz: New Brand Account Registered!*\n\n*Brand:* ${newCampClient}\n*Email:* ${newCampEmail}\n*Phone:* ${newCampContact}\n\nReview in Admin Panel. They will launch campaigns from their dashboard.`;
+                  sendWhatsAppNotification(adminMsg);
+
+                  setCampaignSuccessMsg(`Account created! Login with ${newCampEmail} to launch your first campaign.`);
+                  setNewCampClient(""); setNewCampEmail(""); setNewCampPassword(""); setNewCampPasswordConfirm(""); setNewCampContact("");
+                  setShowAdvRegister(false);
+                  setLandingSection("login");
+                  setActiveLoginSubTab("advertiser");
+                  setTimeout(() => setCampaignSuccessMsg(""), 8000);
+                } catch {
+                  setCampRegError("Something went wrong. Please try again.");
+                }
+              }} className="space-y-5">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Campaign Title <span className="text-red-500">*</span></label>
-                    <input type="text" required placeholder="e.g. Summer Sale — North Kolkata Push" value={newCampTitle} onChange={(e) => setNewCampTitle(e.target.value)}
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Brand / Company Name <span className="text-red-500">*</span></label>
+                    <input type="text" required placeholder="e.g. Tata Motors" value={newCampClient} onChange={(e) => setNewCampClient(e.target.value)}
                       className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium" />
+                    <p className="text-[11px] text-slate-400">Your brand name as it will appear on campaigns.</p>
                   </div>
-
                   <div className="space-y-1.5">
-                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Target Localities / Areas</label>
-                    <input type="text" placeholder="e.g. Shyambazar, Gariahat, Salt Lake, Howrah" value={newCampArea} onChange={(e) => setNewCampArea(e.target.value)}
-                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium" />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Estimated Budget (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" required min={10000} step={5000} value={newCampBudget} onChange={(e) => setNewCampBudget(Number(e.target.value))}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none font-mono font-medium" />
-                      <p className="text-[11px] text-slate-400">Minimum ₹10,000 · Packages from ₹45,000/mo</p>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Number of Autos Needed <span className="text-red-500">*</span></label>
-                      <input type="number" required min={1} max={200} value={newCampAutos} onChange={(e) => setNewCampAutos(Number(e.target.value))}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#FF9800] focus:outline-none font-mono font-medium" />
-                      <p className="text-[11px] text-slate-400">Starter pack: 10 autos · Max: 200 autos</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Your Contact Number <span className="text-red-500">*</span></label>
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Contact Phone <span className="text-red-500">*</span></label>
                     <input type="text" required placeholder="e.g. 9831012345" value={newCampContact} onChange={(e) => setNewCampContact(e.target.value)}
                       className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-mono" />
                   </div>
+                </div>
 
-                  <button type="submit"
-                    className="w-full py-4 bg-[#FF9800] hover:bg-orange-500 text-white font-black text-base rounded-xl transition shadow-lg shadow-orange-200 tracking-wide">
-                    Next: Create Account →
-                  </button>
-                  <p className="text-center text-xs text-slate-400">Already have an account? <button type="button" onClick={() => { setLandingSection("login"); setActiveLoginSubTab("advertiser"); }} className="text-[#FF9800] font-bold hover:underline">Login here →</button></p>
-                </form>
-              )}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Email Address <span className="text-red-500">*</span></label>
+                  <input type="email" required placeholder="e.g. rahul@tatamotors.com" value={newCampEmail} onChange={(e) => setNewCampEmail(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#FF9800] focus:outline-none font-medium" />
+                  <p className="text-[11px] text-slate-400">You will use this email to log in and manage all your campaigns.</p>
+                </div>
 
-              {/* ── STEP 2: Create Account ── */}
-              {campRegStep === 2 && (
-                <form onSubmit={async (e) => {
-                  e.preventDefault();
-                  setCampRegError("");
-                  if (newCampPassword !== newCampPasswordConfirm) { setCampRegError("Passwords do not match."); return; }
-                  if (newCampPassword.length < 6) { setCampRegError("Password must be at least 6 characters."); return; }
-                  try {
-                    // Step A: Register account
-                    const regRes = await fetch("/api/auth/register", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name: newCampClient, email: newCampEmail, password: newCampPassword, company: newCampClient, phone: newCampContact }),
-                    });
-                    const regData = await regRes.json();
-                    if (!regRes.ok) { setCampRegError(regData.error || "Registration failed."); return; }
-
-                    // Step B: Create campaign
-                    await fetch("/api/campaigns", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ title: newCampTitle, client: newCampClient, city: newCampCity, area: newCampArea, budget: newCampBudget, autosCount: newCampAutos, creativeUrl: creativeTemplates[0].url, advertiser_id: null }),
-                    });
-
-                    // Notify admin
-                    const adminMsg = `📢 *AutoAdz: New Campaign + Account Registered!*\n\n*Brand:* ${newCampClient}\n*Campaign:* ${newCampTitle}\n*City:* ${newCampCity}\n*Budget:* ₹${Number(newCampBudget).toLocaleString()}\n*Autos:* ${newCampAutos}\n*Email:* ${newCampEmail}\n*Phone:* ${newCampContact}\n\nPlease review and approve in the Admin Panel.`;
-                    sendWhatsAppNotification(adminMsg);
-
-                    setCampaignSuccessMsg(`Account created & campaign submitted! Login with ${newCampEmail} to track your campaign.`);
-                    setNewCampTitle(""); setNewCampClient(""); setNewCampArea(""); setNewCampEmail(""); setNewCampPassword(""); setNewCampPasswordConfirm(""); setNewCampContact("");
-                    setCampRegStep(1);
-                    setShowAdvRegister(false);
-                    setLandingSection("login");
-                    setActiveLoginSubTab("advertiser");
-                    setTimeout(() => setCampaignSuccessMsg(""), 8000);
-                  } catch {
-                    setCampRegError("Something went wrong. Please try again.");
-                  }
-                }} className="space-y-5">
-
-                  <div className="bg-[#f8fdf9] border border-[#166534]/20 rounded-xl p-4 text-xs text-[#166534] font-mono">
-                    ✅ Campaign details saved — <strong>{newCampTitle || "New Campaign"}</strong> · {newCampCity} · {newCampAutos} autos · ₹{Number(newCampBudget).toLocaleString()}
-                    <button type="button" onClick={() => setCampRegStep(1)} className="ml-2 underline text-[#166534]">Edit</button>
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Your Name <span className="text-red-500">*</span></label>
-                    <input type="text" required placeholder="e.g. Rahul Sharma" value={newCampClient} onChange={(e) => setNewCampClient(e.target.value)}
-                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#166534] focus:outline-none font-medium" />
-                    <p className="text-[11px] text-slate-400">This will be your account display name.</p>
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password <span className="text-red-500">*</span></label>
+                    <input type="password" required placeholder="Min. 6 characters" value={newCampPassword} onChange={(e) => setNewCampPassword(e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
                   </div>
-
                   <div className="space-y-1.5">
-                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Email Address <span className="text-red-500">*</span></label>
-                    <input type="email" required placeholder="e.g. rahul@tatamotors.com" value={newCampEmail} onChange={(e) => setNewCampEmail(e.target.value)}
-                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#166534] focus:outline-none font-medium" />
-                    <p className="text-[11px] text-slate-400">You will use this email to log in and track your campaign.</p>
+                    <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Confirm Password <span className="text-red-500">*</span></label>
+                    <input type="password" required placeholder="Re-enter password" value={newCampPasswordConfirm} onChange={(e) => setNewCampPasswordConfirm(e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password <span className="text-red-500">*</span></label>
-                      <input type="password" required placeholder="Min. 6 characters" value={newCampPassword} onChange={(e) => setNewCampPassword(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Confirm Password <span className="text-red-500">*</span></label>
-                      <input type="password" required placeholder="Re-enter password" value={newCampPasswordConfirm} onChange={(e) => setNewCampPasswordConfirm(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
-                    </div>
-                  </div>
+                {campRegError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold px-4 py-3 rounded-xl">⚠️ {campRegError}</div>
+                )}
 
-                  {campRegError && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold px-4 py-3 rounded-xl">⚠️ {campRegError}</div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <button type="button" onClick={() => setCampRegStep(1)}
-                      className="flex-1 py-4 border-2 border-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition">
-                      ← Back
-                    </button>
-                    <button type="submit"
-                      className="flex-[2] py-4 bg-[#166534] hover:bg-[#14532d] text-white font-black text-base rounded-xl transition shadow-lg tracking-wide">
-                      🚀 Submit & Create Account
-                    </button>
-                  </div>
-                  <p className="text-center text-xs text-slate-400">Already have an account? <button type="button" onClick={() => { setLandingSection("login"); setActiveLoginSubTab("advertiser"); }} className="text-[#166534] font-bold hover:underline">Login here →</button></p>
-                </form>
-              )}
+                <button type="submit"
+                  className="w-full py-4 bg-[#166534] hover:bg-[#14532d] text-white font-black text-base rounded-xl transition shadow-lg tracking-wide">
+                  🚀 Create Brand Account
+                </button>
+                <p className="text-center text-xs text-slate-400">Already have an account? <button type="button" onClick={() => { setLandingSection("login"); setActiveLoginSubTab("advertiser"); }} className="text-[#166534] font-bold hover:underline">Login here →</button></p>
+              </form>
             </div>
           </main>
         )}
