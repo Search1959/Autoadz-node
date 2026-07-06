@@ -3281,7 +3281,7 @@ export default function App() {
             id="sync-telemetry-btn"
           >
             <RefreshCw size={12} className={loading ? "animate-spin text-amber-400" : "text-amber-400"} />
-            <span className="text-slate-50 font-bold">{loading ? "SYNCING..." : "SYNC TELEMETRY"}</span>
+            <span className="text-slate-50 font-bold">{loading ? "REFRESHING..." : "REFRESH DATA"}</span>
           </button>
 
           {/* Logout Switch Portal Button */}
