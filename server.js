@@ -228,9 +228,25 @@ const gpsBuffer = new Map(); // fallback store
 let redisClient = null;
 
 if (process.env.REDIS_URL) {
-  redisClient = createClient({ url: process.env.REDIS_URL });
-  redisClient.on("error", (err) => console.error("Redis error:", err.message));
-  redisClient.connect().then(() => console.log("Redis connected")).catch((err) => {
+  redisClient = createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      reconnectStrategy: (retries) => {
+        if (retries >= 3) {
+          console.error("Redis: max retries reached — falling back to in-memory GPS store");
+          redisClient = null;
+          return false; // stop retrying
+        }
+        return retries * 1000; // wait 1s, 2s, 3s between retries
+      },
+    },
+  });
+  redisClient.on("error", (err) => {
+    if (err.message.includes("WRONGPASS") || err.message.includes("ECONNREFUSED")) {
+      console.error("Redis error:", err.message);
+    }
+  });
+  redisClient.connect().then(() => console.log("✅ Redis connected — GPS store active")).catch((err) => {
     console.error("Redis connect failed — falling back to in-memory:", err.message);
     redisClient = null;
   });
