@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import schedule from "node-schedule";
+import { createClient } from "redis";
 
 dotenv.config();
 
@@ -220,8 +221,6 @@ function mapDriver(r) {
 // Redis mode: all processes share one GPS store — required for PM2 cluster.
 // Fallback mode: single-process in-memory Map — works on current Cloud Hosting.
 // Switch by adding REDIS_URL to .env — no other code change needed.
-
-import { createClient } from "redis";
 
 const GPS_HASH = "autoadz:gps";
 const gpsBuffer = new Map(); // fallback store
