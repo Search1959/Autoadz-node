@@ -1347,14 +1347,16 @@ export default function App() {
     try {
       const advId = localStorage.getItem("autoadz_adv_user_id");
       const campUrl = advId ? `/api/campaigns?advertiser_id=${advId}` : "/api/campaigns";
+      const txUrl = advId ? `/api/wallet/transactions?user_id=${advId}` : "/api/wallet/transactions";
+      const billsUrl = advId ? `/api/bills?advertiser_id=${advId}` : "/api/bills";
       const [dataCamps, dataDrivers, dataProofs, dataTxs, dataNotifs, dataCities, dataBills] = await Promise.all([
         safeFetchJson<any[]>(campUrl, []),
         safeFetchJson<any[]>("/api/drivers", []),
         safeFetchJson<any[]>("/api/proofs", []),
-        safeFetchJson<any[]>("/api/wallet/transactions", []),
+        safeFetchJson<any[]>(txUrl, []),
         safeFetchJson<any[]>("/api/notifications", []),
         safeFetchJson<any[]>("/api/cities", []),
-        safeFetchJson<any[]>("/api/bills", []),
+        safeFetchJson<any[]>(billsUrl, []),
       ]);
 
       setCampaigns(dataCamps);

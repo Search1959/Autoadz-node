@@ -123,10 +123,10 @@ app.post("/api/campaigns", async (req, res) => {
        safeCreativeUrl, startDate, endDate, advertiser_id || null]
     );
 
-    // Auto wallet deduction
+    // Auto wallet deduction — scoped to the advertiser who created the campaign
     await db(
-      `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, 'advertiser_main', 'payment', ?, 'success', ?, ?)`,
-      [uid("tx"), Number(budget) || 50000, `Pre-payment for campaign: ${title}`, ts()]
+      `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, ?, 'payment', ?, 'success', ?, ?)`,
+      [uid("tx"), advertiser_id || "advertiser_main", Number(budget) || 50000, `Pre-payment for campaign: ${title}`, ts()]
     );
 
     // Notification
@@ -434,7 +434,10 @@ app.put("/api/proofs/:id/status", async (req, res) => {
 // ─── WALLET ───────────────────────────────────────────────────────────────────
 app.get("/api/wallet/transactions", async (req, res) => {
   try {
-    const rows = await db("SELECT * FROM wallet_transactions ORDER BY created_at DESC");
+    const { user_id } = req.query;
+    const rows = user_id
+      ? await db("SELECT * FROM wallet_transactions WHERE user_id = ? ORDER BY created_at DESC", [user_id])
+      : await db("SELECT * FROM wallet_transactions ORDER BY created_at DESC");
     res.json(rows.map(r => ({
       id: r.id, userId: r.user_id, type: r.type,
       amount: Number(r.amount), status: r.status,
@@ -475,7 +478,10 @@ app.post("/api/wallet/transactions", async (req, res) => {
 // ─── BILLS ────────────────────────────────────────────────────────────────────
 app.get("/api/bills", async (req, res) => {
   try {
-    const rows = await db("SELECT * FROM bills ORDER BY created_at DESC");
+    const { advertiser_id } = req.query;
+    const rows = advertiser_id
+      ? await db("SELECT * FROM bills WHERE receiver_id = ? OR sender_id = ? ORDER BY created_at DESC", [advertiser_id, advertiser_id])
+      : await db("SELECT * FROM bills ORDER BY created_at DESC");
     res.json(rows.map(r => ({
       id: r.id, type: r.type, senderId: r.sender_id, senderName: r.sender_name,
       receiverId: r.receiver_id, campaignId: r.campaign_id,
@@ -553,8 +559,8 @@ app.put("/api/bills/:id", async (req, res) => {
         );
       } else if (bill.type === "advertiser_invoice") {
         await db(
-          `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, 'advertiser_main', 'payment', ?, 'success', ?, ?)`,
-          [uid("tx"), bill.amount, `Payment for invoice: ${bill.id}`, nowTs]
+          `INSERT INTO wallet_transactions (id, user_id, type, amount, status, description, timestamp) VALUES (?, ?, 'payment', ?, 'success', ?, ?)`,
+          [uid("tx"), bill.receiver_id || "advertiser_main", bill.amount, `Payment for invoice: ${bill.id}`, nowTs]
         );
         await db(
           `INSERT INTO notifications (id, title, message, timestamp, unread, type) VALUES (?, 'Invoice Paid', ?, ?, 1, 'billing')`,
