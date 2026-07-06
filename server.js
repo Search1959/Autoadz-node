@@ -9,7 +9,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import schedule from "node-schedule";
-import { createClient } from "redis";
 
 dotenv.config();
 
@@ -217,88 +216,32 @@ function mapDriver(r) {
   };
 }
 
-// ─── GPS STORE (Redis if configured, in-memory Map fallback) ─────────────────
-// Redis mode: all processes share one GPS store — required for PM2 cluster.
-// Fallback mode: single-process in-memory Map — works on current Cloud Hosting.
-// Switch by adding REDIS_URL to .env — no other code change needed.
+// ─── IN-MEMORY GPS BUFFER ─────────────────────────────────────────────────────
+// Drivers write to RAM instantly — no DB hit per push.
+// Background timer flushes dirty positions to DB every 5 seconds.
+const gpsBuffer = new Map(); // driverId → { lat, lng, updatedAt, dirty, campaignId, name, autoNumber, state }
 
-const GPS_HASH = "autoadz:gps";
-const gpsBuffer = new Map(); // fallback store
-let redisClient = null;
-
-if (process.env.REDIS_URL) {
-  redisClient = createClient({
-    url: process.env.REDIS_URL,
-    socket: {
-      reconnectStrategy: (retries) => {
-        if (retries >= 3) {
-          console.error("Redis: max retries reached — falling back to in-memory GPS store");
-          redisClient = null;
-          return false; // stop retrying
-        }
-        return retries * 1000; // wait 1s, 2s, 3s between retries
-      },
-    },
-  });
-  redisClient.on("error", (err) => {
-    if (err.message.includes("WRONGPASS") || err.message.includes("ECONNREFUSED")) {
-      console.error("Redis error:", err.message);
-    }
-  });
-  redisClient.connect().then(() => console.log("✅ Redis connected — GPS store active")).catch((err) => {
-    console.error("Redis connect failed — falling back to in-memory:", err.message);
-    redisClient = null;
-  });
-}
-
-async function gpsSet(driverId, data) {
-  if (redisClient?.isReady) {
-    await redisClient.hSet(GPS_HASH, driverId, JSON.stringify(data));
-  } else {
-    gpsBuffer.set(driverId, data);
-  }
-}
-
-async function gpsGet(driverId) {
-  if (redisClient?.isReady) {
-    const val = await redisClient.hGet(GPS_HASH, driverId);
-    return val ? JSON.parse(val) : null;
-  }
-  return gpsBuffer.get(driverId) || null;
-}
-
-async function gpsGetAll() {
-  if (redisClient?.isReady) {
-    const all = await redisClient.hGetAll(GPS_HASH);
-    return Object.entries(all).map(([id, raw]) => [id, JSON.parse(raw)]);
-  }
-  return [...gpsBuffer.entries()];
-}
-
-// Flush dirty GPS positions to MySQL every 5 seconds
 async function flushGpsBuffer() {
+  const dirty = [...gpsBuffer.entries()].filter(([, v]) => v.dirty);
+  if (dirty.length === 0) return;
   try {
-    const entries = await gpsGetAll();
-    const dirty = entries.filter(([, v]) => v.dirty);
-    if (dirty.length === 0) return;
     await Promise.all(dirty.map(([id, v]) =>
       db("UPDATE drivers SET lat = ?, lng = ?, location_updated_at = ? WHERE id = ?",
         [v.lat, v.lng, v.updatedAt, id])
     ));
-    // Mark clean
-    await Promise.all(dirty.map(([id, v]) => gpsSet(id, { ...v, dirty: false })));
+    dirty.forEach(([id]) => { if (gpsBuffer.has(id)) gpsBuffer.get(id).dirty = false; });
   } catch (err) {
     console.error("GPS flush error:", err.message);
   }
 }
 setInterval(flushGpsBuffer, 5000);
 
-// Pre-warm store from DB on startup
+// Pre-warm buffer from DB on startup
 (async () => {
   try {
     const rows = await db("SELECT id, name, auto_number, state, lat, lng, location_updated_at, current_campaign_id FROM drivers WHERE lat IS NOT NULL AND lng IS NOT NULL");
     for (const r of rows) {
-      await gpsSet(r.id, { lat: Number(r.lat), lng: Number(r.lng), updatedAt: r.location_updated_at, dirty: false, campaignId: r.current_campaign_id, name: r.name, autoNumber: r.auto_number, state: r.state });
+      gpsBuffer.set(r.id, { lat: Number(r.lat), lng: Number(r.lng), updatedAt: r.location_updated_at, dirty: false, campaignId: r.current_campaign_id, name: r.name, autoNumber: r.auto_number, state: r.state });
     }
     console.log(`GPS store pre-warmed with ${rows.length} drivers`);
   } catch (_) {}
@@ -306,13 +249,13 @@ setInterval(flushGpsBuffer, 5000);
 
 // ─── LIVE LOCATION ENDPOINTS ──────────────────────────────────────────────────
 
-// Driver pushes GPS — writes to store instantly, flushed to DB every 5s
+// Driver pushes GPS — writes to RAM only, flushed to DB every 5s
 app.post("/api/drivers/:id/location", async (req, res) => {
   const { id } = req.params;
   const { lat, lng } = req.body;
   if (!lat || !lng) return res.status(400).json({ error: "lat and lng required" });
-  const existing = (await gpsGet(id)) || {};
-  await gpsSet(id, { ...existing, lat: Number(lat), lng: Number(lng), updatedAt: ts(), dirty: true });
+  const existing = gpsBuffer.get(id) || {};
+  gpsBuffer.set(id, { ...existing, lat: Number(lat), lng: Number(lng), updatedAt: ts(), dirty: true });
   res.json({ success: true });
 });
 
