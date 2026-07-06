@@ -23,8 +23,8 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "autoadz_db",
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  connectionLimit: 50,
+  queueLimit: 100,
   charset: "utf8mb4",
 });
 
@@ -216,53 +216,63 @@ function mapDriver(r) {
   };
 }
 
+// ─── IN-MEMORY GPS BUFFER ─────────────────────────────────────────────────────
+// Drivers write to RAM instantly — no DB hit per push.
+// A background timer flushes all dirty positions to DB every 5 seconds.
+// Live-locations reads from RAM, making it O(1) regardless of driver count.
+const gpsBuffer = new Map(); // driverId → { lat, lng, updatedAt, dirty, campaignId, name, autoNumber, state }
+
+async function flushGpsBuffer() {
+  const dirty = [...gpsBuffer.entries()].filter(([, v]) => v.dirty);
+  if (dirty.length === 0) return;
+  try {
+    await Promise.all(dirty.map(([id, v]) =>
+      db("UPDATE drivers SET lat = ?, lng = ?, location_updated_at = ? WHERE id = ?",
+        [v.lat, v.lng, v.updatedAt, id])
+    ));
+    dirty.forEach(([id]) => { if (gpsBuffer.has(id)) gpsBuffer.get(id).dirty = false; });
+  } catch (err) {
+    console.error("GPS flush error:", err.message);
+  }
+}
+setInterval(flushGpsBuffer, 5000);
+
+// Pre-warm buffer from DB on startup so live-locations works before first driver push
+(async () => {
+  try {
+    const rows = await db("SELECT id, name, auto_number, state, lat, lng, location_updated_at, current_campaign_id FROM drivers WHERE lat IS NOT NULL AND lng IS NOT NULL");
+    for (const r of rows) {
+      gpsBuffer.set(r.id, { lat: Number(r.lat), lng: Number(r.lng), updatedAt: r.location_updated_at, dirty: false, campaignId: r.current_campaign_id, name: r.name, autoNumber: r.auto_number, state: r.state });
+    }
+  } catch (_) {}
+})();
+
 // ─── LIVE LOCATION ENDPOINTS ──────────────────────────────────────────────────
 
-// Driver pushes its GPS coordinates
+// Driver pushes GPS — writes to RAM only, flushed to DB every 5s
 app.post("/api/drivers/:id/location", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { lat, lng } = req.body;
-    if (!lat || !lng) return res.status(400).json({ error: "lat and lng required" });
-    await db(
-      "UPDATE drivers SET lat = ?, lng = ?, location_updated_at = ? WHERE id = ?",
-      [Number(lat), Number(lng), ts(), id]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to update location" });
-  }
+  const { id } = req.params;
+  const { lat, lng } = req.body;
+  if (!lat || !lng) return res.status(400).json({ error: "lat and lng required" });
+  const existing = gpsBuffer.get(id) || {};
+  gpsBuffer.set(id, { ...existing, lat: Number(lat), lng: Number(lng), updatedAt: ts(), dirty: true });
+  res.json({ success: true });
 });
 
-// Advertiser polls this — returns drivers active on given campaign IDs with recent GPS
+// Advertiser polls — reads from RAM, zero DB queries
 app.get("/api/drivers/live-locations", async (req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.setHeader("Pragma", "no-cache");
   try {
     const { campaign_ids } = req.query;
-    let rows;
-    if (campaign_ids) {
-      const ids = String(campaign_ids).split(",").filter(Boolean);
-      if (ids.length === 0) return res.json([]);
-      const placeholders = ids.map(() => "?").join(",");
-      rows = await db(
-        `SELECT id, name, auto_number, state, lat, lng, location_updated_at, current_campaign_id
-         FROM drivers
-         WHERE current_campaign_id IN (${placeholders}) AND lat IS NOT NULL AND lng IS NOT NULL`,
-        ids
-      );
-    } else {
-      rows = await db(
-        "SELECT id, name, auto_number, state, lat, lng, location_updated_at, current_campaign_id FROM drivers WHERE lat IS NOT NULL AND lng IS NOT NULL"
-      );
+    const ids = campaign_ids ? String(campaign_ids).split(",").filter(Boolean) : null;
+    const result = [];
+    for (const [driverId, v] of gpsBuffer.entries()) {
+      if (!ids || ids.includes(v.campaignId)) {
+        result.push({ id: driverId, name: v.name, autoNumber: v.autoNumber, state: v.state, lat: v.lat, lng: v.lng, locationUpdatedAt: v.updatedAt, currentCampaignId: v.campaignId });
+      }
     }
-    res.json(rows.map(r => ({
-      id: r.id, name: r.name, autoNumber: r.auto_number,
-      state: r.state, lat: Number(r.lat), lng: Number(r.lng),
-      locationUpdatedAt: r.location_updated_at,
-      currentCampaignId: r.current_campaign_id,
-    })));
+    res.json(result);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch live locations" });
