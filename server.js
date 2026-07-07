@@ -266,8 +266,7 @@ app.get("/api/drivers/live-locations", async (req, res) => {
   try {
     const { campaign_ids } = req.query;
     const ids = campaign_ids ? String(campaign_ids).split(",").filter(Boolean) : null;
-    const entries = await gpsGetAll();
-    const result = entries
+    const result = [...gpsBuffer.entries()]
       .filter(([, v]) => !ids || ids.includes(v.campaignId))
       .map(([driverId, v]) => ({ id: driverId, name: v.name, autoNumber: v.autoNumber, state: v.state, lat: v.lat, lng: v.lng, locationUpdatedAt: v.updatedAt, currentCampaignId: v.campaignId }));
     res.json(result);
