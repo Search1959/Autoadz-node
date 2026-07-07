@@ -3784,26 +3784,40 @@ export default function App() {
                     )}
 
                     {/* ADVERTISER LIVE TRACKING TAB */}
-                    {advertiserTab === "tracking" && (
+                    {advertiserTab === "tracking" && (() => {
+                      // Only show drivers assigned to THIS advertiser's campaigns
+                      const myCampIds = new Set(campaigns.map(c => c.id));
+                      const myDrivers = drivers.filter(d => d.currentCampaignId && myCampIds.has(d.currentCampaignId));
+                      const myDriverIds = new Set(myDrivers.map(d => d.id));
+                      // Filter GPS positions to only this advertiser's drivers
+                      const myPositions = Object.fromEntries(
+                        Object.entries(driverPositions).filter(([id]) => myDriverIds.has(id))
+                      );
+                      return (
                       <div className="space-y-3">
                         <div className="bg-white p-3 rounded-xl border border-slate-200">
                           <h5 className="font-bold text-xs text-[#0B1F4D] flex items-center gap-1">
                             <MapPin size={12} className="text-[#FF9800]" /> Real-time Transit Tracking
                           </h5>
-                          <p className="text-[10px] text-slate-400 mt-1">Live GPS positions from drivers assigned to your campaigns. Updates every 8 seconds.</p>
+                          <p className="text-[10px] text-slate-400 mt-1">Live GPS positions from drivers assigned to your campaigns. Updates every 3 seconds.</p>
                         </div>
 
-                        {/* Visual route summary for active campaign */}
-                        {campaigns.filter(c => c.status === "active").map((camp) => (
+                        {/* Visual route summary per active campaign */}
+                        {campaigns.filter(c => c.status === "active").map((camp) => {
+                          const campDrivers = myDrivers.filter(d => d.currentCampaignId === camp.id);
+                          const campPositions = Object.fromEntries(
+                            Object.entries(myPositions).filter(([id]) => campDrivers.some(d => d.id === id))
+                          );
+                          return (
                           <div key={camp.id} className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs space-y-2">
                             <div className="flex justify-between items-center">
                               <span className="text-[10px] font-bold text-slate-800 line-clamp-1">{camp.title}</span>
                               <span className="text-[8px] font-mono bg-green-100 text-green-700 px-1.5 rounded">LIVE</span>
                             </div>
 
-                            {/* Live Leaflet Map — all driver positions */}
+                            {/* Live Map — only this campaign's drivers */}
                             <RouteMap
-                              allDrivers={driverPositions}
+                              allDrivers={campPositions}
                               city={camp.city}
                               height="260px"
                             />
@@ -3812,22 +3826,25 @@ export default function App() {
                               <p className="font-mono flex items-center gap-1 text-slate-700">
                                 <Navigation size={10} className="text-[#FF9800]" /> Active Area: <span className="font-sans text-slate-800 font-medium">{camp.area}</span>
                               </p>
-                              <p>Driver GPS coordinates are pushed to the server every 10 seconds and displayed here live.</p>
+                              <p>Driver GPS coordinates are pushed to the server every 3 seconds and displayed here live.</p>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
 
-                        {/* Drivers feed */}
+                        {/* Fleet Status — only this advertiser's drivers */}
                         <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-[#0B1F4D] uppercase tracking-wide">Fleet Status</span>
                             <span className="text-[9px] font-mono bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
-                              {drivers.filter(d => d.state === "tracking").length} transmitting
+                              {myDrivers.filter(d => d.state === "tracking").length} transmitting
                             </span>
                           </div>
                           <div className="space-y-1.5">
-                            {drivers.map(d => {
-                              const pos = driverPositions[d.id];
+                            {myDrivers.length === 0 ? (
+                              <p className="text-[10px] text-slate-400 text-center py-3">No drivers assigned to your campaigns yet.</p>
+                            ) : myDrivers.map(d => {
+                              const pos = myPositions[d.id];
                               return (
                                 <div key={d.id} className="flex justify-between items-center text-xs p-2 bg-slate-50 rounded-lg border border-slate-100">
                                   <div className="flex items-center gap-2">
@@ -3852,7 +3869,8 @@ export default function App() {
                         </div>
 
                       </div>
-                    )}
+                      );
+                    })()}
 
                     {/* ADVERTISER BILLING & ADVANCE INVOICING TAB */}
                     {advertiserTab === "billing" && (
