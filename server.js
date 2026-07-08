@@ -40,6 +40,10 @@ async function runMigrations() {
     "ALTER TABLE cities ADD COLUMN driver_rate DECIMAL(10,2) NOT NULL DEFAULT 5.00",
     "ALTER TABLE cities ADD COLUMN brand_rate DECIMAL(10,2) NOT NULL DEFAULT 150.00",
     "ALTER TABLE cities ADD COLUMN capacity INT NOT NULL DEFAULT 100",
+    // Agency support
+    "ALTER TABLE users ADD COLUMN commission_rate DECIMAL(5,2) NOT NULL DEFAULT 15.00",
+    "ALTER TABLE campaigns ADD COLUMN agency_id INT DEFAULT NULL",
+    "ALTER TABLE campaigns ADD COLUMN client_brand VARCHAR(255) DEFAULT NULL",
   ];
   for (const q of migrations) {
     try { await db(q); } catch (_) { /* column already exists — skip */ }
@@ -91,16 +95,50 @@ function mapCampaign(r) {
     startDate: r.start_date, endDate: r.end_date,
     kmsCovered: Number(r.kms_covered), qrScans: r.qr_scans,
     advertiserId: r.advertiser_id || null,
+    agencyId: r.agency_id || null,
+    clientBrand: r.client_brand || null,
   };
 }
 
 app.get("/api/campaigns", async (req, res) => {
   try {
-    const { advertiser_id } = req.query;
-    const rows = advertiser_id
-      ? await db("SELECT * FROM campaigns WHERE advertiser_id = ? ORDER BY created_at DESC", [advertiser_id])
-      : await db("SELECT * FROM campaigns ORDER BY created_at DESC");
+    const { advertiser_id, agency_id } = req.query;
+    let rows;
+    if (agency_id) {
+      rows = await db("SELECT * FROM campaigns WHERE agency_id = ? ORDER BY created_at DESC", [agency_id]);
+    } else if (advertiser_id) {
+      rows = await db("SELECT * FROM campaigns WHERE advertiser_id = ? ORDER BY created_at DESC", [advertiser_id]);
+    } else {
+      rows = await db("SELECT * FROM campaigns ORDER BY created_at DESC");
+    }
     res.json(rows.map(mapCampaign));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ─── AGENCY STATS ─────────────────────────────────────────────────────────────
+app.get("/api/agency/stats", async (req, res) => {
+  try {
+    const { agency_id } = req.query;
+    if (!agency_id) return res.status(400).json({ error: "agency_id required" });
+    const [agency] = await db("SELECT id, name, company, email, phone, commission_rate FROM users WHERE id = ? AND role = 'agency'", [agency_id]);
+    if (!agency) return res.status(404).json({ error: "Agency not found" });
+    const campaigns = await db("SELECT * FROM campaigns WHERE agency_id = ?", [agency_id]);
+    const activeCamps = campaigns.filter(c => c.status === "active").length;
+    const totalBudget = campaigns.reduce((s, c) => s + Number(c.budget), 0);
+    const totalKms = campaigns.reduce((s, c) => s + Number(c.kms_covered), 0);
+    const totalQr = campaigns.reduce((s, c) => s + Number(c.qr_scans), 0);
+    const commissionEarned = totalBudget * (Number(agency.commission_rate) / 100);
+    const uniqueClients = [...new Set(campaigns.map(c => c.client_brand || c.client).filter(Boolean))].length;
+    res.json({
+      agencyName: agency.name, company: agency.company, email: agency.email,
+      phone: agency.phone, commissionRate: Number(agency.commission_rate),
+      totalCampaigns: campaigns.length, activeCampaigns: activeCamps,
+      totalClients: uniqueClients, totalBudget, totalKms: Number(totalKms.toFixed(2)),
+      totalQrScans: totalQr, commissionEarned: Number(commissionEarned.toFixed(2)),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -109,18 +147,18 @@ app.get("/api/campaigns", async (req, res) => {
 
 app.post("/api/campaigns", async (req, res) => {
   try {
-    const { title, client, city, area, budget, autosCount, creativeUrl, advertiser_id } = req.body;
+    const { title, client, city, area, budget, autosCount, creativeUrl, advertiser_id, agency_id, client_brand } = req.body;
     const id = uid("camp");
     const startDate = new Date().toISOString().split("T")[0];
     const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const safeCreativeUrl = creativeUrl || "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800";
 
     await db(
-      `INSERT INTO campaigns (id, title, client, city, area, budget, autos_count, creative_url, status, creative_status, creative_approved, start_date, end_date, kms_covered, qr_scans, advertiser_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', 0, ?, ?, 0, 0, ?)`,
+      `INSERT INTO campaigns (id, title, client, city, area, budget, autos_count, creative_url, status, creative_status, creative_approved, start_date, end_date, kms_covered, qr_scans, advertiser_id, agency_id, client_brand)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', 0, ?, ?, 0, 0, ?, ?, ?)`,
       [id, title || "New Campaign", client || "Independent Advertiser", city || "Bangalore",
        area || "Central Area", Number(budget) || 50000, Number(autosCount) || 10,
-       safeCreativeUrl, startDate, endDate, advertiser_id || null]
+       safeCreativeUrl, startDate, endDate, advertiser_id || null, agency_id || null, client_brand || null]
     );
 
     // Auto wallet deduction — scoped to the advertiser who created the campaign
@@ -1258,6 +1296,25 @@ app.post("/api/auth/register", async (req, res) => {
       [name, email, hash, company || "", phone || "", gstin || "", office || ""]
     );
     res.status(201).json({ success: true, message: "Account created. Please login." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+// Agency self-registration
+app.post("/api/agency/register", async (req, res) => {
+  const { name, email, password, company, phone } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: "Name, email and password are required" });
+  try {
+    const [existing] = await db("SELECT id FROM users WHERE email = ?", [email]);
+    if (existing) return res.status(409).json({ error: "Email already registered" });
+    const hash = await bcrypt.hash(password, 10);
+    await db(
+      "INSERT INTO users (role, name, email, password_hash, company, phone) VALUES ('agency',?,?,?,?,?)",
+      [name, email, hash, company || "", phone || ""]
+    );
+    res.status(201).json({ success: true, message: "Agency account created. Please login." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Registration failed" });

@@ -17,7 +17,7 @@ import {
   Smartphone, Shield, Check, RotateCcw, Camera, HelpCircle, 
   TrendingUp, Award, Navigation, RefreshCw, Eye, ThumbsUp, 
   ThumbsDown, Sparkles, MessageSquare, Activity, ShieldAlert,
-  Sun, Moon, Upload, Trash2, Layers, QrCode, Rocket, Truck, Building
+  Sun, Moon, Upload, Trash2, Layers, QrCode, Rocket, Truck, Building, Building2, BarChart3, Users, Percent
 } from "lucide-react";
 import AiAssistant from "./components/AiAssistant";
 import LegalModal from "./components/LegalModal";
@@ -29,7 +29,7 @@ export default function App() {
   const [activeSimulator, setActiveSimulator] = useState<"advertiser" | "driver">("advertiser");
 
   // User Authentication and Portal isolation state
-  const [userSession, setUserSession] = useState<"advertiser" | "driver" | "admin" | null>(null);
+  const [userSession, setUserSession] = useState<"advertiser" | "driver" | "admin" | "agency" | null>(null);
   const [loggedInDriverId, setLoggedInDriverId] = useState<string>("driver_delip");
   const [landingSection, setLandingSection] = useState<"hero" | "register-campaign" | "register-driver" | "login">("hero");
   const [heroSlide, setHeroSlide] = useState(0);
@@ -44,7 +44,7 @@ export default function App() {
   const [loginPhone, setLoginPhone] = useState("");
   const [loginOtp, setLoginOtp] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [activeLoginSubTab, setActiveLoginSubTab] = useState<"advertiser" | "driver" | "admin">("advertiser");
+  const [activeLoginSubTab, setActiveLoginSubTab] = useState<"advertiser" | "driver" | "admin" | "agency">("advertiser");
 
   // Advertiser multi-tenant auth
   const [advUserId, setAdvUserId] = useState<number | null>(() => {
@@ -74,6 +74,34 @@ export default function App() {
   const [advPhone, setAdvPhone] = useState(() => localStorage.getItem("autoadz_adv_phone") || "+91 999 888 7777");
   const [advOffice, setAdvOffice] = useState(() => localStorage.getItem("autoadz_adv_office") || "Indiranagar Double Road, Bangalore");
   const [isEditingAdvProfile, setIsEditingAdvProfile] = useState(false);
+
+  // Agency Portal State
+  const [agencyId, setAgencyId] = useState<number | null>(() => { const s = localStorage.getItem("autoadz_agency_id"); return s ? Number(s) : null; });
+  const [agencyJwt, setAgencyJwt] = useState(() => localStorage.getItem("autoadz_agency_jwt") || "");
+  const [agencyName, setAgencyName] = useState(() => localStorage.getItem("autoadz_agency_name") || "");
+  const [agencyCompany, setAgencyCompany] = useState(() => localStorage.getItem("autoadz_agency_company") || "");
+  const [agencyEmail, setAgencyEmail] = useState(() => localStorage.getItem("autoadz_agency_email") || "");
+  const [agencyPhone, setAgencyPhone] = useState(() => localStorage.getItem("autoadz_agency_phone") || "");
+  const [agencyTab, setAgencyTab] = useState<"home" | "campaigns" | "clients" | "commission">("home");
+  const [agencyStats, setAgencyStats] = useState<any>(null);
+  const [agencyCampaigns, setAgencyCampaigns] = useState<any[]>([]);
+  const [showAgencyRegister, setShowAgencyRegister] = useState(false);
+  const [showCreateAgencyCampaign, setShowCreateAgencyCampaign] = useState(false);
+  const [agencyRegName, setAgencyRegName] = useState("");
+  const [agencyRegCompany, setAgencyRegCompany] = useState("");
+  const [agencyRegEmail, setAgencyRegEmail] = useState("");
+  const [agencyRegPassword, setAgencyRegPassword] = useState("");
+  const [agencyRegPhone, setAgencyRegPhone] = useState("");
+  const [agencyRegLoading, setAgencyRegLoading] = useState(false);
+  // New agency campaign form
+  const [agNewTitle, setAgNewTitle] = useState("");
+  const [agNewClient, setAgNewClient] = useState("");
+  const [agNewBrand, setAgNewBrand] = useState("");
+  const [agNewCity, setAgNewCity] = useState("Kolkata");
+  const [agNewArea, setAgNewArea] = useState("");
+  const [agNewBudget, setAgNewBudget] = useState("50000");
+  const [agNewAutos, setAgNewAutos] = useState("10");
+  const [agCampSuccess, setAgCampSuccess] = useState("");
 
   // Temporary states for editing profile
   const [tempBrandName, setTempBrandName] = useState("");
@@ -1430,6 +1458,22 @@ export default function App() {
     if (userSession !== "admin" || adminTab !== "advertisers") return;
     fetch("/api/advertisers").then(r => r.json()).then(data => { if (Array.isArray(data)) setAdvertisers(data); }).catch(() => {});
   }, [userSession, adminTab]);
+
+  // Agency data fetch
+  useEffect(() => {
+    if (userSession !== "agency" || !agencyId) return;
+    const fetchAgencyData = async () => {
+      try {
+        const [statsRes, campsRes] = await Promise.all([
+          fetch(`/api/agency/stats?agency_id=${agencyId}`),
+          fetch(`/api/campaigns?agency_id=${agencyId}`),
+        ]);
+        if (statsRes.ok) setAgencyStats(await statsRes.json());
+        if (campsRes.ok) setAgencyCampaigns(await campsRes.json());
+      } catch (e) { console.error(e); }
+    };
+    fetchAgencyData();
+  }, [userSession, agencyId, agencyTab]);
 
   // Advertiser live tracking — poll server GPS positions every 8s
   useEffect(() => {
@@ -2867,7 +2911,7 @@ export default function App() {
             </div>
 
             {/* Role selector tabs */}
-            <div className="w-full grid grid-cols-3 gap-3 mb-5">
+            <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
               {/* Advertiser */}
               <button
                 onClick={() => { setActiveLoginSubTab("advertiser"); setLoginEmail(""); setLoginPassword(""); setLoginError(""); }}
@@ -2915,6 +2959,22 @@ export default function App() {
                 <p className={`font-bold text-sm ${activeLoginSubTab === "admin" ? "text-indigo-700" : "text-slate-700"}`}>Operations Admin</p>
                 <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Approve drivers & manage campaigns</p>
               </button>
+
+              {/* Agency */}
+              <button
+                onClick={() => { setActiveLoginSubTab("agency"); setLoginEmail(""); setLoginPassword(""); setLoginError(""); setShowAgencyRegister(false); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  activeLoginSubTab === "agency"
+                    ? "border-[#166534] bg-green-50 shadow-lg"
+                    : "border-slate-200 bg-white hover:border-green-200 hover:bg-green-50/50"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${activeLoginSubTab === "agency" ? "bg-[#166534] text-white" : "bg-green-100 text-[#166534]"}`}>
+                  <Building2 size={18} />
+                </div>
+                <p className={`font-bold text-sm ${activeLoginSubTab === "agency" ? "text-[#166534]" : "text-slate-700"}`}>OOH Agency</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Agency portal & commission tracking</p>
+              </button>
             </div>
 
             {/* Login form card */}
@@ -2926,11 +2986,13 @@ export default function App() {
                   {activeLoginSubTab === "advertiser" && "Brand Advertiser Login"}
                   {activeLoginSubTab === "driver" && "Driver Partner Login"}
                   {activeLoginSubTab === "admin" && "Operations Admin Login"}
+                  {activeLoginSubTab === "agency" && "OOH Agency Login"}
                 </h4>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {activeLoginSubTab === "advertiser" && "Access your campaign dashboard"}
                   {activeLoginSubTab === "driver" && "Start your GPS session and check in"}
                   {activeLoginSubTab === "admin" && "Manage the full AutoAdz platform"}
+                  {activeLoginSubTab === "agency" && "Manage client campaigns & commissions"}
                 </p>
               </div>
 
@@ -3035,6 +3097,63 @@ export default function App() {
                 </div>
               )}
 
+              {/* AGENCY LOGIN FIELDS */}
+              {activeLoginSubTab === "agency" && (
+                <div className="space-y-4">
+                  {!showAgencyRegister ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Agency Email</label>
+                        <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value.trim())} placeholder="agency@example.com" autoCapitalize="none" autoCorrect="off" autoComplete="off" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
+                        <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" autoCapitalize="none" autoComplete="off" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <button onClick={() => setShowAgencyRegister(true)} className="text-xs text-[#166534] font-bold hover:underline w-full text-right">New agency? Register here →</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-xs text-green-800 font-medium">Register your OOH agency to manage client campaigns on AutoAdz</div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Agency / Contact Name</label>
+                        <input type="text" value={agencyRegName} onChange={e => setAgencyRegName(e.target.value)} placeholder="Your full name" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Company Name</label>
+                        <input type="text" value={agencyRegCompany} onChange={e => setAgencyRegCompany(e.target.value)} placeholder="Your agency company name" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Email</label>
+                        <input type="email" value={agencyRegEmail} onChange={e => setAgencyRegEmail(e.target.value.trim())} placeholder="agency@example.com" autoCapitalize="none" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Phone</label>
+                        <input type="tel" value={agencyRegPhone} onChange={e => setAgencyRegPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
+                        <input type="password" value={agencyRegPassword} onChange={e => setAgencyRegPassword(e.target.value)} placeholder="Create a strong password" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => setShowAgencyRegister(false)} className="flex-1 py-3 rounded-xl text-xs font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-50">← Back to Login</button>
+                        <button disabled={agencyRegLoading} onClick={async () => {
+                          if (!agencyRegName || !agencyRegEmail || !agencyRegPassword) { setLoginError("Name, email and password required"); return; }
+                          setAgencyRegLoading(true);
+                          try {
+                            const res = await fetch("/api/agency/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: agencyRegName, company: agencyRegCompany, email: agencyRegEmail, phone: agencyRegPhone, password: agencyRegPassword }) });
+                            const data = await res.json();
+                            if (!res.ok) { setLoginError(data.error || "Registration failed"); } else { setLoginError("✅ Registered! Please login."); setShowAgencyRegister(false); setLoginEmail(agencyRegEmail); }
+                          } catch { setLoginError("Network error"); } finally { setAgencyRegLoading(false); }
+                        }} className="flex-1 py-3 rounded-xl text-xs font-black bg-[#166534] text-white hover:bg-green-800 disabled:opacity-60">
+                          {agencyRegLoading ? "Registering..." : "Register Agency"}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Error message */}
               {loginError && (
                 <div className={`text-sm text-center font-medium p-3 rounded-xl border ${loginError.startsWith("✅") ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-50 border-red-200"}`}>
@@ -3099,16 +3218,37 @@ export default function App() {
                         setUserSession("admin");
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       } else { setLoginError("Invalid admin credentials."); }
+                    } else if (activeLoginSubTab === "agency") {
+                      if (showAgencyRegister) return;
+                      if (!loginEmail || !loginPassword) { setLoginError("Please enter your email and password."); return; }
+                      try {
+                        const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "agency", email: loginEmail.trim().toLowerCase(), password: loginPassword.trim() }) });
+                        const data = await res.json();
+                        if (!res.ok) { setLoginError(data.error || "Invalid credentials."); return; }
+                        if (data.role !== "agency") { setLoginError("This account is not registered as an agency."); return; }
+                        localStorage.setItem("autoadz_agency_jwt", data.token);
+                        localStorage.setItem("autoadz_agency_id", String(data.userId));
+                        localStorage.setItem("autoadz_agency_name", data.name);
+                        localStorage.setItem("autoadz_agency_company", data.company || "");
+                        localStorage.setItem("autoadz_agency_email", data.email);
+                        localStorage.setItem("autoadz_agency_phone", data.phone || "");
+                        setAgencyJwt(data.token); setAgencyId(data.userId); setAgencyName(data.name);
+                        setAgencyCompany(data.company || ""); setAgencyEmail(data.email); setAgencyPhone(data.phone || "");
+                        setUserSession("agency");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } catch (err: any) { setLoginError(`Error: ${err?.message || "Network failure."}`); }
                     }
                   }}
                   className={`w-full py-4 rounded-xl text-sm font-black transition shadow-lg tracking-wide ${
                     activeLoginSubTab === "advertiser" ? "bg-[#FF9800] hover:bg-orange-500 text-white shadow-orange-200" :
                     activeLoginSubTab === "driver" ? "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-200" :
+                    activeLoginSubTab === "agency" ? "bg-[#166534] hover:bg-green-800 text-white shadow-green-200" :
                     "bg-[#0B1F4D] hover:bg-[#1a3a7a] text-white shadow-slate-200"
                   }`}
                 >
                   {activeLoginSubTab === "advertiser" ? "🚀 Log In to Dashboard" :
                    activeLoginSubTab === "driver" ? "🛺 Start My GPS Session" :
+                   activeLoginSubTab === "agency" ? (showAgencyRegister ? "Register Above ↑" : "🏢 Enter Agency Portal") :
                    "🔐 Access Admin Panel"}
                 </button>
               )}
@@ -3151,10 +3291,12 @@ export default function App() {
               <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                 userSession === "admin" ? "bg-red-500/20 text-red-400 border-red-500/30" :
                 userSession === "driver" ? "bg-teal-500/20 text-teal-400 border-teal-500/30" :
+                userSession === "agency" ? "bg-green-500/20 text-green-400 border-green-500/30" :
                 "bg-orange-500/20 text-[#FF9800] border-orange-500/30"
               }`}>
                 {userSession === "admin" ? "Admin Command Center" :
                  userSession === "driver" ? "Driver Partner Hub" :
+                 userSession === "agency" ? "Agency Portal" :
                  "Advertiser Campaign Desk"}
               </span>
             </div>
@@ -3204,6 +3346,16 @@ export default function App() {
                 setAdvUserId(null);
                 setAdvEmail("");
               }
+              if (userSession === "agency") {
+                localStorage.removeItem("autoadz_agency_jwt");
+                localStorage.removeItem("autoadz_agency_id");
+                localStorage.removeItem("autoadz_agency_name");
+                localStorage.removeItem("autoadz_agency_company");
+                localStorage.removeItem("autoadz_agency_email");
+                localStorage.removeItem("autoadz_agency_phone");
+                setAgencyJwt(""); setAgencyId(null); setAgencyName(""); setAgencyCompany(""); setAgencyEmail(""); setAgencyPhone("");
+                setAgencyStats(null); setAgencyCampaigns([]);
+              }
               setUserSession(null);
               setLoginError("");
             }}
@@ -3235,7 +3387,7 @@ export default function App() {
         {/* ========================================================= */}
         {/* LEFT COLUMN: DUAL MOBILE DEVICE SIMULATOR (45% Width) */}
         {/* ========================================================= */}
-        {userSession !== "admin" && (
+        {userSession !== "admin" && userSession !== "agency" && (
           <div className="xl:col-span-5 flex flex-col items-center">
             {/* Switcher Tab - Hidden since separate login is active */}
             {false && (
@@ -5209,7 +5361,7 @@ export default function App() {
         {/* ========================================================= */}
         {/* RIGHT COLUMN: REVENUE, TELEMETRY & ADMIN (55% Width) */}
         {/* ========================================================= */}
-        <div className={`${userSession === "admin" ? "xl:col-span-12" : "xl:col-span-7"} flex flex-col gap-6`}>
+        <div className={`${(userSession === "admin" || userSession === "agency") ? "xl:col-span-12" : "xl:col-span-7"} flex flex-col gap-6`}>
           
           {/* Conditional Workspaces depending on User Sessions */}
           {userSession === "admin" && (
@@ -6943,6 +7095,255 @@ export default function App() {
               </div>
 
 
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* AGENCY PORTAL (Full Width)                               */}
+          {/* ========================================================= */}
+          {userSession === "agency" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+              <div className="lg:col-span-12 flex flex-col gap-6">
+
+                {/* Agency Header */}
+                <div className="bg-gradient-to-br from-[#166534] to-[#14532d] rounded-3xl overflow-hidden shadow-lg">
+                  <div className="px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <Building2 size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-display font-extrabold text-white text-lg leading-tight">Agency Portal</h3>
+                        <p className="text-[11px] text-green-200 mt-0.5">{agencyCompany || agencyName} — Campaign Management & Commission Tracking</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowCreateAgencyCampaign(true)}
+                      className="flex items-center gap-2 bg-white text-[#166534] font-black text-xs px-4 py-2.5 rounded-xl shadow hover:bg-green-50 transition"
+                    >
+                      <Plus size={14} /> NEW CAMPAIGN
+                    </button>
+                  </div>
+
+                  {/* Stats strip */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-6 pb-5">
+                    {[
+                      { label: "Total Campaigns", value: agencyStats?.totalCampaigns ?? 0, color: "text-white" },
+                      { label: "Active", value: agencyStats?.activeCampaigns ?? 0, color: "text-green-300" },
+                      { label: "Total Clients", value: agencyStats?.totalClients ?? 0, color: "text-yellow-300" },
+                      { label: "Commission Earned", value: `₹${(agencyStats?.commissionEarned ?? 0).toLocaleString()}`, color: "text-emerald-300" },
+                    ].map(k => (
+                      <div key={k.label} className="bg-white/10 border border-white/15 rounded-xl px-4 py-2.5 text-center">
+                        <p className={`text-xl font-extrabold font-display leading-none ${k.color}`}>{k.value}</p>
+                        <p className="text-[9px] text-green-200 mt-0.5 uppercase tracking-wide font-mono">{k.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Agency Tabs */}
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-1 flex gap-1">
+                  {(["home", "campaigns", "clients", "commission"] as const).map(tab => (
+                    <button key={tab} onClick={() => setAgencyTab(tab)} className={`flex-1 py-2.5 text-xs font-bold rounded-xl capitalize transition ${agencyTab === tab ? "bg-[#166534] text-white shadow" : "text-slate-500 hover:bg-slate-50"}`}>
+                      {tab === "home" ? "Dashboard" : tab === "campaigns" ? "Campaigns" : tab === "clients" ? "Clients" : "Commission"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Agency Dashboard Tab */}
+                {agencyTab === "home" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 bg-green-100 rounded-xl"><BarChart3 size={16} className="text-[#166534]" /></div>
+                        <h4 className="font-bold text-sm text-[#0B1F4D]">Total Budget Managed</h4>
+                      </div>
+                      <p className="text-3xl font-display font-extrabold text-[#166534]">₹{((agencyStats?.totalBudget ?? 0)/1000).toFixed(0)}K</p>
+                      <p className="text-xs text-slate-400 mt-1">across all client campaigns</p>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 bg-orange-100 rounded-xl"><Navigation size={16} className="text-[#FF9800]" /></div>
+                        <h4 className="font-bold text-sm text-[#0B1F4D]">Total KMs Covered</h4>
+                      </div>
+                      <p className="text-3xl font-display font-extrabold text-[#FF9800]">{(agencyStats?.totalKms ?? 0).toLocaleString()}</p>
+                      <p className="text-xs text-slate-400 mt-1">GPS-verified kilometres</p>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 bg-emerald-100 rounded-xl"><Percent size={16} className="text-emerald-600" /></div>
+                        <h4 className="font-bold text-sm text-[#0B1F4D]">Commission Rate</h4>
+                      </div>
+                      <p className="text-3xl font-display font-extrabold text-emerald-600">{agencyStats?.commissionRate ?? 15}%</p>
+                      <p className="text-xs text-slate-400 mt-1">earned on total billing</p>
+                    </div>
+                    <div className="md:col-span-2 lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-blue-100 rounded-xl"><Users size={16} className="text-blue-600" /></div>
+                        <h4 className="font-bold text-sm text-[#0B1F4D]">Agency Profile</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Name</p><p className="font-semibold text-slate-700">{agencyName}</p></div>
+                        <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Company</p><p className="font-semibold text-slate-700">{agencyCompany || "—"}</p></div>
+                        <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Email</p><p className="font-semibold text-slate-700">{agencyEmail}</p></div>
+                        <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Phone</p><p className="font-semibold text-slate-700">{agencyPhone || "—"}</p></div>
+                        <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Commission</p><p className="font-semibold text-emerald-600 font-mono">{agencyStats?.commissionRate ?? 15}%</p></div>
+                        <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Total Earned</p><p className="font-semibold text-[#166534] font-mono">₹{(agencyStats?.commissionEarned ?? 0).toLocaleString()}</p></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Campaigns Tab */}
+                {agencyTab === "campaigns" && (
+                  <div className="space-y-4">
+                    {agencyCampaigns.length === 0 ? (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+                        <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3"><Rocket size={24} className="text-[#166534]" /></div>
+                        <h4 className="font-bold text-[#0B1F4D] mb-1">No campaigns yet</h4>
+                        <p className="text-xs text-slate-400 mb-4">Launch your first client campaign to get started</p>
+                        <button onClick={() => setShowCreateAgencyCampaign(true)} className="bg-[#166534] text-white text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-green-800 transition">+ Create Campaign</button>
+                      </div>
+                    ) : agencyCampaigns.map(c => (
+                      <div key={c.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${c.status === "active" ? "bg-green-100 text-green-700" : c.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{c.status.toUpperCase()}</span>
+                            {c.clientBrand && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded font-mono">{c.clientBrand}</span>}
+                          </div>
+                          <h4 className="font-bold text-[#0B1F4D] text-sm">{c.title}</h4>
+                          <p className="text-xs text-slate-400">{c.city} · {c.area} · {c.autosCount} autos · ₹{Number(c.budget).toLocaleString()}</p>
+                          <p className="text-xs text-slate-400 font-mono">{c.startDate} → {c.endDate}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => exportCampaignPDF(c, [])} className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition">
+                            <FileText size={13} /> PDF Report
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Clients Tab */}
+                {agencyTab === "clients" && (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+                    <h4 className="font-bold text-[#0B1F4D] mb-4">Client Brands</h4>
+                    {agencyCampaigns.length === 0 ? (
+                      <p className="text-sm text-slate-400 text-center py-8">No clients yet. Launch campaigns to track clients.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {[...new Set(agencyCampaigns.map(c => c.clientBrand || c.client).filter(Boolean))].map(brand => {
+                          const brandCamps = agencyCampaigns.filter(c => (c.clientBrand || c.client) === brand);
+                          const totalBudget = brandCamps.reduce((s: number, c: any) => s + Number(c.budget), 0);
+                          return (
+                            <div key={brand} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                              <div>
+                                <p className="font-bold text-sm text-[#0B1F4D]">{brand}</p>
+                                <p className="text-xs text-slate-400">{brandCamps.length} campaign{brandCamps.length !== 1 ? "s" : ""}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-sm text-[#166534]">₹{totalBudget.toLocaleString()}</p>
+                                <p className="text-[10px] text-slate-400">total budget</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Commission Tab */}
+                {agencyTab === "commission" && (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-emerald-500 rounded-xl"><Percent size={18} className="text-white" /></div>
+                        <div>
+                          <h4 className="font-bold text-[#0B1F4D]">Commission Summary</h4>
+                          <p className="text-xs text-slate-500">Based on {agencyStats?.commissionRate ?? 15}% of total campaign billing</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                          { label: "Commission Rate", value: `${agencyStats?.commissionRate ?? 15}%`, color: "text-[#166534]" },
+                          { label: "Total Billed", value: `₹${((agencyStats?.totalBudget ?? 0)/1000).toFixed(1)}K`, color: "text-[#0B1F4D]" },
+                          { label: "Commission Earned", value: `₹${(agencyStats?.commissionEarned ?? 0).toLocaleString()}`, color: "text-emerald-600" },
+                          { label: "Campaigns", value: agencyStats?.totalCampaigns ?? 0, color: "text-[#FF9800]" },
+                        ].map(k => (
+                          <div key={k.label} className="bg-white rounded-xl p-3 text-center border border-emerald-100">
+                            <p className={`text-lg font-extrabold font-display ${k.color}`}>{k.value}</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wide mt-0.5">{k.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                      <h4 className="font-bold text-sm text-[#0B1F4D] mb-4">Commission per Campaign</h4>
+                      {agencyCampaigns.length === 0 ? (
+                        <p className="text-sm text-slate-400 text-center py-6">No campaigns yet</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {agencyCampaigns.map(c => {
+                            const commission = Number(c.budget) * ((agencyStats?.commissionRate ?? 15) / 100);
+                            return (
+                              <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                <div>
+                                  <p className="font-semibold text-xs text-[#0B1F4D]">{c.title}</p>
+                                  <p className="text-[10px] text-slate-400">{c.clientBrand || c.client} · ₹{Number(c.budget).toLocaleString()} budget</p>
+                                </div>
+                                <p className="font-bold text-sm text-emerald-600 font-mono">₹{commission.toLocaleString()}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Create Campaign Modal */}
+                {showCreateAgencyCampaign && (
+                  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-display font-extrabold text-[#0B1F4D] text-lg">New Client Campaign</h3>
+                        <button onClick={() => setShowCreateAgencyCampaign(false)} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button>
+                      </div>
+                      {agCampSuccess && <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-xl p-3">{agCampSuccess}</div>}
+                      <div className="space-y-3">
+                        <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Campaign Title</label><input value={agNewTitle} onChange={e => setAgNewTitle(e.target.value)} placeholder="e.g. Senco Jewellers Durga Puja 2026" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                        <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Client Brand Name</label><input value={agNewBrand} onChange={e => setAgNewBrand(e.target.value)} placeholder="e.g. Senco Jewellers" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                        <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Client Company (for invoice)</label><input value={agNewClient} onChange={e => setAgNewClient(e.target.value)} placeholder="e.g. Senco Gold & Diamonds Pvt. Ltd." className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">City</label><input value={agNewCity} onChange={e => setAgNewCity(e.target.value)} placeholder="Kolkata" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                          <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Area / Zone</label><input value={agNewArea} onChange={e => setAgNewArea(e.target.value)} placeholder="Gariahat, Park Street" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Budget (₹)</label><input type="number" value={agNewBudget} onChange={e => setAgNewBudget(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                          <div><label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">No. of Autos</label><input type="number" value={agNewAutos} onChange={e => setAgNewAutos(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#166534] focus:outline-none" /></div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button onClick={() => setShowCreateAgencyCampaign(false)} className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50">Cancel</button>
+                        <button onClick={async () => {
+                          if (!agNewTitle || !agNewBrand || !agNewBudget) { setAgCampSuccess("Please fill in all required fields"); return; }
+                          try {
+                            const res = await fetch("/api/campaigns", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: agNewTitle, client: agNewClient || agNewBrand, client_brand: agNewBrand, city: agNewCity, area: agNewArea, budget: Number(agNewBudget), autosCount: Number(agNewAutos), agency_id: agencyId }) });
+                            if (!res.ok) { const d = await res.json(); setAgCampSuccess("Error: " + (d.error || "Failed")); return; }
+                            setAgCampSuccess("✅ Campaign created successfully! Awaiting admin approval.");
+                            setAgNewTitle(""); setAgNewBrand(""); setAgNewClient(""); setAgNewArea(""); setAgNewBudget("50000"); setAgNewAutos("10");
+                            const campsRes = await fetch(`/api/campaigns?agency_id=${agencyId}`);
+                            if (campsRes.ok) setAgencyCampaigns(await campsRes.json());
+                          } catch (e: any) { setAgCampSuccess("Error: " + e.message); }
+                        }} className="flex-1 py-3 rounded-xl bg-[#166534] text-white text-sm font-black hover:bg-green-800 transition">Launch Campaign</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
             </div>
           )}
 
