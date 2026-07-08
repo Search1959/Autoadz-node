@@ -40,7 +40,8 @@ async function runMigrations() {
     "ALTER TABLE cities ADD COLUMN driver_rate DECIMAL(10,2) NOT NULL DEFAULT 5.00",
     "ALTER TABLE cities ADD COLUMN brand_rate DECIMAL(10,2) NOT NULL DEFAULT 150.00",
     "ALTER TABLE cities ADD COLUMN capacity INT NOT NULL DEFAULT 100",
-    // Agency support
+    // Agency support — extend role enum to include 'agency'
+    "ALTER TABLE users MODIFY COLUMN role ENUM('admin','advertiser','driver','agency') NOT NULL DEFAULT 'advertiser'",
     "ALTER TABLE users ADD COLUMN commission_rate DECIMAL(5,2) NOT NULL DEFAULT 15.00",
     "ALTER TABLE campaigns ADD COLUMN agency_id INT DEFAULT NULL",
     "ALTER TABLE campaigns ADD COLUMN client_brand VARCHAR(255) DEFAULT NULL",
