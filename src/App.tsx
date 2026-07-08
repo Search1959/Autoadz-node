@@ -1153,8 +1153,10 @@ export default function App() {
   const [advertiserTab, setAdvertiserTab] = useState<"home" | "campaigns" | "tracking" | "profile" | "billing">("home");
   const [expandedFleetCampaignId, setExpandedFleetCampaignId] = useState<string | null>(null);
   const [driverTab, setDriverTab] = useState<"dashboard" | "proof" | "tracker" | "earnings" | "profile">("dashboard");
-  const [adminTab, setAdminTab] = useState<"campaigns" | "drivers" | "proofs" | "analytics" | "cities" | "settings" | "finance_crm" | "advertisers">("campaigns");
+  const [adminTab, setAdminTab] = useState<"campaigns" | "drivers" | "proofs" | "analytics" | "cities" | "settings" | "finance_crm" | "advertisers" | "agencies">("campaigns");
   const [advertisers, setAdvertisers] = useState<any[]>([]);
+  const [agencies, setAgencies] = useState<any[]>([]);
+  const [agencyCommissionEdits, setAgencyCommissionEdits] = useState<Record<number, string>>({});
   const [resetPwdTarget, setResetPwdTarget] = useState<{id: number, email: string} | null>(null);
   const [resetPwdVal, setResetPwdVal] = useState("");
   const [editCreativeTarget, setEditCreativeTarget] = useState<{id: string, title: string, url: string} | null>(null);
@@ -1457,6 +1459,11 @@ export default function App() {
   useEffect(() => {
     if (userSession !== "admin" || adminTab !== "advertisers") return;
     fetch("/api/advertisers").then(r => r.json()).then(data => { if (Array.isArray(data)) setAdvertisers(data); }).catch(() => {});
+  }, [userSession, adminTab]);
+
+  useEffect(() => {
+    if (userSession !== "admin" || adminTab !== "agencies") return;
+    fetch("/api/agencies").then(r => r.json()).then(data => { if (Array.isArray(data)) setAgencies(data); }).catch(() => {});
   }, [userSession, adminTab]);
 
   // Agency data fetch
@@ -5404,6 +5411,7 @@ export default function App() {
                       { key: "drivers",     icon: <Truck size={13} />,     label: "Drivers KYC",  count: drivers.length },
                       { key: "proofs",      icon: <Camera size={13} />,    label: "Audit Proofs", count: proofs.length },
                       { key: "advertisers", icon: <Building size={13} />,  label: "Advertisers",  count: advertisers.length },
+                      { key: "agencies",    icon: <Building2 size={13} />, label: "Agencies",     count: agencies.length },
                       { key: "cities",      icon: <MapPin size={13} />,    label: "Cities",       count: cities.length },
                       { key: "finance_crm", icon: <DollarSign size={13} />,label: "Finance & CRM",count: bills.length },
                       { key: "settings",    icon: <Settings size={13} />,  label: "Gateway",      count: null },
@@ -6361,6 +6369,123 @@ export default function App() {
                               className="flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
                             >
                               🗑 DELETE
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ADMIN AGENCIES TAB */}
+            {adminTab === "agencies" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-800">OOH Agency Accounts</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{agencies.length} registered agencies — set commission rates & manage access</p>
+                  </div>
+                  <button onClick={() => fetch("/api/agencies").then(r => r.json()).then(data => { if (Array.isArray(data)) setAgencies(data); })} className="text-[10px] font-bold text-[#166534] bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-100 transition flex items-center gap-1">
+                    <RefreshCw size={11} /> Refresh
+                  </button>
+                </div>
+
+                {agencies.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 text-xs">
+                    <Building2 size={32} className="mx-auto mb-2 opacity-30" />
+                    <p>No agencies registered yet.</p>
+                    <p className="mt-1 text-slate-300">Agencies register via the Login → OOH Agency tab.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {agencies.map((ag: any) => {
+                      const agCamps = campaigns.filter((c: any) => c.agencyId === ag.id);
+                      const editRate = agencyCommissionEdits[ag.id] ?? String(ag.commissionRate);
+                      return (
+                        <div key={ag.id} className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                          {/* Header row */}
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#166534] text-white rounded-xl flex items-center justify-center font-bold text-sm shrink-0">
+                              {ag.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-slate-800 truncate">{ag.name}</p>
+                              <p className="text-[10px] text-slate-500 truncate">{ag.company || "—"}</p>
+                            </div>
+                            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${ag.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                              {ag.isActive ? "ACTIVE" : "DISABLED"}
+                            </span>
+                          </div>
+
+                          {/* Info grid */}
+                          <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-600 border-t border-slate-100 pt-2">
+                            <span className="truncate">📧 {ag.email}</span>
+                            <span>📱 {ag.phone || "—"}</span>
+                            <span>📋 Campaigns: <b>{agCamps.length}</b></span>
+                            <span>📅 Joined: {ag.createdAt ? new Date(ag.createdAt).toLocaleDateString("en-IN") : "—"}</span>
+                          </div>
+
+                          {/* Commission rate editor */}
+                          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3">
+                            <Percent size={14} className="text-[#166534] shrink-0" />
+                            <span className="text-xs font-bold text-[#166534] flex-1">Commission Rate</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.5"
+                              value={editRate}
+                              onChange={e => setAgencyCommissionEdits(prev => ({ ...prev, [ag.id]: e.target.value }))}
+                              className="w-20 text-center text-sm font-bold border-2 border-green-300 rounded-lg px-2 py-1 focus:border-[#166534] focus:outline-none bg-white"
+                            />
+                            <span className="text-xs text-slate-500 font-mono">%</span>
+                            <button
+                              onClick={async () => {
+                                const rate = Number(editRate);
+                                if (isNaN(rate) || rate < 0 || rate > 100) { alert("Rate must be 0–100"); return; }
+                                await fetch(`/api/agencies/${ag.id}/commission`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ commissionRate: rate }) });
+                                setAgencies(prev => prev.map(a => a.id === ag.id ? { ...a, commissionRate: rate } : a));
+                                setAgencyCommissionEdits(prev => { const n = { ...prev }; delete n[ag.id]; return n; });
+                              }}
+                              className="text-[10px] font-black bg-[#166534] text-white px-3 py-1.5 rounded-lg hover:bg-green-800 transition"
+                            >
+                              SAVE
+                            </button>
+                          </div>
+
+                          {/* Campaign tags */}
+                          {agCamps.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {agCamps.map((c: any) => (
+                                <span key={c.id} className="text-[9px] bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-mono">{c.title}</span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Action buttons */}
+                          <div className="flex gap-2 border-t border-slate-100 pt-2">
+                            <button
+                              onClick={async () => {
+                                const action = ag.isActive ? "disable" : "enable";
+                                if (!confirm(`${action.toUpperCase()} agency account for ${ag.name}?`)) return;
+                                await fetch(`/api/agencies/${ag.id}/status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !ag.isActive }) });
+                                setAgencies(prev => prev.map(a => a.id === ag.id ? { ...a, isActive: !ag.isActive } : a));
+                              }}
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono transition ${ag.isActive ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100" : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"}`}
+                            >
+                              {ag.isActive ? "⛔ DISABLE ACCESS" : "✅ ENABLE ACCESS"}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`PERMANENTLY DELETE agency account for ${ag.name} (${ag.email})? This cannot be undone.`)) return;
+                                await fetch(`/api/agencies/${ag.id}`, { method: "DELETE" });
+                                setAgencies(prev => prev.filter(a => a.id !== ag.id));
+                              }}
+                              className="flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
+                            >
+                              🗑 DELETE AGENCY
                             </button>
                           </div>
                         </div>

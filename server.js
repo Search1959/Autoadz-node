@@ -1283,6 +1283,63 @@ app.delete("/api/advertisers/:id", async (req, res) => {
   }
 });
 
+// ─── AGENCY ADMIN ENDPOINTS ───────────────────────────────────────────────────
+
+// List all agencies (admin use)
+app.get("/api/agencies", async (req, res) => {
+  try {
+    const rows = await db("SELECT id, name, email, company, phone, commission_rate, is_active, created_at FROM users WHERE role = 'agency' ORDER BY created_at DESC");
+    res.json(rows.map(r => ({
+      id: r.id, name: r.name, email: r.email,
+      company: r.company, phone: r.phone,
+      commissionRate: Number(r.commission_rate), isActive: !!r.is_active, createdAt: r.created_at,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch agencies" });
+  }
+});
+
+// Admin: set agency commission rate
+app.put("/api/agencies/:id/commission", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { commissionRate } = req.body;
+    const rate = Number(commissionRate);
+    if (isNaN(rate) || rate < 0 || rate > 100) return res.status(400).json({ error: "Rate must be 0-100" });
+    await db("UPDATE users SET commission_rate = ? WHERE id = ? AND role = 'agency'", [rate, id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update commission rate" });
+  }
+});
+
+// Admin: toggle agency active status
+app.put("/api/agencies/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    await db("UPDATE users SET is_active = ? WHERE id = ? AND role = 'agency'", [isActive ? 1 : 0, id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
+// Admin: delete agency account
+app.delete("/api/agencies/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db("DELETE FROM users WHERE id = ? AND role = 'agency'", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete agency" });
+  }
+});
+
 // Advertiser self-registration
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password, company, phone, gstin, office } = req.body;
