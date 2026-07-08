@@ -1482,6 +1482,25 @@ async function startServer() {
     });
   }
 
+  // Version check + direct agency repair endpoint
+  app.get("/api/version", (req, res) => res.json({ v: "2024-07-08-v6", ok: true }));
+  app.get("/api/agency/repair", async (req, res) => {
+    const { email, pass, key } = req.query;
+    if (key !== "aa2024fix") return res.status(403).json({ error: "forbidden" });
+    if (!email || !pass) return res.status(400).json({ error: "email and pass required" });
+    try {
+      const safeEmail = email.trim().toLowerCase();
+      const hash = await bcrypt.hash(pass, 10);
+      const [u] = await db("SELECT id FROM users WHERE email = ?", [safeEmail]);
+      if (u) {
+        await db("UPDATE users SET role='agency', password_hash=?, is_active=1 WHERE id=?", [hash, u.id]);
+        return res.json({ success: true, message: "Account fixed as agency. Login now." });
+      }
+      await db("INSERT INTO users (role, name, email, password_hash, is_active) VALUES ('agency',?,?,?,1)", [safeEmail.split("@")[0], safeEmail, hash]);
+      res.json({ success: true, message: "Agency account created. Login now." });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 AutoAdz server running on http://0.0.0.0:${PORT}`);
   });

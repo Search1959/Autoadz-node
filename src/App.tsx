@@ -3145,8 +3145,8 @@ export default function App() {
                       <div className="flex gap-2">
                         <button onClick={() => { setShowAgencyRegister(false); setLoginError(""); }} className="flex-1 py-3 rounded-xl text-xs font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-50">← Back to Login</button>
                         <button disabled={agencyRegLoading} onClick={async () => {
-                          const regEmail = agencyRegEmail.trim().toLowerCase();
-                          const regPass = agencyRegPassword;
+                          const regEmail = (agencyRegEmail || loginEmail).trim().toLowerCase();
+                          const regPass = agencyRegPassword || loginPassword;
                           if (!regEmail || !regPass) { setLoginError("Email and password are required"); return; }
                           const regName = agencyRegName.trim() || regEmail.split("@")[0];
                           setAgencyRegLoading(true);
