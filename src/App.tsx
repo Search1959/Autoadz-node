@@ -3104,10 +3104,17 @@ export default function App() {
                 </div>
               )}
 
-              {/* AGENCY LOGIN FIELDS */}
+              {/* AGENCY LOGIN / REGISTER FIELDS */}
               {activeLoginSubTab === "agency" && (
-                <div className="space-y-4">
+                <div className="space-y-3">
+                  {/* Tab switcher */}
+                  <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+                    <button onClick={() => { setShowAgencyRegister(false); setLoginError(""); }} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${!showAgencyRegister ? "bg-white text-[#166534] shadow" : "text-slate-500 hover:text-slate-700"}`}>Login</button>
+                    <button onClick={() => { setShowAgencyRegister(true); setLoginError(""); }} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${showAgencyRegister ? "bg-white text-[#166534] shadow" : "text-slate-500 hover:text-slate-700"}`}>Register</button>
+                  </div>
+
                   {!showAgencyRegister ? (
+                    /* ── LOGIN ── */
                     <>
                       <div className="space-y-1.5">
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Agency Email</label>
@@ -3117,18 +3124,17 @@ export default function App() {
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
                         <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" autoCapitalize="none" autoComplete="off" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
                       </div>
-                      <button onClick={() => { setShowAgencyRegister(true); setAgencyRegEmail(loginEmail); setAgencyRegPassword(loginPassword); setLoginError(""); }} className="text-xs text-[#166534] font-bold hover:underline w-full text-right">New agency? Register here →</button>
                     </>
                   ) : (
+                    /* ── REGISTER ── */
                     <>
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-xs text-green-800 font-medium">Register your OOH agency to manage client campaigns on AutoAdz</div>
                       <div className="space-y-1.5">
-                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Agency / Contact Name</label>
-                        <input type="text" value={agencyRegName} onChange={e => setAgencyRegName(e.target.value)} placeholder="Your full name" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Full Name</label>
+                        <input type="text" value={agencyRegName} onChange={e => setAgencyRegName(e.target.value)} placeholder="Your name" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Company Name</label>
-                        <input type="text" value={agencyRegCompany} onChange={e => setAgencyRegCompany(e.target.value)} placeholder="Your agency company name" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                        <input type="text" value={agencyRegCompany} onChange={e => setAgencyRegCompany(e.target.value)} placeholder="Agency company name" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Email</label>
@@ -3136,50 +3142,41 @@ export default function App() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Phone</label>
-                        <input type="tel" value={agencyRegPhone} onChange={e => setAgencyRegPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                        <input type="tel" value={agencyRegPhone} onChange={e => setAgencyRegPhone(e.target.value)} placeholder="+91 98XXXXXXXX" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
-                        <input type="password" value={agencyRegPassword} onChange={e => setAgencyRegPassword(e.target.value)} placeholder="Create a strong password" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
+                        <input type="password" value={agencyRegPassword} onChange={e => setAgencyRegPassword(e.target.value)} placeholder="Create password" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
                       </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => { setShowAgencyRegister(false); setLoginError(""); }} className="flex-1 py-3 rounded-xl text-xs font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-50">← Back to Login</button>
-                        <button disabled={agencyRegLoading} onClick={async () => {
-                          const regEmail = (agencyRegEmail || loginEmail).trim().toLowerCase();
-                          const regPass = agencyRegPassword || loginPassword;
-                          if (!regEmail || !regPass) { setLoginError("Email and password are required"); return; }
-                          const regName = agencyRegName.trim() || regEmail.split("@")[0];
-                          setAgencyRegLoading(true);
-                          setLoginError("Registering...");
-                          try {
-                            const res = await fetch("/api/agency/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: regName, company: agencyRegCompany, email: regEmail, phone: agencyRegPhone, password: regPass }) });
-                            const data = await res.json();
-                            if (!res.ok) { setLoginError("Register error: " + (data.error || "Failed")); } else {
-                              setLoginError("Account ready. Logging in...");
-                              // Auto-login
-                              try {
-                                const lr = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: regEmail, password: regPass }) });
-                                const ld = await lr.json();
-                                if (lr.ok) {
-                                  localStorage.setItem("autoadz_agency_jwt", ld.token);
-                                  localStorage.setItem("autoadz_agency_id", String(ld.userId));
-                                  localStorage.setItem("autoadz_agency_name", ld.name);
-                                  localStorage.setItem("autoadz_agency_company", ld.company || "");
-                                  localStorage.setItem("autoadz_agency_email", ld.email);
-                                  localStorage.setItem("autoadz_agency_phone", ld.phone || "");
-                                  setAgencyJwt(ld.token); setAgencyId(ld.userId); setAgencyName(ld.name);
-                                  setAgencyCompany(ld.company || ""); setAgencyEmail(ld.email); setAgencyPhone(ld.phone || "");
-                                  setShowAgencyRegister(false);
-                                  setUserSession("agency");
-                                  window.scrollTo({ top: 0, behavior: "smooth" });
-                                } else { setLoginError("Registered! Now login with your email & password."); setShowAgencyRegister(false); setLoginEmail(regEmail); }
-                              } catch { setLoginError("Registered! Now login with your email & password."); setShowAgencyRegister(false); setLoginEmail(regEmail); }
-                            }
-                          } catch { setLoginError("Network error"); } finally { setAgencyRegLoading(false); }
-                        }} className="flex-1 py-3 rounded-xl text-xs font-black bg-[#166534] text-white hover:bg-green-800 disabled:opacity-60">
-                          {agencyRegLoading ? "Registering..." : "Register Agency"}
-                        </button>
-                      </div>
+                      <button disabled={agencyRegLoading} onClick={async () => {
+                        const regEmail = agencyRegEmail.trim().toLowerCase();
+                        const regPass = agencyRegPassword.trim();
+                        const regName = agencyRegName.trim() || regEmail.split("@")[0];
+                        if (!regEmail || !regPass) { setLoginError("Email and password are required"); return; }
+                        setAgencyRegLoading(true); setLoginError("Please wait...");
+                        try {
+                          const res = await fetch("/api/agency/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: regName, company: agencyRegCompany.trim(), email: regEmail, phone: agencyRegPhone.trim(), password: regPass }) });
+                          const data = await res.json();
+                          if (!res.ok) { setLoginError("Error: " + (data.error || "Registration failed")); return; }
+                          setLoginError("Registered! Logging in...");
+                          const lr = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: regEmail, password: regPass }) });
+                          const ld = await lr.json();
+                          if (lr.ok) {
+                            localStorage.setItem("autoadz_agency_jwt", ld.token);
+                            localStorage.setItem("autoadz_agency_id", String(ld.userId));
+                            localStorage.setItem("autoadz_agency_name", ld.name);
+                            localStorage.setItem("autoadz_agency_company", ld.company || "");
+                            localStorage.setItem("autoadz_agency_email", ld.email);
+                            localStorage.setItem("autoadz_agency_phone", ld.phone || "");
+                            setAgencyJwt(ld.token); setAgencyId(ld.userId); setAgencyName(ld.name);
+                            setAgencyCompany(ld.company || ""); setAgencyEmail(ld.email); setAgencyPhone(ld.phone || "");
+                            setShowAgencyRegister(false); setUserSession("agency");
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          } else { setLoginError("Registered! Now click Login tab and sign in."); setShowAgencyRegister(false); setLoginEmail(regEmail); }
+                        } catch { setLoginError("Network error. Please try again."); } finally { setAgencyRegLoading(false); }
+                      }} className="w-full py-3 rounded-xl text-sm font-black bg-[#166534] text-white hover:bg-green-800 disabled:opacity-60">
+                        {agencyRegLoading ? "Please wait..." : "Create Agency Account"}
+                      </button>
                     </>
                   )}
                 </div>
@@ -3192,8 +3189,8 @@ export default function App() {
                 </div>
               )}
 
-              {/* Submit button */}
-              {(
+              {/* Submit button — hidden when agency register tab is active (has its own button) */}
+              {!(activeLoginSubTab === "agency" && showAgencyRegister) && (
                 <button
                   onClick={async () => {
                     if (activeLoginSubTab === "advertiser") {
@@ -3255,17 +3252,7 @@ export default function App() {
                       try {
                         const res = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword.trim() }) });
                         const data = await res.json();
-                        if (!res.ok) {
-                          if (res.status === 401 && data.error && data.error.includes("not registered as an agency")) {
-                            setAgencyRegEmail(loginEmail.trim().toLowerCase());
-                            setAgencyRegPassword(loginPassword.trim());
-                            setShowAgencyRegister(true);
-                            setLoginError("");
-                          } else {
-                            setLoginError(data.error || "Invalid email or password.");
-                          }
-                          return;
-                        }
+                        if (!res.ok) { setLoginError(data.error || "Invalid email or password."); return; }
                         localStorage.setItem("autoadz_agency_jwt", data.token);
                         localStorage.setItem("autoadz_agency_id", String(data.userId));
                         localStorage.setItem("autoadz_agency_name", data.name);
@@ -3288,7 +3275,7 @@ export default function App() {
                 >
                   {activeLoginSubTab === "advertiser" ? "🚀 Log In to Dashboard" :
                    activeLoginSubTab === "driver" ? "🛺 Start My GPS Session" :
-                   activeLoginSubTab === "agency" ? (showAgencyRegister ? "Register Above ↑" : "🏢 Enter Agency Portal") :
+                   activeLoginSubTab === "agency" ? "🏢 Enter Agency Portal" :
                    "🔐 Access Admin Panel"}
                 </button>
               )}
