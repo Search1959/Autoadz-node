@@ -7353,24 +7353,78 @@ export default function App() {
                         <p className="text-xs text-slate-400 mb-4">Launch your first client campaign to get started</p>
                         <button onClick={() => setShowCreateAgencyCampaign(true)} className="bg-[#166534] text-white text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-green-800 transition">+ Create Campaign</button>
                       </div>
-                    ) : agencyCampaigns.map(c => (
-                      <div key={c.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${c.status === "active" ? "bg-green-100 text-green-700" : c.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{c.status.toUpperCase()}</span>
-                            {c.clientBrand && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded font-mono">{c.clientBrand}</span>}
+                    ) : agencyCampaigns.map(c => {
+                      const budget = Number(c.budget) || 0;
+                      const kms = Number(c.kmsCovered) || 0;
+                      const qr = Number(c.qrScans) || 0;
+                      const commRate = agencyStats?.commissionRate ?? 15;
+                      const commEarned = budget * commRate / 100;
+                      const days = c.startDate && c.endDate ? Math.max(1, Math.round((new Date(c.endDate).getTime() - new Date(c.startDate).getTime()) / 86400000)) : 30;
+                      const elapsed = c.startDate ? Math.min(days, Math.max(0, Math.round((Date.now() - new Date(c.startDate).getTime()) / 86400000))) : 0;
+                      const progress = Math.round((elapsed / days) * 100);
+                      return (
+                        <div key={c.id} className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                          {/* Header */}
+                          <div className="px-5 pt-4 pb-3 border-b border-slate-100">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${c.status === "active" ? "bg-green-100 text-green-700" : c.status === "pending" ? "bg-amber-100 text-amber-700" : c.status === "completed" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}`}>{(c.status || "pending").toUpperCase()}</span>
+                                  {c.clientBrand && <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">{c.clientBrand}</span>}
+                                </div>
+                                <h4 className="font-bold text-[#0B1F4D] text-sm leading-tight">{c.title}</h4>
+                                <p className="text-[11px] text-slate-400 mt-0.5">{c.city} · {c.area} · {c.autosCount} autos · {c.startDate} → {c.endDate}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-xs text-slate-400">Budget</p>
+                                <p className="font-black text-[#0B1F4D] text-sm">₹{budget.toLocaleString()}</p>
+                              </div>
+                            </div>
+                            {/* Campaign progress bar */}
+                            {c.status === "active" && (
+                              <div className="mt-3">
+                                <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>Campaign Progress</span><span>{elapsed}/{days} days ({progress}%)</span></div>
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-[#166534] rounded-full transition-all" style={{ width: `${progress}%` }} /></div>
+                              </div>
+                            )}
                           </div>
-                          <h4 className="font-bold text-[#0B1F4D] text-sm">{c.title}</h4>
-                          <p className="text-xs text-slate-400">{c.city} · {c.area} · {c.autosCount} autos · ₹{Number(c.budget).toLocaleString()}</p>
-                          <p className="text-xs text-slate-400 font-mono">{c.startDate} → {c.endDate}</p>
+                          {/* Performance metrics */}
+                          <div className="grid grid-cols-4 divide-x divide-slate-100">
+                            <div className="px-3 py-3 text-center">
+                              <p className="text-[10px] text-slate-400 mb-0.5">KMs Covered</p>
+                              <p className="font-black text-[#166534] text-sm">{kms.toFixed(1)}</p>
+                              <p className="text-[9px] text-slate-400">GPS verified</p>
+                            </div>
+                            <div className="px-3 py-3 text-center">
+                              <p className="text-[10px] text-slate-400 mb-0.5">QR Scans</p>
+                              <p className="font-black text-[#FF9800] text-sm">{qr}</p>
+                              <p className="text-[9px] text-slate-400">engagements</p>
+                            </div>
+                            <div className="px-3 py-3 text-center">
+                              <p className="text-[10px] text-slate-400 mb-0.5">Commission</p>
+                              <p className="font-black text-emerald-600 text-sm">₹{commEarned.toLocaleString()}</p>
+                              <p className="text-[9px] text-slate-400">{commRate}% of budget</p>
+                            </div>
+                            <div className="px-3 py-3 text-center">
+                              <p className="text-[10px] text-slate-400 mb-0.5">Autos</p>
+                              <p className="font-black text-[#0B1F4D] text-sm">{c.autosCount}</p>
+                              <p className="text-[9px] text-slate-400">on road</p>
+                            </div>
+                          </div>
+                          {/* Actions */}
+                          <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+                            <button onClick={() => exportCampaignPDF(c, [])} className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition flex-1 justify-center">
+                              <FileText size={12} /> Client PDF Report
+                            </button>
+                            {c.status === "active" && (
+                              <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-bold px-3 py-2 rounded-xl">
+                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> LIVE
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => exportCampaignPDF(c, [])} className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition">
-                            <FileText size={13} /> PDF Report
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
