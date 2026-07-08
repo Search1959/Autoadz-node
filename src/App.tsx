@@ -3258,8 +3258,9 @@ export default function App() {
                         if (!res.ok) {
                           if (res.status === 401 && data.error && data.error.includes("not registered as an agency")) {
                             setAgencyRegEmail(loginEmail.trim().toLowerCase());
+                            setAgencyRegPassword(loginPassword.trim());
                             setShowAgencyRegister(true);
-                            setLoginError("⚠️ Your email exists but not as agency. Fill the form below and click Register to fix it.");
+                            setLoginError("");
                           } else {
                             setLoginError(data.error || "Invalid email or password.");
                           }

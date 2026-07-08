@@ -1466,24 +1466,8 @@ async function startServer() {
     process.exit(1);
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    const publicPath = path.join(process.cwd(), "public");
-    app.use(express.static(publicPath));
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  // Version check + direct agency repair endpoint
-  app.get("/api/version", (req, res) => res.json({ v: "2024-07-08-v6", ok: true }));
+  // Version check + direct agency repair endpoint (must be before catch-all)
+  app.get("/api/version", (req, res) => res.json({ v: "2024-07-08-v7", ok: true }));
   app.get("/api/agency/repair", async (req, res) => {
     const { email, pass, key } = req.query;
     if (key !== "aa2024fix") return res.status(403).json({ error: "forbidden" });
@@ -1500,6 +1484,22 @@ async function startServer() {
       res.json({ success: true, message: "Agency account created. Login now." });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
+
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), "dist");
+    const publicPath = path.join(process.cwd(), "public");
+    app.use(express.static(publicPath));
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 AutoAdz server running on http://0.0.0.0:${PORT}`);
