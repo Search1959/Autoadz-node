@@ -2255,6 +2255,7 @@ export default function App() {
             <button onClick={() => setLandingSection("hero")} className={`transition hover:text-[#166534] ${landingSection === "hero" ? "text-[#166534]" : ""}`}>Platform</button>
             <button onClick={() => setLandingSection("register-campaign")} className={`transition hover:text-[#166534] ${landingSection === "register-campaign" ? "text-[#166534]" : ""}`}>Start a Campaign</button>
             <button onClick={() => setLandingSection("register-driver")} className={`transition hover:text-[#166534] ${landingSection === "register-driver" ? "text-[#166534]" : ""}`}>Become a Driver</button>
+            <button onClick={() => { setLandingSection("hero"); setTimeout(() => document.getElementById("agency-section")?.scrollIntoView({ behavior: "smooth" }), 50); }} className="transition hover:text-[#FF9800] text-[#FF9800]">OOH Agencies</button>
             <button onClick={() => setLandingSection("login")} className={`transition hover:text-[#166534] ${landingSection === "login" ? "text-[#166534]" : ""}`}>Login</button>
           </div>
 
@@ -2295,6 +2296,7 @@ export default function App() {
           <button onClick={() => setLandingSection("hero")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="hero"?"bg-[#166534] text-white":""}`}>Platform</button>
           <button onClick={() => setLandingSection("register-campaign")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="register-campaign"?"bg-[#166534] text-white":""}`}>Campaign</button>
           <button onClick={() => setLandingSection("register-driver")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="register-driver"?"bg-[#166534] text-white":""}`}>Driver</button>
+          <button onClick={() => { setLandingSection("hero"); setTimeout(() => document.getElementById("agency-section")?.scrollIntoView({ behavior: "smooth" }), 50); }} className="px-3 py-1 rounded-lg whitespace-nowrap text-[#FF9800] font-bold">Agencies</button>
           <button onClick={() => setLandingSection("login")} className={`px-3 py-1 rounded-lg whitespace-nowrap ${landingSection==="login"?"bg-[#166534] text-white":""}`}>Login</button>
         </div>
 
@@ -2499,7 +2501,7 @@ export default function App() {
             </section>
 
             {/* ── FOR OOH AGENCIES ─────────────────────────────────────── */}
-            <section className="w-full bg-[#0B1F4D] py-14 px-4 md:px-10 border-b border-slate-100">
+            <section id="agency-section" className="w-full bg-[#0B1F4D] py-14 px-4 md:px-10 border-b border-slate-100">
               <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-10">
                   <span className="inline-block text-[10px] font-mono font-bold text-[#FF9800] tracking-widest uppercase bg-[#FF9800]/10 px-3 py-1 rounded-full mb-3">For OOH Agencies</span>
