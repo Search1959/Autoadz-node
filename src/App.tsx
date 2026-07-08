@@ -3117,7 +3117,7 @@ export default function App() {
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
                         <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" autoCapitalize="none" autoComplete="off" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
                       </div>
-                      <button onClick={() => setShowAgencyRegister(true)} className="text-xs text-[#166534] font-bold hover:underline w-full text-right">New agency? Register here →</button>
+                      <button onClick={() => { setShowAgencyRegister(true); setAgencyRegEmail(loginEmail); setAgencyRegPassword(loginPassword); setLoginError(""); }} className="text-xs text-[#166534] font-bold hover:underline w-full text-right">New agency? Register here →</button>
                     </>
                   ) : (
                     <>
@@ -3143,21 +3143,22 @@ export default function App() {
                         <input type="password" value={agencyRegPassword} onChange={e => setAgencyRegPassword(e.target.value)} placeholder="Create a strong password" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-[#166534] focus:outline-none" />
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => setShowAgencyRegister(false)} className="flex-1 py-3 rounded-xl text-xs font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-50">← Back to Login</button>
+                        <button onClick={() => { setShowAgencyRegister(false); setLoginError(""); }} className="flex-1 py-3 rounded-xl text-xs font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-50">← Back to Login</button>
                         <button disabled={agencyRegLoading} onClick={async () => {
-                          if (!agencyRegEmail || !agencyRegPassword) { setLoginError("Email and password are required"); return; }
-                          const finalName = agencyRegName.trim() || agencyRegEmail.split("@")[0];
+                          const regEmail = agencyRegEmail.trim().toLowerCase();
+                          const regPass = agencyRegPassword;
+                          if (!regEmail || !regPass) { setLoginError("Email and password are required"); return; }
+                          const regName = agencyRegName.trim() || regEmail.split("@")[0];
                           setAgencyRegLoading(true);
+                          setLoginError("Registering...");
                           try {
-                            const res = await fetch("/api/agency/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: finalName, company: agencyRegCompany, email: agencyRegEmail.trim().toLowerCase(), phone: agencyRegPhone, password: agencyRegPassword }) });
+                            const res = await fetch("/api/agency/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: regName, company: agencyRegCompany, email: regEmail, phone: agencyRegPhone, password: regPass }) });
                             const data = await res.json();
-                            if (!res.ok) { setLoginError(data.error || "Registration failed"); } else {
-                              setLoginError("✅ Account ready! Logging you in...");
-                              setShowAgencyRegister(false);
-                              setLoginEmail(agencyRegEmail.trim().toLowerCase());
-                              // Auto-login after register
+                            if (!res.ok) { setLoginError("Register error: " + (data.error || "Failed")); } else {
+                              setLoginError("Account ready. Logging in...");
+                              // Auto-login
                               try {
-                                const lr = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: agencyRegEmail.trim().toLowerCase(), password: agencyRegPassword }) });
+                                const lr = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: regEmail, password: regPass }) });
                                 const ld = await lr.json();
                                 if (lr.ok) {
                                   localStorage.setItem("autoadz_agency_jwt", ld.token);
@@ -3168,10 +3169,11 @@ export default function App() {
                                   localStorage.setItem("autoadz_agency_phone", ld.phone || "");
                                   setAgencyJwt(ld.token); setAgencyId(ld.userId); setAgencyName(ld.name);
                                   setAgencyCompany(ld.company || ""); setAgencyEmail(ld.email); setAgencyPhone(ld.phone || "");
+                                  setShowAgencyRegister(false);
                                   setUserSession("agency");
                                   window.scrollTo({ top: 0, behavior: "smooth" });
-                                }
-                              } catch {}
+                                } else { setLoginError("Registered! Now login with your email & password."); setShowAgencyRegister(false); setLoginEmail(regEmail); }
+                              } catch { setLoginError("Registered! Now login with your email & password."); setShowAgencyRegister(false); setLoginEmail(regEmail); }
                             }
                           } catch { setLoginError("Network error"); } finally { setAgencyRegLoading(false); }
                         }} className="flex-1 py-3 rounded-xl text-xs font-black bg-[#166534] text-white hover:bg-green-800 disabled:opacity-60">
