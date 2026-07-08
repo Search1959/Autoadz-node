@@ -155,6 +155,42 @@
   .proof-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px;}
   .proof-body{font-size:11.5px;color:var(--gray);line-height:1.55;}
 
+  /* PRICING STRUCTURE */
+  .pricing-split{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:16px;overflow:hidden;border:2px solid var(--border);margin-bottom:24px;}
+  .pricing-col{padding:24px 24px 20px;}
+  .pricing-col.media{background:var(--navy);}
+  .pricing-col.production{background:#fff7ed;border-left:2px solid var(--border);}
+  .pricing-col-tag{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .pricing-col.media .pricing-col-tag{color:#fbbf24;}
+  .pricing-col.production .pricing-col-tag{color:#b45309;}
+  .pricing-col-title{font-size:17px;font-weight:900;margin-bottom:4px;}
+  .pricing-col.media .pricing-col-title{color:#fff;}
+  .pricing-col.production .pricing-col-title{color:var(--navy);}
+  .pricing-col-sub{font-size:11.5px;margin-bottom:16px;line-height:1.6;}
+  .pricing-col.media .pricing-col-sub{color:rgba(255,255,255,0.55);}
+  .pricing-col.production .pricing-col-sub{color:var(--gray);}
+  .pricing-items{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .pricing-items li{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:7px 10px;border-radius:8px;}
+  .pricing-col.media .pricing-items li{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.8);}
+  .pricing-col.production .pricing-items li{background:rgba(255,152,0,0.08);color:var(--navy);}
+  .pricing-items li span:last-child{font-weight:800;font-family:monospace;font-size:13px;}
+  .pricing-col.media .pricing-items li span:last-child{color:#fbbf24;}
+  .pricing-col.production .pricing-items li span:last-child{color:#b45309;}
+  .pricing-total{margin-top:14px;padding:10px 10px;border-radius:8px;display:flex;justify-content:space-between;font-size:13px;font-weight:900;}
+  .pricing-col.media .pricing-total{background:rgba(255,255,255,0.12);color:#fff;}
+  .pricing-col.production .pricing-total{background:#fff;border:1.5px solid #fed7aa;color:var(--navy);}
+  .pricing-total span:last-child{color:#fbbf24;}
+  .pricing-col.production .pricing-total span:last-child{color:#b45309;}
+  .pricing-note{font-size:10.5px;margin-top:10px;line-height:1.5;}
+  .pricing-col.media .pricing-note{color:rgba(255,255,255,0.4);}
+  .pricing-col.production .pricing-note{color:#94a3b8;}
+
+  .label-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+  .label-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;}
+  .label-badge.navy{background:#eff6ff;color:var(--navy);}
+  .label-badge.amber{background:#fff7ed;color:#b45309;}
+  .label-sep{color:#94a3b8;font-size:12px;}
+
   /* NEXT STEPS */
   .next-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
   .ns{display:flex;align-items:center;gap:14px;background:var(--light);border-radius:12px;padding:14px 18px;border:1px solid var(--border);}
@@ -193,6 +229,7 @@
   <a href="#opportunity">The Opportunity</a>
   <a href="#how">How It Works</a>
   <a href="#commission">Commission Model</a>
+  <a href="#pricing">Pricing Structure</a>
   <a href="#benefits">What You Get</a>
   <a href="#projections">Revenue Projections</a>
   <a href="#platform">Platform Features</a>
@@ -438,6 +475,112 @@
 
     <div class="highlight">
       <p><strong>Important:</strong> Commission rate is agreed at onboarding and remains fixed for the contract period. High-volume agency partners may qualify for premium rates. Your agency portal shows cumulative commission earned, campaign-wise breakdown, and total KMs covered for all your clients — in one place.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 4B: PRICING STRUCTURE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="pricing">
+  <div class="section">
+    <div class="section-tag">Pricing Structure</div>
+    <div class="section-title">Two-Part Billing — Industry Standard</div>
+    <div class="section-desc">Like all professional OOH campaigns, AutoAdz separates media costs from production costs. This is standard practice — your clients already understand this model from hoardings and transit ads.</div>
+
+    <div class="label-row">
+      <span class="label-badge navy">📡 Part 1 — Campaign Fleet Fee</span>
+      <span class="label-sep">+</span>
+      <span class="label-badge amber">🖨️ Part 2 — Creative Production</span>
+    </div>
+
+    <div class="pricing-split">
+      <!-- LEFT: MEDIA / FLEET FEE -->
+      <div class="pricing-col media">
+        <div class="pricing-col-tag">Part 1 · Media Cost</div>
+        <div class="pricing-col-title">Campaign Fleet Fee</div>
+        <div class="pricing-col-sub">Covers everything AutoAdz operates — fleet deployment, GPS tracking, driver payouts, live dashboard, and campaign reporting.</div>
+        <ul class="pricing-items">
+          <li><span>Fleet deployment (20 autos)</span><span>Included</span></li>
+          <li><span>GPS tracking — live map</span><span>Included</span></li>
+          <li><span>Driver GPS payouts (₹4.50/km)</span><span>Included</span></li>
+          <li><span>Agency portal access</span><span>Included</span></li>
+          <li><span>QR engagement tracking</span><span>Included</span></li>
+          <li><span>PDF campaign report</span><span>Included</span></li>
+          <li><span>Campaign duration (30 days)</span><span>Included</span></li>
+        </ul>
+        <div class="pricing-total">
+          <span>Minimum fleet fee</span>
+          <span>₹1,00,000</span>
+        </div>
+        <div class="pricing-note">Agency earns 15% commission on this fleet fee only. Scales with number of autos and campaign duration.</div>
+      </div>
+
+      <!-- RIGHT: PRODUCTION -->
+      <div class="pricing-col production">
+        <div class="pricing-col-tag">Part 2 · Production Cost</div>
+        <div class="pricing-col-title">Creative Production</div>
+        <div class="pricing-col-sub">One-time charges for physical banner production and fitting. Billed separately, paid directly by advertiser. Standard in every OOH campaign.</div>
+        <ul class="pricing-items">
+          <li><span>Vinyl banner print (per auto)</span><span>₹500</span></li>
+          <li><span>Installation & fitting (per auto)</span><span>₹150</span></li>
+          <li><span>Removal after campaign (per auto)</span><span>₹50</span></li>
+        </ul>
+        <div class="pricing-total">
+          <span>Total per auto</span>
+          <span>₹700</span>
+        </div>
+        <div class="pricing-note">Example: 20 autos × ₹700 = ₹14,000 production charge. Billed once at campaign start. No agency commission on production charges.</div>
+      </div>
+    </div>
+
+    <!-- EXAMPLE INVOICE BREAKDOWN -->
+    <div class="section-tag" style="margin-bottom:8px;">What a Client Invoice Looks Like</div>
+    <table class="commission">
+      <thead>
+        <tr>
+          <th>Line Item</th>
+          <th>Description</th>
+          <th>Who Pays</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Campaign Fleet Fee</td>
+          <td>20 autos · 30 days · GPS tracking + reporting</td>
+          <td>Advertiser → AutoAdz</td>
+          <td class="highlight-cell">₹1,00,000</td>
+        </tr>
+        <tr>
+          <td>Agency Commission</td>
+          <td>15% of fleet fee (AutoAdz pays to agency)</td>
+          <td>AutoAdz → Agency</td>
+          <td style="color:#166534;font-weight:800;">₹15,000 earned</td>
+        </tr>
+        <tr>
+          <td>Banner Printing</td>
+          <td>20 autos × vinyl flex print (₹500/auto)</td>
+          <td>Advertiser → Print vendor</td>
+          <td style="color:#b45309;font-weight:700;">₹10,000</td>
+        </tr>
+        <tr>
+          <td>Installation Charges</td>
+          <td>20 autos × fitting + removal (₹200/auto)</td>
+          <td>Advertiser → AutoAdz</td>
+          <td style="color:#b45309;font-weight:700;">₹4,000</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">Total advertiser investment for a complete 30-day, 20-auto campaign</td>
+          <td>₹1,14,000</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="highlight" style="margin-top:20px;">
+      <p><strong>Why this is better for your clients:</strong> Separating production costs means clients can compare AutoAdz fleet fees directly against other media — hoardings, bus panels, wall paintings. Our fleet fee is competitive. Production is a one-time sunk cost they already budget for in every OOH campaign. <strong>No hidden charges. No surprises at invoice time.</strong></p>
     </div>
   </div>
 </div>
