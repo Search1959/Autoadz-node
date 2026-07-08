@@ -1398,6 +1398,7 @@ app.post("/api/auth/login", async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: "Email and password required" });
     const [user] = await db("SELECT * FROM users WHERE email = ?", [email]);
     if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (role && role !== "driver" && user.role !== role) return res.status(401).json({ error: "Invalid email or password" });
     if (!user.is_active) return res.status(403).json({ error: "Account disabled. Contact support." });
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ error: "Invalid email or password" });
