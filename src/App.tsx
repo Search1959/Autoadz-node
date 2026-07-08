@@ -83,7 +83,7 @@ export default function App() {
   const [agencyCompany, setAgencyCompany] = useState(() => localStorage.getItem("autoadz_agency_company") || "");
   const [agencyEmail, setAgencyEmail] = useState(() => localStorage.getItem("autoadz_agency_email") || "");
   const [agencyPhone, setAgencyPhone] = useState(() => localStorage.getItem("autoadz_agency_phone") || "");
-  const [agencyTab, setAgencyTab] = useState<"home" | "campaigns" | "clients" | "commission">("home");
+  const [agencyTab, setAgencyTab] = useState<"home" | "campaigns" | "tracking" | "clients" | "commission">("home");
   const [agencyStats, setAgencyStats] = useState<any>(null);
   const [agencyCampaigns, setAgencyCampaigns] = useState<any[]>([]);
   const [showAgencyRegister, setShowAgencyRegister] = useState(false);
@@ -4041,7 +4041,7 @@ export default function App() {
                       // Filter GPS positions to only this advertiser's drivers
                       const myPositions = Object.fromEntries(
                         Object.entries(driverPositions).filter(([id]) => myDriverIds.has(id))
-                      );
+                      ) as typeof driverPositions;
                       return (
                       <div className="space-y-3">
                         <div className="bg-white p-3 rounded-xl border border-slate-200">
@@ -4056,7 +4056,7 @@ export default function App() {
                           const campDrivers = myDrivers.filter(d => d.currentCampaignId === camp.id);
                           const campPositions = Object.fromEntries(
                             Object.entries(myPositions).filter(([id]) => campDrivers.some(d => d.id === id))
-                          );
+                          ) as typeof driverPositions;
                           return (
                           <div key={camp.id} className="bg-white p-3 rounded-xl border border-slate-150 shadow-xs space-y-2">
                             <div className="flex justify-between items-center">
@@ -7358,9 +7358,9 @@ export default function App() {
 
                 {/* Agency Tabs */}
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-1 flex gap-1">
-                  {(["home", "campaigns", "clients", "commission"] as const).map(tab => (
+                  {(["home", "campaigns", "tracking", "clients", "commission"] as const).map(tab => (
                     <button key={tab} onClick={() => setAgencyTab(tab)} className={`flex-1 py-2.5 text-xs font-bold rounded-xl capitalize transition ${agencyTab === tab ? "bg-[#166534] text-white shadow" : "text-slate-500 hover:bg-slate-50"}`}>
-                      {tab === "home" ? "Dashboard" : tab === "campaigns" ? "Campaigns" : tab === "clients" ? "Clients" : "Commission"}
+                      {tab === "home" ? "Dashboard" : tab === "campaigns" ? "Campaigns" : tab === "tracking" ? "🗺 Live Map" : tab === "clients" ? "Clients" : "Commission"}
                     </button>
                   ))}
                 </div>
@@ -7493,6 +7493,90 @@ export default function App() {
                     })}
                   </div>
                 )}
+
+                {/* Live Map Tab */}
+                {agencyTab === "tracking" && (() => {
+                  const activeCamps = agencyCampaigns.filter(c => c.status === "active");
+                  const allCampIds = new Set(agencyCampaigns.map((c: any) => c.id));
+                  const agencyDrivers = drivers.filter(d => d.currentCampaignId && allCampIds.has(d.currentCampaignId));
+                  const agencyDriverIds = new Set(agencyDrivers.map(d => d.id));
+                  const agencyPositions = Object.fromEntries(
+                    Object.entries(driverPositions).filter(([id]) => agencyDriverIds.has(id))
+                  ) as typeof driverPositions;
+                  return (
+                    <div className="space-y-3">
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <h5 className="font-bold text-xs text-[#0B1F4D] flex items-center gap-1">
+                          <MapPin size={12} className="text-[#FF9800]" /> Real-time Transit Tracking — Client Campaigns
+                        </h5>
+                        <p className="text-[10px] text-slate-400 mt-1">Live GPS positions for all autos running your client campaigns. Updates every 3 seconds.</p>
+                      </div>
+
+                      {activeCamps.length === 0 ? (
+                        <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+                          <MapPin size={28} className="text-slate-300 mx-auto mb-3" />
+                          <p className="text-sm font-bold text-slate-500">No active campaigns</p>
+                          <p className="text-xs text-slate-400 mt-1">Live map will appear here once a client campaign is active.</p>
+                        </div>
+                      ) : activeCamps.map((camp: any) => {
+                        const campDrivers = agencyDrivers.filter(d => d.currentCampaignId === camp.id);
+                        const campPositions = Object.fromEntries(
+                          Object.entries(agencyPositions).filter(([id]) => campDrivers.some(d => d.id === id))
+                        ) as typeof driverPositions;
+                        const budget = Number(camp.budget) || 0;
+                        const commRate = agencyStats?.commissionRate ?? 15;
+                        return (
+                          <div key={camp.id} className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div className="px-4 pt-3 pb-2 border-b border-slate-100 flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="text-[8px] font-mono font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">LIVE</span>
+                                  {camp.clientBrand && <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">{camp.clientBrand}</span>}
+                                </div>
+                                <p className="font-bold text-sm text-[#0B1F4D]">{camp.title}</p>
+                                <p className="text-[10px] text-slate-400">{camp.city} · {camp.area} · {camp.autosCount} autos</p>
+                              </div>
+                              <div className="text-right text-xs">
+                                <p className="text-slate-400">Commission</p>
+                                <p className="font-black text-emerald-600">₹{(budget * commRate / 100).toLocaleString()}</p>
+                              </div>
+                            </div>
+                            <div className="p-3">
+                              <RouteMap allDrivers={campPositions} city={camp.city} height="280px" />
+                            </div>
+                            <div className="px-4 pb-3 space-y-1.5">
+                              <p className="text-[9px] text-slate-400 font-mono flex items-center gap-1">
+                                <Navigation size={10} className="text-[#FF9800]" /> Active Area: <span className="font-sans text-slate-700 font-medium">{camp.area}</span>
+                              </p>
+                              <div className="space-y-1">
+                                {campDrivers.length === 0 ? (
+                                  <p className="text-[10px] text-slate-400">No drivers transmitting for this campaign yet.</p>
+                                ) : campDrivers.map(d => {
+                                  const pos = agencyPositions[d.id];
+                                  return (
+                                    <div key={d.id} className="flex justify-between items-center text-xs p-2 bg-slate-50 rounded-lg border border-slate-100">
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full shrink-0 ${d.state === "tracking" ? "bg-green-500 animate-pulse" : "bg-slate-300"}`} />
+                                        <span className="font-semibold text-slate-800">{d.name}</span>
+                                        <span className="text-[8px] text-slate-400 font-mono">{d.autoNumber}</span>
+                                        {pos && d.state === "tracking" && (
+                                          <span className="text-[8px] text-teal-500 font-mono">{pos.lat.toFixed(4)}, {pos.lng.toFixed(4)}</span>
+                                        )}
+                                      </div>
+                                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${d.state === "tracking" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-500"}`}>
+                                        {d.state === "tracking" ? "🟢 LIVE" : "STANDBY"}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 {/* Clients Tab */}
                 {agencyTab === "clients" && (
