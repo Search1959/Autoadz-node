@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoAdz — OOH Agency Partnership Proposal 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --navy:#0B1F4D;
+    --green:#166534;
+    --lgreen:#f0fdf4;
+    --amber:#FF9800;
+    --white:#fff;
+    --light:#F5F8FF;
+    --gray:#475569;
+    --border:#e2e8f0;
+  }
+  body{font-family:'Inter',Arial,sans-serif;color:#222;background:#f8fafc;line-height:1.7;font-size:14px;}
+
+  @media print{
+    .no-print{display:none!important;}
+    .page{page-break-after:always;box-shadow:none!important;margin:0;border-radius:0;}
+    body{background:#fff;font-size:12px;}
+    .toc-nav{display:none;}
+    .main{margin-left:0;}
+  }
+
+  /* NAV */
+  .toc-nav{position:fixed;top:0;left:0;width:210px;height:100vh;background:var(--navy);padding:20px 0;overflow-y:auto;z-index:100;}
+  .toc-nav .logo{padding:0 16px 16px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:10px;}
+  .toc-nav .logo-mark{width:36px;height:36px;background:var(--amber);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#fff;margin-bottom:6px;}
+  .toc-nav .logo-text{color:#fff;font-size:13px;font-weight:800;}
+  .toc-nav .logo-sub{color:rgba(255,255,255,0.45);font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+  .toc-nav h3{color:#4ade80;font-size:9px;letter-spacing:2px;padding:0 16px 8px;text-transform:uppercase;margin-bottom:4px;}
+  .toc-nav a{display:block;color:rgba(255,255,255,0.65);font-size:10.5px;padding:5px 16px;text-decoration:none;transition:.15s;border-left:3px solid transparent;}
+  .toc-nav a:hover{color:#fff;background:rgba(255,255,255,0.06);}
+  .toc-nav a.active{color:#4ade80;border-left-color:#4ade80;background:rgba(74,222,128,0.07);}
+  .print-btn{display:block;margin:14px 16px 6px;padding:9px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:11px;cursor:pointer;text-align:center;font-family:inherit;font-weight:700;letter-spacing:0.5px;}
+  .print-btn:hover{background:#14532d;}
+  .pdf-note{color:rgba(255,255,255,0.35);font-size:9px;text-align:center;padding:0 16px;}
+
+  /* MAIN */
+  .main{margin-left:210px;}
+  .page{background:#fff;max-width:860px;margin:24px auto;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.07);}
+
+  /* ── COVER ── */
+  .cover{background:linear-gradient(145deg,#0B1F4D 0%,#112660 60%,#0d2a5e 100%);min-height:500px;padding:60px 56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+  .cover::before{content:'';position:absolute;top:-80px;right:-80px;width:360px;height:360px;background:rgba(255,152,0,0.07);border-radius:50%;}
+  .cover::after{content:'';position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;background:rgba(22,101,52,0.12);border-radius:50%;}
+  .cover-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
+  .cover-logo{display:flex;align-items:center;gap:12px;}
+  .cover-logo-mark{width:48px;height:48px;background:var(--amber);border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:26px;color:#fff;}
+  .cover-logo-text{color:#fff;font-size:18px;font-weight:900;letter-spacing:-0.5px;}
+  .cover-logo-sub{color:rgba(255,255,255,0.5);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+  .cover-badge{background:rgba(255,152,0,0.15);border:1px solid rgba(255,152,0,0.35);color:var(--amber);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:20px;}
+  .cover-body{position:relative;z-index:1;}
+  .cover-tag{color:#4ade80;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .cover-title{color:#fff;font-size:38px;font-weight:900;line-height:1.15;letter-spacing:-1px;margin-bottom:10px;}
+  .cover-title span{color:var(--amber);}
+  .cover-sub{color:rgba(255,255,255,0.6);font-size:15px;max-width:480px;line-height:1.6;}
+  .cover-bottom{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1;}
+  .cover-pills{display:flex;gap:10px;flex-wrap:wrap;}
+  .cover-pill{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:10px;font-weight:600;padding:5px 12px;border-radius:20px;}
+  .cover-from{text-align:right;}
+  .cover-from p{color:rgba(255,255,255,0.45);font-size:10px;}
+  .cover-from strong{color:#fff;font-size:12px;font-weight:700;}
+
+  /* ── SECTIONS ── */
+  .section{padding:48px 56px;}
+  .section + .section{border-top:1px solid var(--border);}
+  .section-tag{font-size:9px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+  .section-title{font-size:26px;font-weight:900;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px;line-height:1.2;}
+  .section-desc{color:var(--gray);font-size:14px;line-height:1.7;max-width:620px;margin-bottom:28px;}
+
+  /* HIGHLIGHT BOX */
+  .highlight{background:var(--lgreen);border:1.5px solid #bbf7d0;border-radius:14px;padding:20px 24px;margin-bottom:24px;}
+  .highlight p{color:#14532d;font-size:14px;font-weight:500;line-height:1.7;}
+  .highlight strong{font-weight:800;}
+
+  /* PROBLEM / OPPORTUNITY */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+  .box{border-radius:14px;padding:20px 22px;}
+  .box.red{background:#fff5f5;border:1.5px solid #fecaca;}
+  .box.green{background:var(--lgreen);border:1.5px solid #bbf7d0;}
+  .box-icon{font-size:22px;margin-bottom:8px;}
+  .box-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+  .box-body{font-size:12.5px;color:var(--gray);line-height:1.6;}
+
+  /* STATS ROW */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+  .stat{background:var(--light);border-radius:12px;padding:16px;text-align:center;}
+  .stat-val{font-size:26px;font-weight:900;color:var(--navy);line-height:1;}
+  .stat-val.amber{color:var(--amber);}
+  .stat-val.green{color:var(--green);}
+  .stat-label{font-size:10px;color:var(--gray);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+
+  /* HOW IT WORKS STEPS */
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:20px;padding:20px 0;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;}
+  .step-num{width:38px;height:38px;border-radius:12px;background:var(--navy);color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+  .step-body{}
+  .step-title{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+  .step-desc{font-size:13px;color:var(--gray);line-height:1.6;}
+  .step-badge{display:inline-block;background:rgba(255,152,0,0.12);color:#b45309;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:6px;}
+
+  /* MONEY FLOW */
+  .money-flow{display:flex;align-items:stretch;gap:0;margin-bottom:28px;border-radius:14px;overflow:hidden;border:1.5px solid var(--border);}
+  .mf-col{flex:1;padding:20px 18px;text-align:center;border-right:1px solid var(--border);}
+  .mf-col:last-child{border-right:none;}
+  .mf-icon{font-size:24px;margin-bottom:8px;}
+  .mf-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:4px;}
+  .mf-amount{font-size:22px;font-weight:900;line-height:1;}
+  .mf-note{font-size:10px;color:var(--gray);margin-top:4px;line-height:1.5;}
+  .mf-col.agency-col{background:var(--lgreen);}
+  .mf-col.agency-col .mf-label{color:var(--green);}
+
+  /* COMMISSION TABLE */
+  table.commission{width:100%;border-collapse:collapse;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);}
+  table.commission thead{background:var(--navy);}
+  table.commission thead th{color:#fff;font-size:11px;font-weight:700;padding:12px 16px;text-align:left;letter-spacing:0.5px;}
+  table.commission tbody tr:nth-child(even){background:#f8fafc;}
+  table.commission tbody tr:hover{background:var(--lgreen);}
+  table.commission td{padding:11px 16px;font-size:13px;color:var(--gray);border-bottom:1px solid var(--border);}
+  table.commission td:first-child{font-weight:700;color:var(--navy);}
+  table.commission td.highlight-cell{color:var(--green);font-weight:800;}
+  table.commission tfoot td{font-weight:800;font-size:13px;background:#f0fdf4;color:var(--green);border-top:2px solid #bbf7d0;padding:12px 16px;}
+
+  /* WHAT AGENCY GETS */
+  .perks{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+  .perk{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:16px;}
+  .perk-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .perk-icon.green{background:var(--lgreen);}
+  .perk-icon.amber{background:#fff7ed;}
+  .perk-icon.navy{background:#eff6ff;}
+  .perk-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:3px;}
+  .perk-desc{font-size:12px;color:var(--gray);line-height:1.55;}
+
+  /* REVENUE PROJECTIONS */
+  .proj-table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+  .proj-table thead th{background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:12px 16px;text-align:left;}
+  .proj-table tbody tr:nth-child(even){background:#f8fafc;}
+  .proj-table td{padding:11px 16px;font-size:13px;color:var(--gray);border-bottom:1px solid var(--border);}
+  .proj-table td:first-child{font-weight:700;color:var(--navy);}
+  .proj-table td.green-cell{color:var(--green);font-weight:800;}
+  .proj-table td.amber-cell{color:#b45309;font-weight:800;}
+  .proj-row-highlight td{background:#f0fdf4 !important;}
+
+  /* PLATFORM PROOF */
+  .proof-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;}
+  .proof-card{background:var(--light);border-radius:12px;padding:18px;border:1px solid var(--border);}
+  .proof-icon{font-size:20px;margin-bottom:8px;}
+  .proof-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+  .proof-body{font-size:11.5px;color:var(--gray);line-height:1.55;}
+
+  /* NEXT STEPS */
+  .next-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+  .ns{display:flex;align-items:center;gap:14px;background:var(--light);border-radius:12px;padding:14px 18px;border:1px solid var(--border);}
+  .ns-num{width:32px;height:32px;border-radius:8px;background:var(--green);color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ns-text{font-size:13px;color:var(--navy);font-weight:600;}
+  .ns-sub{font-size:11px;color:var(--gray);}
+
+  /* FOOTER */
+  .footer-page{background:var(--navy);padding:48px 56px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px;margin-bottom:36px;}
+  .footer-brand .logo-mark{width:44px;height:44px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#fff;margin-bottom:10px;}
+  .footer-brand p{color:rgba(255,255,255,0.5);font-size:12px;line-height:1.7;max-width:220px;margin-top:6px;}
+  .footer-col-title{color:#4ade80;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+  .footer-col li{list-style:none;color:rgba(255,255,255,0.6);font-size:12px;padding:3px 0;line-height:1.5;}
+  .footer-col li strong{color:#fff;}
+  .footer-divider{border:none;border-top:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}
+  .footer-bottom{display:flex;justify-content:space-between;align-items:center;}
+  .footer-bottom p{color:rgba(255,255,255,0.35);font-size:11px;}
+  .footer-bottom .cta{background:var(--amber);color:#fff;font-weight:800;font-size:12px;padding:10px 22px;border-radius:10px;text-decoration:none;border:none;cursor:pointer;font-family:inherit;}
+
+  /* DIVIDER */
+  .divider{height:4px;background:linear-gradient(90deg,var(--navy),var(--green),var(--amber));}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="toc-nav no-print">
+  <div class="logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">AutoAdz.in</div>
+    <div class="logo-sub">Agency Proposal</div>
+  </div>
+  <h3>Contents</h3>
+  <a href="#cover">Overview</a>
+  <a href="#opportunity">The Opportunity</a>
+  <a href="#how">How It Works</a>
+  <a href="#commission">Commission Model</a>
+  <a href="#benefits">What You Get</a>
+  <a href="#projections">Revenue Projections</a>
+  <a href="#platform">Platform Features</a>
+  <a href="#nextsteps">Next Steps</a>
+  <br>
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+  <p class="pdf-note">Use browser Print → Save as PDF</p>
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- COVER PAGE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="cover">
+  <div class="cover">
+    <div class="cover-top">
+      <div class="cover-logo">
+        <div class="cover-logo-mark">A</div>
+        <div>
+          <div class="cover-logo-text">AutoAdz.in</div>
+          <div class="cover-logo-sub">GPS Auto-Rickshaw Advertising</div>
+        </div>
+      </div>
+      <div class="cover-badge">Partnership Proposal · 2026</div>
+    </div>
+
+    <div class="cover-body">
+      <div class="cover-tag">🤝 OOH Agency Partnership</div>
+      <div class="cover-title">Earn Commission on Every<br>Campaign You <span>Book With Us</span></div>
+      <div class="cover-sub">AutoAdz runs GPS-tracked auto-rickshaw advertising across Indian cities. We are inviting selected OOH agencies to become authorized booking partners — earn 15% commission on every campaign your clients run.</div>
+    </div>
+
+    <div class="cover-bottom">
+      <div class="cover-pills">
+        <span class="cover-pill">🛺 GPS-Tracked Autos</span>
+        <span class="cover-pill">📊 Real-Time Campaign Data</span>
+        <span class="cover-pill">💰 15% Commission</span>
+        <span class="cover-pill">📄 PDF Reports for Clients</span>
+        <span class="cover-pill">🗺 Kolkata · Pan-India</span>
+      </div>
+      <div class="cover-from">
+        <p>Presented by</p>
+        <strong>Arun Jaiswal</strong><br>
+        <span style="color:rgba(255,255,255,0.45);font-size:10px;">Founder, AutoAdz.in</span><br>
+        <span style="color:rgba(255,255,255,0.45);font-size:10px;">+91 76030-64791 · autoadz.in</span>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 2: OPPORTUNITY -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="opportunity">
+  <div class="section">
+    <div class="section-tag">The Opportunity</div>
+    <div class="section-title">A New Revenue Stream for Your Agency</div>
+    <div class="section-desc">Your clients already spend on OOH advertising. AutoAdz gives you a GPS-backed, data-driven transit media product to add to your portfolio — with commission income on every campaign, at zero investment from you.</div>
+
+    <div class="highlight">
+      <p><strong>The OOH market problem:</strong> Traditional hoardings and transit ads give clients no proof of delivery. No data. No performance metrics. Clients are losing trust in OOH. AutoAdz solves this — every auto carries a GPS tracker, every kilometre is logged, every scan is counted. Your clients get a <strong>verifiable PDF report</strong> after each campaign.</p>
+    </div>
+
+    <div class="two-col">
+      <div class="box red">
+        <div class="box-icon">❌</div>
+        <div class="box-title">Traditional OOH — Client Frustration</div>
+        <div class="box-body">
+          No proof of display · No footfall data · No impressions count · Autos covered in other ads · No GPS verification · Client can't justify spend to management
+        </div>
+      </div>
+      <div class="box green">
+        <div class="box-icon">✅</div>
+        <div class="box-title">AutoAdz — Data-Backed Transit Ads</div>
+        <div class="box-body">
+          GPS-verified kilometres covered · QR scan counts (consumer engagement) · Real-time map tracking · Photo proof of installation · Monthly PDF campaign report
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val amber">₹4.50</div>
+        <div class="stat-label">per KM, driver payout</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">200+</div>
+        <div class="stat-label">auto fleet (Kolkata)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val green">15%</div>
+        <div class="stat-label">agency commission</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">30+</div>
+        <div class="stat-label">km/day per auto avg.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 3: HOW IT WORKS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="how">
+  <div class="section">
+    <div class="section-tag">How It Works</div>
+    <div class="section-title">Simple 5-Step Process for Agencies</div>
+    <div class="section-desc">You focus on your client relationships. AutoAdz handles the operations — fleet management, GPS tracking, driver payouts, and reporting.</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">You Register as an Authorized Agency</div>
+          <div class="step-desc">Create your agency account on autoadz.in in 2 minutes. We review and activate your account, set your commission rate, and assign you an Agency Portal with your own dashboard.</div>
+          <span class="step-badge">One-time setup · Free</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Your Client Approves Campaign Brief</div>
+          <div class="step-desc">Your client wants auto-rickshaw advertising in Kolkata (or any city). You take their brief — brand, area, budget, duration — just like any other OOH campaign.</div>
+          <span class="step-badge">Your normal workflow</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">You Book the Campaign on Agency Portal</div>
+          <div class="step-desc">Log into your AutoAdz Agency Portal, enter client brand name, city, area, number of autos, and budget. Campaign is submitted for admin approval within 24 hours.</div>
+          <span class="step-badge">Takes 5 minutes</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">AutoAdz Runs the Campaign — You Track Live</div>
+          <div class="step-desc">AutoAdz deploys branded autos with GPS. You and your client can track live auto positions on a map from your portal. Daily KM logs are recorded automatically.</div>
+          <span class="step-badge">Zero operations work for you</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Send Client a GPS-Verified PDF Report</div>
+          <div class="step-desc">At campaign end, download the campaign PDF report from your portal (one click). Share it with your client — total KMs, QR scans, map coverage, auto photos. Your client gets proof. They renew.</div>
+          <span class="step-badge">Impress your clients with data</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 4: COMMISSION MODEL -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="commission">
+  <div class="section">
+    <div class="section-tag">Commission Structure</div>
+    <div class="section-title">How You Earn — Transparent & Predictable</div>
+    <div class="section-desc">You earn a flat commission on the total campaign budget booked through your agency. No hidden deductions. Commission is tracked in your portal dashboard in real time.</div>
+
+    <!-- Money Flow -->
+    <div class="money-flow">
+      <div class="mf-col">
+        <div class="mf-icon">🏢</div>
+        <div class="mf-label">Your Client Pays</div>
+        <div class="mf-amount" style="color:var(--navy);">₹1,00,000</div>
+        <div class="mf-note">full campaign budget to AutoAdz via your agency</div>
+      </div>
+      <div class="mf-col agency-col">
+        <div class="mf-icon">📋</div>
+        <div class="mf-label">Your Agency Earns</div>
+        <div class="mf-amount" style="color:var(--green);">₹15,000</div>
+        <div class="mf-note">15% commission — credited to your account</div>
+      </div>
+      <div class="mf-col">
+        <div class="mf-icon">🚀</div>
+        <div class="mf-label">AutoAdz Runs</div>
+        <div class="mf-amount" style="color:var(--amber);">₹85,000</div>
+        <div class="mf-note">funds campaign operations & driver fleet</div>
+      </div>
+      <div class="mf-col">
+        <div class="mf-icon">🛺</div>
+        <div class="mf-label">Driver Gets</div>
+        <div class="mf-amount" style="color:#0ea5e9;">₹4.50/km</div>
+        <div class="mf-note">GPS-verified daily payout per auto</div>
+      </div>
+    </div>
+
+    <!-- Commission Scale Table -->
+    <table class="commission">
+      <thead>
+        <tr>
+          <th>Monthly Campaigns Booked</th>
+          <th>Avg. Budget / Campaign</th>
+          <th>Total Billing</th>
+          <th>Your Commission (15%)</th>
+          <th>Annual Income</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2 campaigns</td>
+          <td>₹75,000</td>
+          <td>₹1,50,000</td>
+          <td class="highlight-cell">₹22,500 / month</td>
+          <td class="highlight-cell">₹2.7 Lakh / year</td>
+        </tr>
+        <tr>
+          <td>5 campaigns</td>
+          <td>₹1,00,000</td>
+          <td>₹5,00,000</td>
+          <td class="highlight-cell">₹75,000 / month</td>
+          <td class="highlight-cell">₹9 Lakh / year</td>
+        </tr>
+        <tr>
+          <td>10 campaigns</td>
+          <td>₹1,00,000</td>
+          <td>₹10,00,000</td>
+          <td class="highlight-cell">₹1,50,000 / month</td>
+          <td class="highlight-cell">₹18 Lakh / year</td>
+        </tr>
+        <tr>
+          <td>20 campaigns</td>
+          <td>₹1,25,000</td>
+          <td>₹25,00,000</td>
+          <td class="highlight-cell">₹3,75,000 / month</td>
+          <td class="highlight-cell">₹45 Lakh / year</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">✅ All campaigns tracked. Commission shown in real time on your Agency Portal dashboard.</td>
+          <td colspan="2">Commission paid as per agreed billing cycle</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="highlight">
+      <p><strong>Important:</strong> Commission rate is agreed at onboarding and remains fixed for the contract period. High-volume agency partners may qualify for premium rates. Your agency portal shows cumulative commission earned, campaign-wise breakdown, and total KMs covered for all your clients — in one place.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 5: WHAT YOU GET -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="benefits">
+  <div class="section">
+    <div class="section-tag">Agency Benefits</div>
+    <div class="section-title">What You Get as an AutoAdz Partner</div>
+    <div class="section-desc">More than just commission — you get a data product that differentiates your agency and builds long-term client loyalty.</div>
+
+    <div class="perks">
+      <div class="perk">
+        <div class="perk-icon green">📱</div>
+        <div>
+          <div class="perk-title">Dedicated Agency Portal</div>
+          <div class="perk-desc">Private dashboard at autoadz.in showing all your client campaigns, live GPS maps, commission earned, and KM reports — separated from other agencies.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon amber">📄</div>
+        <div>
+          <div class="perk-title">Branded PDF Reports</div>
+          <div class="perk-desc">One-click campaign PDF with GPS route maps, KMs covered, QR engagement data, and auto photos. Share directly with clients as proof of delivery.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon navy">🗺️</div>
+        <div>
+          <div class="perk-title">Live Campaign Tracking</div>
+          <div class="perk-desc">You and your clients can see auto-rickshaws moving on a live map during the campaign. Show this to clients in your review meetings — it builds trust instantly.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon green">💰</div>
+        <div>
+          <div class="perk-title">Commission Dashboard</div>
+          <div class="perk-desc">See exactly how much commission you've earned per campaign and in total. Full transparency — no waiting for end-of-month statements.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon amber">🏢</div>
+        <div>
+          <div class="perk-title">Multi-Client Management</div>
+          <div class="perk-desc">Manage all your brand clients under one agency account. Each client campaign is tracked separately with its own data, budget, and report.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon navy">🔁</div>
+        <div>
+          <div class="perk-title">Repeat Business Engine</div>
+          <div class="perk-desc">GPS reports give clients undeniable proof of results. Clients who see data renew campaigns — meaning monthly recurring commission income for your agency.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon green">🏙️</div>
+        <div>
+          <div class="perk-title">Multi-City Campaigns</div>
+          <div class="perk-desc">AutoAdz is expanding to Delhi, Mumbai, Bangalore. As a partner agency, you can book campaigns across cities for national brand clients.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon amber">🤝</div>
+        <div>
+          <div class="perk-title">Zero Capital Required</div>
+          <div class="perk-desc">No investment, no inventory, no operations. You book campaigns using your existing client relationships. AutoAdz manages the entire fleet and execution.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 6: REVENUE PROJECTIONS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="projections">
+  <div class="section">
+    <div class="section-tag">Revenue Projections</div>
+    <div class="section-title">Your Agency Growth Timeline</div>
+    <div class="section-desc">Conservative estimate based on onboarding 1–2 new clients per month and renewing existing ones each month. Campaigns are typically 30-day contracts.</div>
+
+    <table class="proj-table">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Active Campaigns</th>
+          <th>Monthly Billing</th>
+          <th>Your Commission</th>
+          <th>Cumulative Earned</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Month 1–2 (Trial)</td>
+          <td>1–2 campaigns</td>
+          <td>₹1–2 Lakh</td>
+          <td class="amber-cell">₹15,000–30,000</td>
+          <td class="green-cell">₹30,000</td>
+        </tr>
+        <tr>
+          <td>Month 3–4</td>
+          <td>3–5 campaigns</td>
+          <td>₹3–5 Lakh</td>
+          <td class="amber-cell">₹45,000–75,000</td>
+          <td class="green-cell">₹1.5 Lakh</td>
+        </tr>
+        <tr class="proj-row-highlight">
+          <td>Month 5–6</td>
+          <td>6–10 campaigns</td>
+          <td>₹6–10 Lakh</td>
+          <td class="amber-cell">₹90,000–1.5L</td>
+          <td class="green-cell">₹4 Lakh</td>
+        </tr>
+        <tr>
+          <td>Month 9–12</td>
+          <td>15–20 campaigns</td>
+          <td>₹15–25 Lakh</td>
+          <td class="amber-cell">₹2.25L–3.75L/mo</td>
+          <td class="green-cell">₹15–20 Lakh</td>
+        </tr>
+        <tr class="proj-row-highlight">
+          <td><strong>Year 2 (Steady State)</strong></td>
+          <td><strong>25–30 campaigns</strong></td>
+          <td><strong>₹25–40 Lakh/mo</strong></td>
+          <td class="green-cell"><strong>₹3.75–6L / month</strong></td>
+          <td class="green-cell"><strong>₹45–70 Lakh / year</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight">
+      <p><strong>Why campaigns renew:</strong> When a client sees the GPS report showing 8,400 KMs covered, 212 QR scans, and photo proof of auto branding — they have no reason to stop. Unlike hoardings, this data is shareable with their own management. <strong>Data-backed campaigns have a 70%+ renewal rate in our pilot.</strong></p>
+    </div>
+
+    <div class="two-col">
+      <div class="box green">
+        <div class="box-icon">📈</div>
+        <div class="box-title">Recurring Revenue Model</div>
+        <div class="box-body">Every campaign you onboard compounds. Month 1 client renews in Month 2. Month 2 client renews in Month 3. Your commission base grows even without new client acquisition.</div>
+      </div>
+      <div class="box" style="background:#fff7ed;border-color:#fed7aa;">
+        <div class="box-icon">🎯</div>
+        <div class="box-title">Ideal First Clients</div>
+        <div class="box-body">FMCG brands · Retail chains · Real estate developers · Educational institutes · Fintech apps · BFSI sector. All active OOH spenders with measurement appetite.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 7: PLATFORM FEATURES -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="platform">
+  <div class="section">
+    <div class="section-tag">Platform Technology</div>
+    <div class="section-title">What Makes AutoAdz Different</div>
+    <div class="section-desc">Built ground-up in India for Indian transit advertising conditions — real-time GPS, offline-capable driver app, multi-tenant agency portal.</div>
+
+    <div class="proof-grid">
+      <div class="proof-card">
+        <div class="proof-icon">📡</div>
+        <div class="proof-title">Live GPS Tracking</div>
+        <div class="proof-body">Every auto sends GPS coordinates every 5 seconds. Agency portal shows live position on map during campaign hours.</div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">📸</div>
+        <div class="proof-title">Photo Proof of Install</div>
+        <div class="proof-body">Driver uploads morning check-in photo showing branding installed on their auto. Timestamped and geotagged.</div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">📲</div>
+        <div class="proof-title">QR Code Engagement</div>
+        <div class="proof-body">Each creative has a unique QR. Scans are counted per campaign, showing real consumer engagement from passers-by.</div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">📊</div>
+        <div class="proof-title">KM-Level Analytics</div>
+        <div class="proof-body">Exact kilometres covered per auto, per day, per zone. Campaign cumulative KM shown against target in real time.</div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">📄</div>
+        <div class="proof-title">One-Click PDF Report</div>
+        <div class="proof-body">Campaign summary PDF generated from live data — KMs, scans, auto count, creative, dates, map coverage. Client-ready format.</div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">🔐</div>
+        <div class="proof-title">Isolated Agency Data</div>
+        <div class="proof-body">Your client data is fully isolated. No other agency can see your campaigns. Secure JWT-authenticated portal login.</div>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <p><strong>Live demo available:</strong> We invite you to visit our office or schedule a video call for a live walkthrough of the Agency Portal — from campaign booking to live GPS tracking to PDF report generation. Everything takes less than 10 minutes to show. <strong>Contact Arun Jaiswal: +91 76030-64791</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE 8: NEXT STEPS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="nextsteps">
+  <div class="section">
+    <div class="section-tag">Next Steps</div>
+    <div class="section-title">How to Get Started as a Partner</div>
+    <div class="section-desc">Onboarding is quick and completely free. There is no lock-in — you book campaigns when your clients need them.</div>
+
+    <div class="next-steps">
+      <div class="ns">
+        <div class="ns-num">1</div>
+        <div>
+          <div class="ns-text">Schedule a 30-minute demo call or office visit</div>
+          <div class="ns-sub">We walk you through the Agency Portal live and answer all questions · Call +91 76030-64791</div>
+        </div>
+      </div>
+      <div class="ns">
+        <div class="ns-num">2</div>
+        <div>
+          <div class="ns-text">Sign a simple Agency Partnership Agreement</div>
+          <div class="ns-sub">1-page agreement covering commission rate, billing cycle, and data privacy — no complex terms</div>
+        </div>
+      </div>
+      <div class="ns">
+        <div class="ns-num">3</div>
+        <div>
+          <div class="ns-text">Register on autoadz.in → Login → OOH Agency tab</div>
+          <div class="ns-sub">Create your account in 2 minutes · Admin activates within 24 hours and sets your commission rate</div>
+        </div>
+      </div>
+      <div class="ns">
+        <div class="ns-num">4</div>
+        <div>
+          <div class="ns-text">Book your first pilot campaign for an existing client</div>
+          <div class="ns-sub">We recommend starting with a 30-day campaign for one client to demonstrate the product and build confidence</div>
+        </div>
+      </div>
+      <div class="ns">
+        <div class="ns-num">5</div>
+        <div>
+          <div class="ns-text">Share GPS report with client → Renew & scale</div>
+          <div class="ns-sub">PDF report delivered at campaign end · Client renewals start your recurring commission stream</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight" style="margin-top:8px;">
+      <p>
+        <strong>Pilot offer for first 5 agency partners:</strong> Commission rate locked at <strong>15%</strong> for 12 months from onboarding date. First campaign management support provided personally by the AutoAdz team. Priority fleet allocation for your client campaigns in Kolkata.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- FOOTER / CONTACT PAGE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="footer-page">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo-mark">A</div>
+        <div style="color:#fff;font-size:18px;font-weight:900;margin-bottom:4px;">AutoAdz.in</div>
+        <p>India's GPS-tracked auto-rickshaw advertising platform. Measurable transit media for the digital age.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <ul class="footer-col">
+          <li><strong>Arun Jaiswal</strong></li>
+          <li>Founder & Director</li>
+          <li>📞 +91 76030-64791</li>
+          <li>🌐 autoadz.in</li>
+          <li>✉️ deinrimsolutionss@gmail.com</li>
+          <li>📍 Kolkata, West Bengal</li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Partnership Terms</div>
+        <ul class="footer-col">
+          <li>Commission: <strong>15% of billing</strong></li>
+          <li>Min. campaign: <strong>₹30,000</strong></li>
+          <li>Contract: <strong>No lock-in</strong></li>
+          <li>Cities: <strong>Kolkata + expanding</strong></li>
+          <li>Setup: <strong>Free, 24-hr activation</strong></li>
+          <li>Reports: <strong>Per campaign, PDF</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <hr class="footer-divider">
+
+    <div class="footer-bottom">
+      <div>
+        <p>© 2026 AutoAdz.in · Deinrim Solutions · Kolkata, India</p>
+        <p style="margin-top:3px;">This document is confidential and intended only for the named agency partner.</p>
+      </div>
+      <button class="cta no-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('.toc-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
