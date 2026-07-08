@@ -48,6 +48,8 @@ async function runMigrations() {
   for (const q of migrations) {
     try { await db(q); } catch (_) { /* column already exists — skip */ }
   }
+  // Activate any agency accounts stuck with is_active=0 from old registration bug
+  try { await db("UPDATE users SET is_active = 1 WHERE role = 'agency' AND is_active = 0"); } catch (_) {}
 }
 runMigrations();
 
@@ -1368,7 +1370,7 @@ app.post("/api/agency/register", async (req, res) => {
     if (existing) return res.status(409).json({ error: "Email already registered" });
     const hash = await bcrypt.hash(password, 10);
     await db(
-      "INSERT INTO users (role, name, email, password_hash, company, phone) VALUES ('agency',?,?,?,?,?)",
+      "INSERT INTO users (role, name, email, password_hash, company, phone, is_active) VALUES ('agency',?,?,?,?,?,1)",
       [name, email, hash, company || "", phone || ""]
     );
     res.status(201).json({ success: true, message: "Agency account created. Please login." });
