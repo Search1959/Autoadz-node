@@ -3231,7 +3231,16 @@ export default function App() {
                       try {
                         const res = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword.trim() }) });
                         const data = await res.json();
-                        if (!res.ok) { setLoginError(data.error || "Invalid email or password."); return; }
+                        if (!res.ok) {
+                          if (res.status === 401 && data.error && data.error.includes("not registered as an agency")) {
+                            setAgencyRegEmail(loginEmail.trim().toLowerCase());
+                            setShowAgencyRegister(true);
+                            setLoginError("⚠️ Your email exists but not as agency. Fill the form below and click Register to fix it.");
+                          } else {
+                            setLoginError(data.error || "Invalid email or password.");
+                          }
+                          return;
+                        }
                         localStorage.setItem("autoadz_agency_jwt", data.token);
                         localStorage.setItem("autoadz_agency_id", String(data.userId));
                         localStorage.setItem("autoadz_agency_name", data.name);
