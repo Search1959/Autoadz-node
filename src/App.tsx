@@ -3229,10 +3229,9 @@ export default function App() {
                       if (showAgencyRegister) return;
                       if (!loginEmail || !loginPassword) { setLoginError("Please enter your email and password."); return; }
                       try {
-                        const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "agency", email: loginEmail.trim().toLowerCase(), password: loginPassword.trim() }) });
+                        const res = await fetch("/api/agency/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword.trim() }) });
                         const data = await res.json();
-                        if (!res.ok) { setLoginError(data.error || "Invalid credentials."); return; }
-                        if (data.role !== "agency") { setLoginError("This account is not registered as an agency."); return; }
+                        if (!res.ok) { setLoginError(data.error || "Invalid email or password."); return; }
                         localStorage.setItem("autoadz_agency_jwt", data.token);
                         localStorage.setItem("autoadz_agency_id", String(data.userId));
                         localStorage.setItem("autoadz_agency_name", data.name);

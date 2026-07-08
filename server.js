@@ -1390,6 +1390,25 @@ app.post("/api/agency/register", async (req, res) => {
   }
 });
 
+// Dedicated agency login
+app.post("/api/agency/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+  try {
+    const [user] = await db("SELECT * FROM users WHERE email = ?", [email.trim().toLowerCase()]);
+    if (!user) return res.status(401).json({ error: "Email not found. Please register first." });
+    if (user.role !== "agency") return res.status(401).json({ error: "This email is not registered as an agency. Use Register form below." });
+    if (!user.is_active) return res.status(403).json({ error: "Account disabled. Contact AutoAdz support." });
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: "Wrong password. Please try again." });
+    const token = jwt.sign({ id: user.id, role: "agency", name: user.name }, JWT_SECRET, { expiresIn: "7d" });
+    res.json({ success: true, token, role: "agency", userId: user.id, name: user.name, email: user.email, company: user.company || "", phone: user.phone || "" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Login failed. Please try again." });
+  }
+});
+
 // Login (admin + advertiser by email; driver by phone)
 app.post("/api/auth/login", async (req, res) => {
   const { email, phone, password, role } = req.body;
