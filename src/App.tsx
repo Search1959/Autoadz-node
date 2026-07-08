@@ -34,7 +34,7 @@ export default function App() {
   const [landingSection, setLandingSection] = useState<"hero" | "register-campaign" | "register-driver" | "login">("hero");
   const [heroSlide, setHeroSlide] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setHeroSlide(s => (s + 1) % 4), 6000);
+    const t = setInterval(() => setHeroSlide(s => (s + 1) % 5), 6000);
     return () => clearInterval(t);
   }, []);
   const [heroBgVisibility, setHeroBgVisibility] = useState<"none" | "light" | "medium" | "full">("light");
@@ -2399,6 +2399,13 @@ export default function App() {
                         bullets: ["Zero hidden charges", "Weekly performance reports", "Photo + GPS dual verification"],
                         cta: "Launch a Campaign", ctaAction: "register-campaign",
                       },
+                      {
+                        bg: "#1e3a5f", tag: "For OOH Agencies", icon: "🤝",
+                        title: "Earn 15% Commission on Every Campaign",
+                        desc: "Partner with AutoAdz and add GPS-verified auto-rickshaw transit media to your agency portfolio. No investment required — bring the client, we handle the rest.",
+                        bullets: ["15% commission on all campaign billing", "Branded client dashboard & PDF reports", "Dedicated agency portal to manage clients"],
+                        cta: "View Agency Proposal", ctaAction: "agency-portal",
+                      },
                     ].map((slide, i) => (
                       <div
                         key={i}
@@ -2438,7 +2445,7 @@ export default function App() {
                   {/* Dot indicators + prev/next */}
                   <div className="flex items-center justify-between px-1">
                     <div className="flex gap-1.5">
-                      {[0,1,2,3].map(i => (
+                      {[0,1,2,3,4].map(i => (
                         <button
                           key={i}
                           onClick={() => setHeroSlide(i)}
@@ -2447,8 +2454,8 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => setHeroSlide(s => (s + 3) % 4)} className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs transition">‹</button>
-                      <button onClick={() => setHeroSlide(s => (s + 1) % 4)} className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs transition">›</button>
+                      <button onClick={() => setHeroSlide(s => (s + 4) % 5)} className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs transition">‹</button>
+                      <button onClick={() => setHeroSlide(s => (s + 1) % 5)} className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs transition">›</button>
                     </div>
                   </div>
                   {/* Bottom CTA strip */}
@@ -2487,6 +2494,63 @@ export default function App() {
                       <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
                     </div>
                   ))}
+                </div>
+              </div>
+            </section>
+
+            {/* ── FOR OOH AGENCIES ─────────────────────────────────────── */}
+            <section className="w-full bg-[#0B1F4D] py-14 px-4 md:px-10 border-b border-slate-100">
+              <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-10">
+                  <span className="inline-block text-[10px] font-mono font-bold text-[#FF9800] tracking-widest uppercase bg-[#FF9800]/10 px-3 py-1 rounded-full mb-3">For OOH Agencies</span>
+                  <h2 className="text-3xl font-display font-black text-white mt-1">Add Transit Media to Your Portfolio</h2>
+                  <p className="text-white/60 text-sm mt-3 max-w-xl mx-auto">Partner with AutoAdz and offer GPS-verified auto-rickshaw advertising to your clients — with zero upfront investment and 15% commission on every campaign.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                  {[
+                    { icon: "💰", title: "15% Commission", desc: "Earn on every campaign your agency brings — paid automatically after client billing.", color: "#FF9800" },
+                    { icon: "📊", title: "Client Dashboard", desc: "Your clients get a branded portal with live GPS tracking, KM reports and QR scan data.", color: "#22c55e" },
+                    { icon: "📄", title: "PDF Reports", desc: "Auto-generated campaign performance reports — ready to share with your clients.", color: "#60a5fa" },
+                  ].map((f) => (
+                    <div key={f.title} className="bg-white/5 border border-white/10 rounded-2xl p-7 text-center hover:bg-white/10 transition">
+                      <div className="text-4xl mb-4">{f.icon}</div>
+                      <h3 className="text-white font-black text-base mb-2">{f.title}</h3>
+                      <p className="text-white/50 text-xs leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-7 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <div>
+                    <h3 className="text-white font-black text-lg mb-4">How Agency Partnership Works</h3>
+                    <ul className="space-y-3">
+                      {[
+                        "Register your agency on AutoAdz portal",
+                        "Add your OOH clients and create campaigns for them",
+                        "Clients get their own GPS-tracked campaign dashboard",
+                        "You earn 15% commission — every campaign, every month",
+                      ].map((s, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm text-white/70">
+                          <span className="w-5 h-5 rounded-full bg-[#FF9800]/20 text-[#FF9800] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{i+1}</span>
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="flex flex-col gap-3 items-start md:items-end">
+                    <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-xl p-5 w-full md:max-w-xs">
+                      <div className="text-[#FF9800] font-mono text-xs font-bold mb-2 uppercase tracking-widest">Revenue Example</div>
+                      <div className="text-white text-2xl font-black mb-1">₹7,500 / month</div>
+                      <div className="text-white/50 text-xs">on just 5 campaigns × ₹10,000 avg billing</div>
+                    </div>
+                    <a href="/AutoAdz-Agency-Partnership-Proposal.html" target="_blank" rel="noopener noreferrer"
+                      className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-6 py-3 rounded-xl transition w-full md:max-w-xs text-center">
+                      View Full Agency Proposal →
+                    </a>
+                    <button onClick={() => setLandingSection("agency-portal")}
+                      className="border-2 border-white/20 text-white hover:bg-white/10 font-bold text-sm px-6 py-3 rounded-xl transition w-full md:max-w-xs text-center">
+                      Register as Agency Partner
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
