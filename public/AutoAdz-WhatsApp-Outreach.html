@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AutoAdz — Agency WhatsApp Outreach Templates</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #166534 0%, #0B1F4D 100%); color: white; padding: 32px 24px; text-align: center; }
+  .header-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; }
+  .logo-icon { width: 48px; height: 48px; background: #FF9800; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .header h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
+  .header p { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+  .wa-badge { display: inline-flex; align-items: center; gap: 6px; background: #25D366; color: white; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; margin-top: 12px; }
+
+  /* Layout */
+  .container { max-width: 820px; margin: 0 auto; padding: 28px 16px 60px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; background: white; border-radius: 16px; padding: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 24px; overflow-x: auto; }
+  .tab { flex: 1; min-width: 110px; padding: 10px 12px; border-radius: 12px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; text-align: center; transition: all 0.2s; background: transparent; color: #6b7280; white-space: nowrap; }
+  .tab.active { background: #166534; color: white; box-shadow: 0 2px 8px rgba(22,101,52,0.3); }
+  .tab:hover:not(.active) { background: #f0fdf4; color: #166534; }
+
+  /* Message card */
+  .msg-card { background: white; border-radius: 20px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
+  .msg-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; }
+  .msg-label { display: flex; align-items: center; gap: 8px; }
+  .msg-number { width: 28px; height: 28px; background: #166534; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+  .msg-title { font-size: 14px; font-weight: 800; color: #0B1F4D; }
+  .msg-sub { font-size: 11px; color: #6b7280; margin-top: 1px; }
+  .timing-badge { font-size: 11px; background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
+
+  /* WhatsApp preview */
+  .wa-preview { background: #e5ddd5; padding: 16px; position: relative; }
+  .wa-preview::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='1' fill='%23c8b9a8' opacity='0.5'/%3E%3C/svg%3E"); }
+  .wa-bubble { background: white; border-radius: 0 12px 12px 12px; padding: 12px 14px; max-width: 90%; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; font-size: 13.5px; line-height: 1.6; color: #1a1a1a; white-space: pre-wrap; word-break: break-word; }
+  .wa-bubble::before { content: ''; position: absolute; top: 0; left: -8px; width: 0; height: 0; border-style: solid; border-width: 0 0 10px 10px; border-color: transparent transparent white transparent; }
+  .wa-time { text-align: right; font-size: 11px; color: #aaa; margin-top: 4px; }
+
+  /* Copy button */
+  .copy-btn { display: flex; align-items: center; gap: 6px; background: #25D366; color: white; border: none; border-radius: 12px; padding: 10px 18px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; margin: 12px 16px 16px; }
+  .copy-btn:hover { background: #1ebe5d; transform: translateY(-1px); }
+  .copy-btn.copied { background: #166534; }
+
+  /* Tips */
+  .tips-card { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 16px; padding: 18px 20px; margin-top: 24px; }
+  .tips-card h3 { font-size: 14px; font-weight: 800; color: #166534; margin-bottom: 12px; display: flex; align-items: center; gap-6px; }
+  .tips-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .tips-card li { font-size: 12.5px; color: #374151; display: flex; align-items: flex-start; gap: 8px; }
+  .tips-card li::before { content: '✓'; color: #22c55e; font-weight: 900; margin-top: 1px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .highlight { background: #fef3c7; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
+  b { font-weight: 800; }
+
+  @media (max-width: 540px) {
+    .header h1 { font-size: 20px; }
+    .tabs { gap: 3px; }
+    .tab { padding: 8px 8px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-icon">🛺</div>
+    <div>
+      <h1>AutoAdz Agency Outreach</h1>
+      <p>WhatsApp Message Templates for OOH Agency Partnership</p>
+    </div>
+  </div>
+  <div class="wa-badge">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    WhatsApp Ready Templates
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showPanel('intro')">1st Message</button>
+    <button class="tab" onclick="showPanel('followup1')">Follow-up 1</button>
+    <button class="tab" onclick="showPanel('followup2')">Follow-up 2</button>
+    <button class="tab" onclick="showPanel('meeting')">Meeting Confirm</button>
+    <button class="tab" onclick="showPanel('proposal')">Send Proposal</button>
+  </div>
+
+  <!-- Panel 1: First Message -->
+  <div class="panel active" id="panel-intro">
+    <div class="msg-card">
+      <div class="msg-header">
+        <div class="msg-label">
+          <div class="msg-number">1</div>
+          <div>
+            <div class="msg-title">First Contact Message</div>
+            <div class="msg-sub">Send cold to BD/Partnership contact</div>
+          </div>
+        </div>
+        <div class="timing-badge">Day 1</div>
+      </div>
+      <div class="wa-preview">
+        <div class="wa-bubble" id="msg-intro">Hello [Name] 👋
+
+I'm Arun Jaiswal from *AutoAdz* — India's first GPS-tracked auto-rickshaw advertising platform.
+
+We help OOH agencies expand their transit media portfolio with verified, data-backed auto-rickshaw campaigns across Kolkata, Delhi, Bangalore & Mumbai.
+
+🛺 *Why agencies partner with us:*
+• 15% commission on every campaign
+• Real-time GPS proof — no guesswork
+• QR scan tracking per auto
+• Campaign dashboard for your clients
+• Zero upfront investment for your agency
+
+I'd love to explore a revenue-share partnership with *[Agency Name]*.
+
+May I send our agency proposal? Takes 2 minutes to review. 🙏
+
+— Arun Jaiswal
+AutoAdz.in | +91 98361 30393</div>
+        <div class="wa-time">✓✓ 10:30 AM</div>
+      </div>
+      <button class="copy-btn" onclick="copyMsg('msg-intro', this)">
+        📋 Copy Message
+      </button>
+    </div>
+
+    <div class="tips-card">
+      <h3>💡 Tips for First Message</h3>
+      <ul>
+        <li>Find the BD/Partnerships contact on LinkedIn before messaging</li>
+        <li>Replace [Name] and [Agency Name] before sending</li>
+        <li>Send between 10am–12pm or 3pm–5pm on weekdays</li>
+        <li>Don't send proposal link in first message — wait for reply</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Panel 2: Follow-up 1 -->
+  <div class="panel" id="panel-followup1">
+    <div class="msg-card">
+      <div class="msg-header">
+        <div class="msg-label">
+          <div class="msg-number">2</div>
+          <div>
+            <div class="msg-title">Follow-up 1 — No Reply</div>
+            <div class="msg-sub">Send if no reply in 4–5 days</div>
+          </div>
+        </div>
+        <div class="timing-badge">Day 5–6</div>
+      </div>
+      <div class="wa-preview">
+        <div class="wa-bubble" id="msg-fu1">Hi [Name] 👋
+
+Just following up on my message from last week about AutoAdz.
+
+In case it got buried — we're a GPS-verified auto-rickshaw ad platform offering *15% commission* to agency partners on every campaign they bring us.
+
+We already have operations in Kolkata 🚀
+
+Happy to share our agency proposal — it's a 2-minute read with all commission details, campaign pricing, and client reporting tools.
+
+Would this be a good time to connect?
+
+— Arun | AutoAdz.in</div>
+        <div class="wa-time">✓✓ 11:15 AM</div>
+      </div>
+      <button class="copy-btn" onclick="copyMsg('msg-fu1', this)">
+        📋 Copy Message
+      </button>
+    </div>
+
+    <div class="tips-card">
+      <h3>💡 Tips for Follow-up 1</h3>
+      <ul>
+        <li>Keep it short — shorter than first message</li>
+        <li>Mention the specific benefit again (15% commission)</li>
+        <li>Ask a simple yes/no question at the end</li>
+        <li>Don't apologize for following up — be confident</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Panel 3: Follow-up 2 -->
+  <div class="panel" id="panel-followup2">
+    <div class="msg-card">
+      <div class="msg-header">
+        <div class="msg-label">
+          <div class="msg-number">3</div>
+          <div>
+            <div class="msg-title">Follow-up 2 — Final Nudge</div>
+            <div class="msg-sub">Last attempt before moving on</div>
+          </div>
+        </div>
+        <div class="timing-badge">Day 10–12</div>
+      </div>
+      <div class="wa-preview">
+        <div class="wa-bubble" id="msg-fu2">Hi [Name],
+
+One last note from my end — I don't want to keep pinging if the timing isn't right.
+
+We're onboarding a few select agency partners in Q3 for our Kolkata expansion. If [Agency Name] would like to be part of it, I'd love to get on a 15-minute call this week.
+
+Here's our full agency proposal for your reference:
+👉 https://autoadz.in/AutoAdz-Agency-Partnership-Proposal.html
+
+If not the right fit now, totally understand — just let me know and I won't follow up further.
+
+Thanks for your time 🙏
+— Arun | AutoAdz.in</div>
+        <div class="wa-time">✓✓ 10:45 AM</div>
+      </div>
+      <button class="copy-btn" onclick="copyMsg('msg-fu2', this)">
+        📋 Copy Message
+      </button>
+    </div>
+
+    <div class="tips-card">
+      <h3>💡 Tips for Follow-up 2</h3>
+      <ul>
+        <li>This is your last message — make it feel final</li>
+        <li>Give them an easy out ("just let me know and I won't follow up")</li>
+        <li>Now is the right time to share the proposal link</li>
+        <li>Create urgency with "Q3 expansion" framing</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Panel 4: Meeting Confirmation -->
+  <div class="panel" id="panel-meeting">
+    <div class="msg-card">
+      <div class="msg-header">
+        <div class="msg-label">
+          <div class="msg-number">4</div>
+          <div>
+            <div class="msg-title">Meeting / Call Confirmation</div>
+            <div class="msg-sub">Send after they agree to a call</div>
+          </div>
+        </div>
+        <div class="timing-badge">After Reply</div>
+      </div>
+      <div class="wa-preview">
+        <div class="wa-bubble" id="msg-meet">Hi [Name] 😊
+
+Great connecting! Confirming our call:
+
+📅 *Date:* [Day, Date]
+⏰ *Time:* [Time] IST
+📞 *Mode:* Google Meet / WhatsApp Call / Phone
+
+I'll send the Google Meet link 30 minutes before.
+
+*What we'll cover in 15 mins:*
+• How AutoAdz GPS tracking works
+• Commission structure & payout
+• How your agency creates client campaigns
+• Live platform demo
+
+Looking forward to it!
+
+— Arun Jaiswal
+AutoAdz.in | +91 98361 30393</div>
+        <div class="wa-time">✓✓ 2:30 PM</div>
+      </div>
+      <button class="copy-btn" onclick="copyMsg('msg-meet', this)">
+        📋 Copy Message
+      </button>
+    </div>
+
+    <div class="tips-card">
+      <h3>💡 Tips for Meeting Confirmation</h3>
+      <ul>
+        <li>Always confirm in writing — avoids "I forgot" cancellations</li>
+        <li>Keep the agenda to 3–4 bullet points max</li>
+        <li>Remind 30 minutes before with the meeting link</li>
+        <li>Prepare the live demo at autoadz.in before the call</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Panel 5: Send Proposal -->
+  <div class="panel" id="panel-proposal">
+    <div class="msg-card">
+      <div class="msg-header">
+        <div class="msg-label">
+          <div class="msg-number">5</div>
+          <div>
+            <div class="msg-title">Send Proposal Link</div>
+            <div class="msg-sub">When they ask for more details</div>
+          </div>
+        </div>
+        <div class="timing-badge">On Request</div>
+      </div>
+      <div class="wa-preview">
+        <div class="wa-bubble" id="msg-prop">Hi [Name] 👋
+
+As promised — here's the AutoAdz Agency Partnership Proposal:
+
+👉 *https://autoadz.in/AutoAdz-Agency-Partnership-Proposal.html*
+
+*Key highlights:*
+✅ 15% commission on all campaign billing
+✅ GPS-verified KM tracking per auto
+✅ QR scan engagement tracking per campaign
+✅ Branded client dashboard & PDF reports
+✅ No investment required from your agency
+
+The proposal covers:
+• How it works end-to-end
+• Commission model with examples
+• Transparent pricing (Fleet fee + Production)
+• Revenue projections for 5/10/20 campaigns
+• Platform features & next steps
+
+Takes about 3 minutes to read.
+
+Happy to walk you through it on a quick call if you prefer 😊
+
+— Arun | AutoAdz.in | +91 98361 30393</div>
+        <div class="wa-time">✓✓ 11:00 AM</div>
+      </div>
+      <button class="copy-btn" onclick="copyMsg('msg-prop', this)">
+        📋 Copy Message
+      </button>
+    </div>
+
+    <div class="tips-card">
+      <h3>💡 Tips for Sending Proposal</h3>
+      <ul>
+        <li>Always send the live URL — not a PDF attachment (easier to view on mobile)</li>
+        <li>Summarise key points in the message so they don't have to open the link first</li>
+        <li>End with a soft CTA — offer a call, don't demand one</li>
+        <li>Follow up in 2 days if they don't respond after seeing the proposal</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Quick Reference -->
+  <div style="background:white; border-radius:20px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,0.07); margin-top:24px;">
+    <h3 style="font-size:14px;font-weight:800;color:#0B1F4D;margin-bottom:14px;">📋 Outreach Sequence at a Glance</h3>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#f0fdf4;border-radius:12px;border-left:3px solid #166534;">
+        <span style="font-size:20px;">1️⃣</span>
+        <div><p style="font-size:13px;font-weight:700;color:#166534;">Day 1 — First Contact</p><p style="font-size:11px;color:#6b7280;">Introduce AutoAdz + 15% commission. Ask to send proposal.</p></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fefce8;border-radius:12px;border-left:3px solid #eab308;">
+        <span style="font-size:20px;">2️⃣</span>
+        <div><p style="font-size:13px;font-weight:700;color:#a16207;">Day 5–6 — Follow-up 1</p><p style="font-size:11px;color:#6b7280;">Short nudge. Re-state benefit. Ask simple question.</p></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fef2f2;border-radius:12px;border-left:3px solid #ef4444;">
+        <span style="font-size:20px;">3️⃣</span>
+        <div><p style="font-size:13px;font-weight:700;color:#dc2626;">Day 10–12 — Follow-up 2 (Final)</p><p style="font-size:11px;color:#6b7280;">Send proposal link. Create urgency. Give easy out.</p></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#eff6ff;border-radius:12px;border-left:3px solid #3b82f6;">
+        <span style="font-size:20px;">🤝</span>
+        <div><p style="font-size:13px;font-weight:700;color:#1d4ed8;">On Reply — Schedule Call + Confirm</p><p style="font-size:11px;color:#6b7280;">Send meeting confirmation. Demo the live platform.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function copyMsg(id, btn) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    const el = document.getElementById(id);
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    btn.innerHTML = '✅ Copied!';
+    setTimeout(() => { btn.innerHTML = '📋 Copy Message'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
