@@ -62,6 +62,7 @@ export default function App() {
   const [regGstin, setRegGstin] = useState("");
   const [regLoading, setRegLoading] = useState(false);
   const [showAdvPassword, setShowAdvPassword] = useState(false);
+  const [showAgencyPassword, setShowAgencyPassword] = useState(false);
 
   // Advertiser Reach Calculator States
   const [calcVehicles, setCalcVehicles] = useState<number>(25);
@@ -3122,7 +3123,10 @@ export default function App() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-slate-500 uppercase font-bold tracking-wide block">Password</label>
-                        <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" autoCapitalize="none" autoComplete="off" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
+                        <div className="relative">
+                          <input type={showAgencyPassword ? "text" : "password"} value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" autoCapitalize="none" autoComplete="off" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 pr-16 text-sm text-slate-800 focus:border-[#166534] focus:outline-none" />
+                          <button type="button" onClick={() => setShowAgencyPassword(p => !p)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold">{showAgencyPassword ? "Hide" : "Show"}</button>
+                        </div>
                       </div>
                     </>
                   ) : (

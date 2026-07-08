@@ -1467,7 +1467,14 @@ async function startServer() {
   }
 
   // Version check + direct agency repair endpoint (must be before catch-all)
-  app.get("/api/version", (req, res) => res.json({ v: "2024-07-08-v7", ok: true }));
+  app.get("/api/version", (req, res) => res.json({ v: "2024-07-08-v8", ok: true }));
+  app.get("/api/agency/check", async (req, res) => {
+    const { email, key } = req.query;
+    if (key !== "aa2024fix") return res.status(403).json({ error: "forbidden" });
+    const [u] = await db("SELECT id, email, role, is_active FROM users WHERE email = ?", [email.trim().toLowerCase()]);
+    if (!u) return res.json({ found: false });
+    res.json({ found: true, id: u.id, email: u.email, role: u.role, is_active: u.is_active });
+  });
   app.get("/api/agency/repair", async (req, res) => {
     const { email, pass, key } = req.query;
     if (key !== "aa2024fix") return res.status(403).json({ error: "forbidden" });
