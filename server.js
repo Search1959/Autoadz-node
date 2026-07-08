@@ -1361,32 +1361,31 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-// Agency self-registration
+// Agency self-registration / password reset
 app.post("/api/agency/register", async (req, res) => {
   const { name, email, password, company, phone } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: "Name, email and password are required" });
+  if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
   try {
-    const [existing] = await db("SELECT id, role FROM users WHERE email = ?", [email]);
+    const safeEmail = email.trim().toLowerCase();
+    const safeName = (name || "").trim() || safeEmail.split("@")[0];
     const hash = await bcrypt.hash(password, 10);
+    const [existing] = await db("SELECT id FROM users WHERE email = ?", [safeEmail]);
     if (existing) {
-      if (existing.role === "agency") {
-        return res.status(409).json({ error: "Email already registered as agency. Please login." });
-      }
-      // Email exists under different role (e.g. advertiser) — upgrade to agency
+      // Always upgrade/update to agency — covers all cases (advertiser, agency with wrong password, etc.)
       await db(
         "UPDATE users SET role='agency', name=?, password_hash=?, company=?, phone=?, is_active=1 WHERE id=?",
-        [name, hash, company || "", phone || "", existing.id]
+        [safeName, hash, company || "", phone || "", existing.id]
       );
-      return res.status(200).json({ success: true, message: "Account updated to agency. Please login." });
+      return res.json({ success: true, message: "Agency account ready." });
     }
     await db(
       "INSERT INTO users (role, name, email, password_hash, company, phone, is_active) VALUES ('agency',?,?,?,?,?,1)",
-      [name, email, hash, company || "", phone || ""]
+      [safeName, safeEmail, hash, company || "", phone || ""]
     );
-    res.status(201).json({ success: true, message: "Agency account created. Please login." });
+    res.status(201).json({ success: true, message: "Agency account created." });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Registration failed" });
+    console.error("Agency register error:", err);
+    res.status(500).json({ error: "Registration failed: " + err.message });
   }
 });
 
