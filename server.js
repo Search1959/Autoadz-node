@@ -1366,9 +1366,19 @@ app.post("/api/agency/register", async (req, res) => {
   const { name, email, password, company, phone } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: "Name, email and password are required" });
   try {
-    const [existing] = await db("SELECT id FROM users WHERE email = ?", [email]);
-    if (existing) return res.status(409).json({ error: "Email already registered" });
+    const [existing] = await db("SELECT id, role FROM users WHERE email = ?", [email]);
     const hash = await bcrypt.hash(password, 10);
+    if (existing) {
+      if (existing.role === "agency") {
+        return res.status(409).json({ error: "Email already registered as agency. Please login." });
+      }
+      // Email exists under different role (e.g. advertiser) — upgrade to agency
+      await db(
+        "UPDATE users SET role='agency', name=?, password_hash=?, company=?, phone=?, is_active=1 WHERE id=?",
+        [name, hash, company || "", phone || "", existing.id]
+      );
+      return res.status(200).json({ success: true, message: "Account updated to agency. Please login." });
+    }
     await db(
       "INSERT INTO users (role, name, email, password_hash, company, phone, is_active) VALUES ('agency',?,?,?,?,?,1)",
       [name, email, hash, company || "", phone || ""]
