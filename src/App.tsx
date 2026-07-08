@@ -2548,7 +2548,7 @@ export default function App() {
                       className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-sm px-6 py-3 rounded-xl transition w-full md:max-w-xs text-center">
                       View Full Agency Proposal →
                     </a>
-                    <button onClick={() => setLandingSection("agency-portal")}
+                    <button onClick={() => setLandingSection("login")}
                       className="border-2 border-white/20 text-white hover:bg-white/10 font-bold text-sm px-6 py-3 rounded-xl transition w-full md:max-w-xs text-center">
                       Register as Agency Partner
                     </button>
