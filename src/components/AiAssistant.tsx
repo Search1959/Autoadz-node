@@ -62,7 +62,9 @@ export default function AiAssistant({ embedded = false, onSuggestedPrompt }: AiA
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 1 || loading) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, loading]);
 
   const handleSend = async (textToSend?: string) => {
