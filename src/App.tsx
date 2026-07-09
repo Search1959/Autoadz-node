@@ -3483,8 +3483,10 @@ export default function App() {
       )}
       {/* Dynamic Master Header */}
       <header className="bg-[#0B1F4D] text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 shadow-md border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#FF9800] rounded-xl flex items-center justify-center font-display font-bold text-xl text-white shadow-md animate-bounce">
+        <button onClick={() => { setUserSession(null); setDemoMode(false); setLandingSection("hero"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer text-left"
+          title="Go to Home">
+          <div className="w-10 h-10 bg-[#FF9800] rounded-xl flex items-center justify-center font-display font-bold text-xl text-white shadow-md animate-bounce shrink-0">
             A
           </div>
           <div>
@@ -3504,7 +3506,7 @@ export default function App() {
             </div>
             <p className="text-xs text-slate-300 font-mono">India's measurable auto-rickshaw advertising with GPS proof</p>
           </div>
-        </div>
+        </button>
 
         {/* Sync Status Button */}
         <div className="flex items-center gap-4">
