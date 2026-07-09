@@ -1516,6 +1516,9 @@ async function startServer() {
     const publicPath = path.join(process.cwd(), "public");
     app.use(express.static(publicPath));
     app.use(express.static(distPath));
+    app.get("/demo", (req, res) => {
+      res.sendFile(path.join(publicPath, "demo.html"));
+    });
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
