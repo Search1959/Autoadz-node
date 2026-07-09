@@ -2486,15 +2486,21 @@ export default function App() {
                     </div>
                   </div>
                   {/* Bottom CTA strip */}
-                  <div className="bg-[#0B1F4D] rounded-2xl px-5 py-3 flex items-center justify-between">
-                    <div>
+                  <div className="bg-[#0B1F4D] rounded-2xl px-5 py-3 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
                       <div className="text-white font-black text-sm">Ready to start?</div>
                       <div className="text-white/50 text-[10px] font-mono">📞 76030-64791 · autoadz.in</div>
                     </div>
-                    <button onClick={() => setLandingSection("register-campaign")}
-                      className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-xs px-4 py-2 rounded-lg transition shrink-0">
-                      Launch →
-                    </button>
+                    <div className="flex gap-2 shrink-0">
+                      <a href="/demo" target="_blank"
+                        className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs px-4 py-2 rounded-lg transition">
+                        👁 Live Demo
+                      </a>
+                      <button onClick={() => setLandingSection("register-campaign")}
+                        className="bg-[#FF9800] hover:bg-orange-500 text-white font-black text-xs px-4 py-2 rounded-lg transition">
+                        Launch →
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

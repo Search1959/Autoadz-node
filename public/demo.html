@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AutoAdz Live Demo — Interactive Platform Preview</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;min-height:100vh}
+
+/* ── DEMO BADGE ── */
+#demo-bar{position:fixed;top:0;left:0;right:0;z-index:1000;background:#0B1F4D;display:flex;align-items:center;justify-content:space-between;padding:8px 20px;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.demo-badge{background:#FF9800;color:#fff;font-size:10px;font-weight:900;letter-spacing:.12em;padding:4px 12px;border-radius:20px;text-transform:uppercase}
+.demo-title{color:rgba(255,255,255,.7);font-size:12px;font-weight:600}
+.demo-logo{color:#fff;font-size:15px;font-weight:900}
+.demo-logo span{color:#FF9800}
+
+/* ── ROLE SWITCHER ── */
+#role-switcher{position:fixed;top:44px;left:0;right:0;z-index:999;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;gap:0;overflow-x:auto}
+.role-btn{flex:1;min-width:100px;padding:12px 8px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;color:#94a3b8;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px}
+.role-btn.active{color:#0B1F4D;border-bottom-color:#FF9800;background:#fffbf5}
+.role-btn .dot{width:7px;height:7px;border-radius:50%}
+.dot-adv{background:#166534}
+.dot-agency{background:#6366f1}
+.dot-driver{background:#FF9800}
+.dot-admin{background:#ef4444}
+
+/* ── MAIN CONTENT ── */
+#main{padding-top:96px;max-width:960px;margin:0 auto;padding-left:16px;padding-right:16px;padding-bottom:40px}
+.view{display:none}.view.active{display:block}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:20px;margin-bottom:16px}
+.card-dark{background:#0B1F4D;border-radius:16px;padding:20px;margin-bottom:16px;color:#fff}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;margin-bottom:12px}
+h2{font-size:20px;font-weight:800;color:#0B1F4D;margin-bottom:4px}
+h3{font-size:15px;font-weight:700;color:#0B1F4D;margin-bottom:8px}
+h4{font-size:13px;font-weight:700;color:#0B1F4D;margin-bottom:4px}
+p{font-size:13px;color:#64748b;line-height:1.6}
+
+/* ── STAT GRID ── */
+.stats{display:grid;gap:12px;margin-bottom:16px}
+.stats-4{grid-template-columns:repeat(4,1fr)}
+.stats-3{grid-template-columns:repeat(3,1fr)}
+.stats-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:600px){.stats-4,.stats-3{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center}
+.stat .val{font-size:24px;font-weight:900;line-height:1;margin-bottom:4px}
+.stat .lbl{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.val-green{color:#166534}.val-orange{color:#FF9800}.val-navy{color:#0B1F4D}.val-purple{color:#6366f1}.val-red{color:#ef4444}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.04em}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-orange{background:#fff7ed;color:#c2410c}
+.badge-navy{background:#e0e7ff;color:#3730a3}
+.badge-amber{background:#fef9c3;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-gray{background:#f1f5f9;color:#475569}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── MAP ── */
+.map-wrap{border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:16px}
+.map-header{background:#0B1F4D;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+.map-header span{color:#fff;font-size:12px;font-weight:700}
+#map-adv,#map-agency,#map-admin{height:280px}
+
+/* ── CAMPAIGN CARD ── */
+.camp-card{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:14px}
+.camp-header{padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:flex-start}
+.camp-metrics{display:grid;grid-template-columns:repeat(4,1fr);divide-x:1px solid #f1f5f9}
+.metric{padding:10px 0;text-align:center;border-right:1px solid #f1f5f9}
+.metric:last-child{border-right:none}
+.metric .mv{font-size:16px;font-weight:900}
+.metric .ml{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.camp-foot{background:#f8fafc;padding:10px 16px;display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+.btn-outline{background:#fff;border:1px solid #e2e8f0;color:#475569}
+.btn-green{background:#166534;color:#fff}
+.btn-orange{background:#FF9800;color:#fff}
+.btn-navy{background:#0B1F4D;color:#fff}
+.progress-bar{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:2px;background:#166534;transition:width .5s}
+
+/* ── DRIVER VIEW ── */
+.driver-card{background:linear-gradient(135deg,#0B1F4D,#1e3a5f);border-radius:16px;padding:24px;color:#fff;margin-bottom:16px;text-align:center}
+.driver-avatar{width:70px;height:70px;border-radius:50%;background:#FF9800;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff}
+.earn-ring{width:140px;height:140px;margin:16px auto;position:relative}
+.earn-ring svg{transform:rotate(-90deg)}
+.earn-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+
+/* ── ADMIN ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;border-bottom:1px solid #e2e8f0;font-weight:700}
+td{padding:10px 12px;border-bottom:1px solid #f8fafc;color:#334155;vertical-align:middle}
+tr:hover td{background:#f8fafc}
+
+/* ── CHECKLIST ── */
+.checklist{list-style:none;display:flex;flex-direction:column;gap:10px}
+.checklist li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#475569}
+.check-ico{min-width:20px;height:20px;border-radius:50%;background:#dcfce7;color:#166534;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:1px}
+
+/* ── READONLY OVERLAY ── */
+.readonly-notice{background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:10px 16px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px;margin-bottom:16px}
+
+/* ── TIMELINE ── */
+.timeline{display:flex;flex-direction:column;gap:0}
+.trow{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.trow:last-child{border-bottom:none}
+.ttime{font-size:10px;color:#94a3b8;font-family:monospace;min-width:44px;padding-top:2px}
+.tbody h4{font-size:12px;font-weight:700;color:#0B1F4D;margin-bottom:2px}
+.tbody p{font-size:11px;color:#64748b}
+
+/* ── WELCOME SCREEN ── */
+#welcome{position:fixed;inset:0;background:#0B1F4D;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px}
+.welcome-logo{font-size:52px;margin-bottom:12px}
+.welcome-title{font-size:32px;font-weight:900;color:#fff;text-align:center;margin-bottom:8px}
+.welcome-title span{color:#FF9800}
+.welcome-sub{font-size:14px;color:rgba(255,255,255,.6);text-align:center;max-width:420px;line-height:1.7;margin-bottom:36px}
+.role-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:480px}
+.role-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px;cursor:pointer;transition:all .2s;text-align:center}
+.role-card:hover{background:rgba(255,255,255,.15);border-color:rgba(255,152,0,.5);transform:translateY(-2px)}
+.role-card .icon{font-size:32px;margin-bottom:10px}
+.role-card h3{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
+.role-card p{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- ══ WELCOME SCREEN ══ -->
+<div id="welcome">
+  <div class="welcome-logo">🛺</div>
+  <div class="welcome-title">Auto<span>Adz</span> Live Demo</div>
+  <div class="welcome-sub">Experience India's first GPS-verified auto-rickshaw advertising platform. Choose a role to explore the full dashboard.</div>
+  <div class="role-grid">
+    <div class="role-card" onclick="enterDemo('advertiser')">
+      <div class="icon">📊</div>
+      <h3>Advertiser</h3>
+      <p>Brand / client view — campaigns, live map, analytics</p>
+    </div>
+    <div class="role-card" onclick="enterDemo('agency')">
+      <div class="icon">🤝</div>
+      <h3>Agency Partner</h3>
+      <p>Commission dashboard, client campaigns, reports</p>
+    </div>
+    <div class="role-card" onclick="enterDemo('driver')">
+      <div class="icon">🛺</div>
+      <h3>Driver Partner</h3>
+      <p>GPS tracking, earnings, campaign assignment</p>
+    </div>
+    <div class="role-card" onclick="enterDemo('admin')">
+      <div class="icon">⚙️</div>
+      <h3>Platform Admin</h3>
+      <p>Full control — campaigns, drivers, billing, approvals</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEMO BAR ══ -->
+<div id="demo-bar">
+  <div class="demo-logo">Auto<span>Adz</span><span style="color:rgba(255,255,255,.4);font-weight:400;font-size:11px;margin-left:6px">.in</span></div>
+  <div class="demo-title">Interactive Platform Demo</div>
+  <div class="demo-badge">● DEMO MODE</div>
+</div>
+
+<!-- ══ ROLE SWITCHER ══ -->
+<div id="role-switcher">
+  <button class="role-btn active" onclick="switchRole('advertiser')" id="btn-advertiser"><span class="dot dot-adv"></span>Advertiser</button>
+  <button class="role-btn" onclick="switchRole('agency')" id="btn-agency"><span class="dot dot-agency"></span>Agency Partner</button>
+  <button class="role-btn" onclick="switchRole('driver')" id="btn-driver"><span class="dot dot-driver"></span>Driver</button>
+  <button class="role-btn" onclick="switchRole('admin')" id="btn-admin"><span class="dot dot-red"></span>Admin</button>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+
+<!-- ════════════════════════════════════════
+     ADVERTISER VIEW
+════════════════════════════════════════ -->
+<div class="view active" id="view-advertiser">
+  <div class="readonly-notice">👁 Demo Mode — Advertiser: <strong>Senco Jewellery</strong>. All data is simulated. No real campaigns are affected.</div>
+
+  <div class="card-dark" style="margin-bottom:16px">
+    <div class="section-label" style="color:rgba(255,255,255,.4)">Welcome back</div>
+    <h2 style="color:#fff;margin-bottom:4px">Senco Jewellery</h2>
+    <p style="color:rgba(255,255,255,.5)">Kolkata · Campaign advertiser · Active since Jan 2026</p>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <span class="badge badge-green"><span class="live-dot"></span>1 LIVE Campaign</span>
+      <span class="badge" style="background:rgba(255,152,0,.2);color:#FF9800">2 Completed</span>
+    </div>
+  </div>
+
+  <div class="stats stats-4">
+    <div class="stat"><div class="val val-green">1,247</div><div class="lbl">KMs Covered</div></div>
+    <div class="stat"><div class="val val-orange">89</div><div class="lbl">QR Scans</div></div>
+    <div class="stat"><div class="val val-navy">10</div><div class="lbl">Active Autos</div></div>
+    <div class="stat"><div class="val val-green">₹50K</div><div class="lbl">Campaign Budget</div></div>
+  </div>
+
+  <!-- Live Map -->
+  <div class="map-wrap">
+    <div class="map-header">
+      <span>🗺 Live Auto Fleet — Kolkata</span>
+      <span class="badge badge-green"><span class="live-dot"></span>&nbsp;3 LIVE</span>
+    </div>
+    <div id="map-adv"></div>
+  </div>
+
+  <!-- Active Campaign -->
+  <div class="section-label">Active Campaign</div>
+  <div class="camp-card">
+    <div class="camp-header">
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="badge badge-green"><span class="live-dot"></span>LIVE</span>
+          <span class="badge badge-navy">Durga Puja 2026</span>
+        </div>
+        <h4>Senco Jewellery Durga Puja Campaign</h4>
+        <p style="font-size:11px;color:#94a3b8;margin-top:2px">Kolkata · Garihat — Parkstreet · 10 autos · 01 Jul → 31 Jul 2026</p>
+        <div class="progress-bar"><div class="progress-fill" style="width:29%"></div></div>
+        <p style="font-size:10px;color:#94a3b8;margin-top:4px">Campaign progress: 9 of 31 days (29%)</p>
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:10px;color:#94a3b8">Budget</p>
+        <p style="font-size:18px;font-weight:900;color:#0B1F4D">₹50,000</p>
+      </div>
+    </div>
+    <div class="camp-metrics">
+      <div class="metric"><div class="mv val-green">1,247</div><div class="ml">KMs</div></div>
+      <div class="metric"><div class="mv val-orange">89</div><div class="ml">QR Scans</div></div>
+      <div class="metric"><div class="mv val-navy">10</div><div class="ml">Autos</div></div>
+      <div class="metric"><div class="mv" style="color:#6366f1">₹1,247</div><div class="ml">Spent</div></div>
+    </div>
+    <div class="camp-foot">
+      <button class="btn btn-outline">📄 Download Report</button>
+      <button class="btn btn-outline">📸 View Photo Proof</button>
+    </div>
+  </div>
+
+  <!-- Fleet Status -->
+  <div class="section-label">Fleet Status — Live</div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Auto No.</th><th>Driver</th><th>Status</th><th>Today KMs</th><th>QR Scans</th><th>Last GPS</th></tr></thead>
+        <tbody>
+          <tr><td><strong>WB 47 D 1234</strong></td><td>Rajesh Kumar</td><td><span class="badge badge-green"><span class="live-dot"></span>LIVE</span></td><td>23.4</td><td>8</td><td>30 sec ago</td></tr>
+          <tr><td><strong>WB 23 C 5678</strong></td><td>Amit Sarkar</td><td><span class="badge badge-green"><span class="live-dot"></span>LIVE</span></td><td>18.9</td><td>5</td><td>1 min ago</td></tr>
+          <tr><td><strong>WB 14 B 9012</strong></td><td>Suresh Das</td><td><span class="badge badge-green"><span class="live-dot"></span>LIVE</span></td><td>31.2</td><td>12</td><td>45 sec ago</td></tr>
+          <tr><td><strong>WB 38 A 3456</strong></td><td>Mohan Roy</td><td><span class="badge badge-gray">STANDBY</span></td><td>0</td><td>0</td><td>2 hrs ago</td></tr>
+          <tr><td><strong>WB 52 E 7890</strong></td><td>Bikash Sen</td><td><span class="badge badge-gray">STANDBY</span></td><td>0</td><td>0</td><td>3 hrs ago</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     AGENCY VIEW
+════════════════════════════════════════ -->
+<div class="view" id="view-agency">
+  <div class="readonly-notice">👁 Demo Mode — Agency: <strong>BrandOnWheelz</strong>. Explore how your agency dashboard and commission tracking works.</div>
+
+  <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">
+    <div class="section-label" style="color:rgba(255,255,255,.5)">Agency Partner Dashboard</div>
+    <h2 style="color:#fff">BrandOnWheelz</h2>
+    <p style="color:rgba(255,255,255,.6);font-size:12px">Transit Media Agency · Bengaluru + Kolkata</p>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <span class="badge" style="background:rgba(255,255,255,.15);color:#fff">3 Active Clients</span>
+      <span class="badge" style="background:rgba(255,152,0,.25);color:#FF9800">15% Commission Rate</span>
+    </div>
+  </div>
+
+  <div class="stats stats-4">
+    <div class="stat"><div class="val" style="color:#6366f1">3</div><div class="lbl">Client Campaigns</div></div>
+    <div class="stat"><div class="val val-orange">₹18,750</div><div class="lbl">Commission Earned</div></div>
+    <div class="stat"><div class="val val-green">3,891</div><div class="lbl">Total KMs</div></div>
+    <div class="stat"><div class="val val-navy">₹1.25L</div><div class="lbl">Total Billing</div></div>
+  </div>
+
+  <!-- Agency Map -->
+  <div class="map-wrap">
+    <div class="map-header">
+      <span>🗺 Live Fleet — All Client Campaigns</span>
+      <span class="badge badge-green"><span class="live-dot"></span>&nbsp;5 LIVE</span>
+    </div>
+    <div id="map-agency"></div>
+  </div>
+
+  <!-- Client Campaigns -->
+  <div class="section-label">Client Campaigns</div>
+
+  <div class="camp-card">
+    <div class="camp-header">
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="badge badge-green"><span class="live-dot"></span>LIVE</span>
+          <span class="badge badge-navy">Senco Jewellery</span>
+        </div>
+        <h4>Senco Jewellery Durga Puja 2026</h4>
+        <p style="font-size:11px;color:#94a3b8">Kolkata · Garihat–Parkstreet · 10 autos · Jul 2026</p>
+        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:29%"></div></div>
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:10px;color:#94a3b8">Commission</p>
+        <p style="font-size:16px;font-weight:900;color:#166534">₹7,500</p>
+      </div>
+    </div>
+    <div class="camp-metrics">
+      <div class="metric"><div class="mv val-green">1,247</div><div class="ml">KMs</div></div>
+      <div class="metric"><div class="mv val-orange">89</div><div class="ml">QR Scans</div></div>
+      <div class="metric"><div class="mv val-navy">10</div><div class="ml">Autos</div></div>
+      <div class="metric"><div class="mv" style="color:#166534">15%</div><div class="ml">Rate</div></div>
+    </div>
+    <div class="camp-foot">
+      <button class="btn btn-outline">📄 Client PDF Report</button>
+      <span class="badge badge-green" style="margin-left:auto"><span class="live-dot"></span>LIVE</span>
+    </div>
+  </div>
+
+  <div class="camp-card">
+    <div class="camp-header">
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="badge badge-green"><span class="live-dot"></span>LIVE</span>
+          <span class="badge badge-orange">Haldiram's</span>
+        </div>
+        <h4>Haldiram's Brand Awareness — Kolkata South</h4>
+        <p style="font-size:11px;color:#94a3b8">Kolkata · Tollygunge–Jadavpur · 8 autos · Jun–Jul 2026</p>
+        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:68%"></div></div>
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:10px;color:#94a3b8">Commission</p>
+        <p style="font-size:16px;font-weight:900;color:#166534">₹6,000</p>
+      </div>
+    </div>
+    <div class="camp-metrics">
+      <div class="metric"><div class="mv val-green">1,894</div><div class="ml">KMs</div></div>
+      <div class="metric"><div class="mv val-orange">143</div><div class="ml">QR Scans</div></div>
+      <div class="metric"><div class="mv val-navy">8</div><div class="ml">Autos</div></div>
+      <div class="metric"><div class="mv" style="color:#166534">15%</div><div class="ml">Rate</div></div>
+    </div>
+    <div class="camp-foot">
+      <button class="btn btn-outline">📄 Client PDF Report</button>
+    </div>
+  </div>
+
+  <div class="camp-card">
+    <div class="camp-header">
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="badge badge-green"><span class="live-dot"></span>LIVE</span>
+          <span class="badge badge-navy">Kolkata Police</span>
+        </div>
+        <h4>Kolkata Police — Road Safety Awareness</h4>
+        <p style="font-size:11px;color:#94a3b8">Kolkata · Citywide · 7 autos · Jul 2026</p>
+        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:22%"></div></div>
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:10px;color:#94a3b8">Commission</p>
+        <p style="font-size:16px;font-weight:900;color:#166534">₹5,250</p>
+      </div>
+    </div>
+    <div class="camp-metrics">
+      <div class="metric"><div class="mv val-green">750</div><div class="ml">KMs</div></div>
+      <div class="metric"><div class="mv val-orange">47</div><div class="ml">QR Scans</div></div>
+      <div class="metric"><div class="mv val-navy">7</div><div class="ml">Autos</div></div>
+      <div class="metric"><div class="mv" style="color:#166534">15%</div><div class="ml">Rate</div></div>
+    </div>
+    <div class="camp-foot">
+      <button class="btn btn-outline">📄 Client PDF Report</button>
+    </div>
+  </div>
+
+  <!-- Commission Summary -->
+  <div class="section-label">Commission Summary — July 2026</div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#f0fdf4;border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:28px;font-weight:900;color:#166534">₹18,750</div>
+        <div style="font-size:11px;color:#166534;font-weight:600;margin-top:4px">Total Commission This Month</div>
+      </div>
+      <div style="background:#fff7ed;border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:28px;font-weight:900;color:#FF9800">₹7,500</div>
+        <div style="font-size:11px;color:#c2410c;font-weight:600;margin-top:4px">Pending Payout (Jul 31)</div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Revenue breakdown</div>
+      <div class="timeline">
+        <div class="trow"><div class="ttime">Senco</div><div class="tbody"><h4>Durga Puja Campaign</h4><p>₹50,000 billing × 15% = ₹7,500</p></div></div>
+        <div class="trow"><div class="ttime">Haldiram</div><div class="tbody"><h4>Brand Awareness</h4><p>₹40,000 billing × 15% = ₹6,000</p></div></div>
+        <div class="trow"><div class="ttime">KP</div><div class="tbody"><h4>Road Safety</h4><p>₹35,000 billing × 15% = ₹5,250</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     DRIVER VIEW
+════════════════════════════════════════ -->
+<div class="view" id="view-driver">
+  <div class="readonly-notice">👁 Demo Mode — Driver: <strong>Rajesh Kumar</strong>. This is the driver's mobile experience.</div>
+
+  <div class="driver-card">
+    <div class="driver-avatar">RK</div>
+    <h2 style="color:#fff;margin-bottom:4px">Rajesh Kumar</h2>
+    <p style="color:rgba(255,255,255,.5);font-size:12px">Auto No. WB 47 D 1234 · Kolkata</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+      <span class="badge badge-green"><span class="live-dot"></span>GPS ACTIVE</span>
+      <span class="badge" style="background:rgba(255,152,0,.2);color:#FF9800">Campaign: Senco Jewellery</span>
+    </div>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:900;color:#FF9800">23.4</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:3px">Today KMs</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:900;color:#4ade80">₹234</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:3px">Today Earned</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:900;color:#fff">8</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:3px">QR Scans</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats stats-2" style="margin-bottom:16px">
+    <div class="stat"><div class="val val-green">₹3,450</div><div class="lbl">Total Earnings</div></div>
+    <div class="stat"><div class="val val-orange">412</div><div class="lbl">Total KMs Driven</div></div>
+  </div>
+
+  <!-- GPS Status -->
+  <div class="card" style="margin-bottom:16px;border:2px solid #22c55e">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span class="live-dot" style="width:10px;height:10px"></span>
+      <h3 style="color:#166534;margin:0">GPS Tracking — LIVE</h3>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px">
+        <div style="color:#94a3b8;font-size:10px;margin-bottom:3px">LATITUDE</div>
+        <div style="font-weight:700;color:#0B1F4D;font-family:monospace">22.5726° N</div>
+      </div>
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px">
+        <div style="color:#94a3b8;font-size:10px;margin-bottom:3px">LONGITUDE</div>
+        <div style="font-weight:700;color:#0B1F4D;font-family:monospace">88.3639° E</div>
+      </div>
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px">
+        <div style="color:#94a3b8;font-size:10px;margin-bottom:3px">SPEED</div>
+        <div style="font-weight:700;color:#0B1F4D">24 km/h</div>
+      </div>
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px">
+        <div style="color:#94a3b8;font-size:10px;margin-bottom:3px">LAST UPDATE</div>
+        <div style="font-weight:700;color:#0B1F4D">3 sec ago</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#94a3b8;margin-top:10px">📍 GPS coordinates push to server every 3 seconds. Advertiser and agency can see your live position on their dashboards.</p>
+  </div>
+
+  <!-- Photo Proof -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>Photo Proof Upload</h3>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:12px">Upload a photo of your auto with the brand creative installed. Campaign billing starts only after admin approves.</p>
+    <div style="border:2px dashed #e2e8f0;border-radius:12px;padding:24px;text-align:center;background:#f8fafc">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-size:13px;font-weight:700;color:#166534">Photo Approved</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Uploaded 01 Jul 2026 · Approved by Admin</div>
+    </div>
+  </div>
+
+  <!-- Weekly Earnings -->
+  <div class="section-label">Weekly Earnings History</div>
+  <div class="card">
+    <div class="timeline">
+      <div class="trow"><div class="ttime">Week 1</div><div class="tbody"><h4>Jul 1–7, 2026</h4><p>89.2 km · ₹892 earned · WhatsApp payment confirmed ✓</p></div></div>
+      <div class="trow"><div class="ttime">Week 2</div><div class="tbody"><h4>Jul 8–14, 2026</h4><p>112.4 km · ₹1,124 earned · WhatsApp payment confirmed ✓</p></div></div>
+      <div class="trow"><div class="ttime">Week 3</div><div class="tbody"><h4>Jul 15–Jul 9 (ongoing)</h4><p>23.4 km so far · ₹234 earned this week</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ADMIN VIEW
+════════════════════════════════════════ -->
+<div class="view" id="view-admin">
+  <div class="readonly-notice">🔒 Admin View — Read only in demo mode. All controls are visible but disabled. Real admin has full access.</div>
+
+  <div class="card-dark" style="margin-bottom:16px">
+    <div class="section-label" style="color:rgba(255,255,255,.4)">Platform Control Centre</div>
+    <h2 style="color:#fff;margin-bottom:4px">AutoAdz Admin</h2>
+    <p style="color:rgba(255,255,255,.5)">Full operational dashboard · Arun Jaiswal · autoadz.in</p>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <span class="badge badge-green"><span class="live-dot"></span>System Online</span>
+      <span class="badge" style="background:rgba(239,68,68,.2);color:#fca5a5">2 Pending Approvals</span>
+    </div>
+  </div>
+
+  <div class="stats stats-4">
+    <div class="stat"><div class="val val-green">3</div><div class="lbl">Active Campaigns</div></div>
+    <div class="stat"><div class="val val-navy">12</div><div class="lbl">Total Drivers</div></div>
+    <div class="stat"><div class="val val-orange">₹1.25L</div><div class="lbl">Total Billing</div></div>
+    <div class="stat"><div class="val" style="color:#ef4444">2</div><div class="lbl">Pending Approvals</div></div>
+  </div>
+
+  <!-- Admin Map -->
+  <div class="map-wrap">
+    <div class="map-header">
+      <span>🗺 All Fleet — Citywide View</span>
+      <span class="badge badge-green"><span class="live-dot"></span>&nbsp;5 LIVE</span>
+    </div>
+    <div id="map-admin"></div>
+  </div>
+
+  <!-- Campaigns Table -->
+  <div class="section-label">All Campaigns</div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campaign</th><th>Advertiser</th><th>Agency</th><th>Status</th><th>Budget</th><th>KMs</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Senco Jewellery Durga Puja</strong><br><span style="font-size:10px;color:#94a3b8">Kolkata · 10 autos · Jul 2026</span></td>
+            <td>Senco Jewellery</td>
+            <td><span class="badge badge-navy">BrandOnWheelz</span></td>
+            <td><span class="badge badge-green"><span class="live-dot"></span>LIVE</span></td>
+            <td>₹50,000</td><td>1,247</td>
+            <td><button class="btn btn-outline" style="font-size:10px;padding:4px 8px" disabled>View</button></td>
+          </tr>
+          <tr>
+            <td><strong>Haldiram's Brand Awareness</strong><br><span style="font-size:10px;color:#94a3b8">Kolkata · 8 autos · Jun–Jul 2026</span></td>
+            <td>Haldiram's</td>
+            <td><span class="badge badge-navy">BrandOnWheelz</span></td>
+            <td><span class="badge badge-green"><span class="live-dot"></span>LIVE</span></td>
+            <td>₹40,000</td><td>1,894</td>
+            <td><button class="btn btn-outline" style="font-size:10px;padding:4px 8px" disabled>View</button></td>
+          </tr>
+          <tr>
+            <td><strong>Kolkata Police Road Safety</strong><br><span style="font-size:10px;color:#94a3b8">Kolkata · 7 autos · Jul 2026</span></td>
+            <td>KP Dept.</td>
+            <td><span class="badge badge-navy">BrandOnWheelz</span></td>
+            <td><span class="badge badge-green"><span class="live-dot"></span>LIVE</span></td>
+            <td>₹35,000</td><td>750</td>
+            <td><button class="btn btn-outline" style="font-size:10px;padding:4px 8px" disabled>View</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Driver Approval Queue -->
+  <div class="section-label">Driver Approval Queue <span class="badge badge-red" style="font-size:10px">2 Pending</span></div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Driver</th><th>Auto No.</th><th>DL Verified</th><th>Aadhaar</th><th>Photo Proof</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Prakash Mondal</strong><br><span style="font-size:10px;color:#94a3b8">Applied 9 Jul 2026</span></td>
+            <td>WB 22 F 4567</td>
+            <td><span class="badge badge-green">✓ Verified</span></td>
+            <td><span class="badge badge-green">✓ Verified</span></td>
+            <td><span class="badge badge-amber">⏳ Pending</span></td>
+            <td style="display:flex;gap:4px">
+              <button class="btn btn-green" style="font-size:10px;padding:4px 8px;opacity:.5" disabled>Approve</button>
+              <button class="btn btn-outline" style="font-size:10px;padding:4px 8px;opacity:.5" disabled>Reject</button>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Dilip Ghosh</strong><br><span style="font-size:10px;color:#94a3b8">Applied 9 Jul 2026</span></td>
+            <td>WB 33 G 8901</td>
+            <td><span class="badge badge-green">✓ Verified</span></td>
+            <td><span class="badge badge-amber">⏳ Pending</span></td>
+            <td><span class="badge badge-amber">⏳ Pending</span></td>
+            <td style="display:flex;gap:4px">
+              <button class="btn btn-green" style="font-size:10px;padding:4px 8px;opacity:.5" disabled>Approve</button>
+              <button class="btn btn-outline" style="font-size:10px;padding:4px 8px;opacity:.5" disabled>Reject</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Billing & Payouts -->
+  <div class="section-label">Billing & Payouts — July 2026</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div class="card" style="text-align:center">
+      <div style="font-size:28px;font-weight:900;color:#166534">₹1,25,000</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Total Campaign Billing</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:28px;font-weight:900;color:#6366f1">₹18,750</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Agency Commission (15%)</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:28px;font-weight:900;color:#FF9800">₹3,450</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Driver Payouts (Week 2)</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:28px;font-weight:900;color:#0B1F4D">₹1,02,800</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Platform Net Revenue</div>
+    </div>
+  </div>
+
+  <!-- Key Advantages -->
+  <div class="section-label">Why AutoAdz — Platform Transparency</div>
+  <div class="card">
+    <ul class="checklist">
+      <li><div class="check-ico">✓</div>Every rupee tracked — GPS km × rate = driver payout. Zero manual billing.</li>
+      <li><div class="check-ico">✓</div>Photo proof before campaign starts — admin approves, billing only begins after verification.</li>
+      <li><div class="check-ico">✓</div>Agency commission auto-calculated — 15% of client billing, paid at month end.</li>
+      <li><div class="check-ico">✓</div>Real-time GPS positions visible to advertiser, agency, and admin simultaneously.</li>
+      <li><div class="check-ico">✓</div>QR scan data per auto — client knows exactly which auto generated engagement.</li>
+    </ul>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+// ── MAPS ──────────────────────────────────────────────────────────────
+const KOL = [22.5726, 88.3639];
+const POSITIONS = [
+  [22.5958, 88.3697], // Shyambazar
+  [22.5195, 88.3617], // Gariahat
+  [22.5514, 88.3473], // Park Street
+  [22.6050, 88.3800], // Dum Dum
+  [22.5400, 88.4100], // Salt Lake
+  [22.5730, 88.4200], // Ultadanga
+  [22.5280, 88.3540], // Kalighat
+];
+
+const autoIcon = L.divIcon({ className:'', html:`<div style="width:28px;height:28px;background:#166534;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.3)">🛺</div>`, iconSize:[28,28], iconAnchor:[14,14] });
+
+let maps = {};
+let markers = {};
+
+function makeMap(id, positions){
+  const map = L.map(id, { zoomControl:true, scrollWheelZoom:false }).setView(KOL, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:18}).addTo(map);
+  const mks = positions.map(p => L.marker(p, {icon:autoIcon}).addTo(map));
+  maps[id] = map; markers[id] = mks;
+  return {map, mks};
+}
+
+// Animate markers to simulate GPS movement
+function animateMarkers(){
+  Object.entries(markers).forEach(([id, mks]) => {
+    mks.forEach(mk => {
+      const pos = mk.getLatLng();
+      mk.setLatLng([pos.lat + (Math.random()-.5)*0.001, pos.lng + (Math.random()-.5)*0.001]);
+    });
+  });
+}
+
+// ── ROLE SWITCHING ────────────────────────────────────────────────────
+function switchRole(role){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-'+role).classList.add('active');
+  document.getElementById('btn-'+role).classList.add('active');
+  // Init map if not yet created
+  setTimeout(() => {
+    if(role==='advertiser' && !maps['map-adv']) makeMap('map-adv', POSITIONS.slice(0,3));
+    if(role==='agency' && !maps['map-agency']) makeMap('map-agency', POSITIONS.slice(0,5));
+    if(role==='admin' && !maps['map-admin']) makeMap('map-admin', POSITIONS);
+    Object.values(maps).forEach(m => m.invalidateSize());
+  }, 100);
+}
+
+// ── WELCOME SCREEN ────────────────────────────────────────────────────
+function enterDemo(role){
+  document.getElementById('welcome').style.display='none';
+  switchRole(role);
+}
+
+// Auto-init advertiser map after load
+window.addEventListener('load', () => {
+  setTimeout(()=>{ makeMap('map-adv', POSITIONS.slice(0,3)); },300);
+  setInterval(animateMarkers, 3000);
+});
+</script>
+</body>
+</html>
