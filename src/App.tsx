@@ -3478,7 +3478,7 @@ export default function App() {
         <div className="bg-[#FF9800] text-white text-center text-xs font-black py-1.5 px-4 flex items-center justify-center gap-3 tracking-wide z-50">
           <span className="animate-pulse">●</span>
           DEMO MODE — Read-only preview. No changes are saved.
-          <button onClick={() => { setUserSession(null); setDemoMode(false); }} className="underline opacity-80 hover:opacity-100 font-bold">Exit Demo</button>
+          <button onClick={() => { setUserSession(null); setDemoMode(false); setTimeout(() => document.getElementById("demo-section")?.scrollIntoView({ behavior: "smooth" }), 50); }} className="underline opacity-80 hover:opacity-100 font-bold">Exit Demo</button>
         </div>
       )}
       {/* Dynamic Master Header */}
@@ -3558,9 +3558,11 @@ export default function App() {
                 setAgencyJwt(""); setAgencyId(null); setAgencyName(""); setAgencyCompany(""); setAgencyEmail(""); setAgencyPhone("");
                 setAgencyStats(null); setAgencyCampaigns([]);
               }
+              const wasDemo = demoMode;
               setUserSession(null);
               setDemoMode(false);
               setLoginError("");
+              if (wasDemo) setTimeout(() => document.getElementById("demo-section")?.scrollIntoView({ behavior: "smooth" }), 50);
             }}
             className="flex items-center gap-1 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 transition rounded-lg text-xs font-mono font-bold"
             title="Log out of active session"
