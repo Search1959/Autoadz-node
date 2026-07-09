@@ -28,6 +28,9 @@ export default function App() {
   // Simulator state
   const [activeSimulator, setActiveSimulator] = useState<"advertiser" | "driver">("advertiser");
 
+  // Demo mode
+  const [demoMode, setDemoMode] = useState(false);
+
   // User Authentication and Portal isolation state
   const [userSession, setUserSession] = useState<"advertiser" | "driver" | "admin" | "agency" | null>(null);
   const [loggedInDriverId, setLoggedInDriverId] = useState<string>("driver_delip");
@@ -2716,6 +2719,75 @@ export default function App() {
               </div>
             </section>
 
+            {/* ── TRY LIVE DEMO ──────────────────────────────────────── */}
+            <section id="demo-section" className="w-full bg-gradient-to-br from-[#0B1F4D] to-[#1e3a5f] py-16 px-4 md:px-10">
+              <div className="max-w-4xl mx-auto text-center">
+                <span className="text-[10px] font-mono font-bold text-[#FF9800] tracking-widest uppercase">Interactive Demo</span>
+                <h2 className="text-3xl font-display font-black mt-2 mb-3 text-white">Experience AutoAdz Live</h2>
+                <p className="text-sm text-white/60 max-w-xl mx-auto mb-10">
+                  Click any role below to instantly enter a real demo session — pre-loaded with Kolkata campaign data, live GPS map and all dashboards. Read-only, no signup needed.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                  {(["advertiser","agency","driver","admin"] as const).map(role => {
+                    const meta = {
+                      advertiser: { icon: "📊", label: "Advertiser", sub: "Campaigns & live map", color: "from-orange-500 to-orange-600" },
+                      agency:     { icon: "🤝", label: "Agency Partner", sub: "Commission dashboard", color: "from-indigo-500 to-indigo-700" },
+                      driver:     { icon: "🛺", label: "Driver Partner", sub: "Earnings & GPS view", color: "from-teal-500 to-teal-700" },
+                      admin:      { icon: "⚙️", label: "Admin Panel", sub: "Full platform view", color: "from-rose-500 to-rose-700" },
+                    }[role];
+                    return (
+                      <button key={role}
+                        onClick={async () => {
+                          try {
+                            const res = await fetch("/api/demo/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) });
+                            const data = await res.json();
+                            if (!res.ok) { alert("Demo unavailable — " + (data.error || "try again")); return; }
+                            setDemoMode(true);
+                            if (role === "driver") {
+                              setLoggedInDriverId(data.driverId);
+                              setUserSession("driver");
+                              setActiveSimulator("driver");
+                            } else if (role === "admin") {
+                              setUserSession("admin");
+                            } else if (role === "agency") {
+                              localStorage.setItem("autoadz_agency_jwt", data.token);
+                              localStorage.setItem("autoadz_agency_id", String(data.userId));
+                              localStorage.setItem("autoadz_agency_name", data.name);
+                              localStorage.setItem("autoadz_agency_company", data.company || "");
+                              localStorage.setItem("autoadz_agency_email", data.email);
+                              localStorage.setItem("autoadz_agency_phone", data.phone || "");
+                              setAgencyJwt(data.token); setAgencyId(data.userId); setAgencyName(data.name);
+                              setAgencyCompany(data.company || ""); setAgencyEmail(data.email); setAgencyPhone(data.phone || "");
+                              setUserSession("agency");
+                            } else {
+                              localStorage.setItem("autoadz_adv_jwt", data.token);
+                              localStorage.setItem("autoadz_adv_user_id", String(data.userId));
+                              localStorage.setItem("autoadz_adv_email", data.email);
+                              localStorage.setItem("autoadz_adv_brand_name", data.name);
+                              localStorage.setItem("autoadz_adv_brand_id", data.company || "SencoDemo");
+                              localStorage.setItem("autoadz_adv_gstin", data.gstin || "");
+                              localStorage.setItem("autoadz_adv_phone", data.phone || "");
+                              setAdvJwt(data.token); setAdvUserId(data.userId); setAdvEmail(data.email);
+                              setAdvBrandName(data.name); setAdvBrandId(data.company || "SencoDemo");
+                              setAdvGstin(data.gstin || ""); setAdvPhone(data.phone || "");
+                              setUserSession("advertiser"); setActiveSimulator("advertiser");
+                            }
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          } catch { alert("Network error — please try again."); }
+                        }}
+                        className={`bg-gradient-to-br ${meta.color} text-white rounded-2xl p-5 flex flex-col items-center gap-2 hover:scale-105 transition-transform shadow-lg`}
+                      >
+                        <span className="text-3xl">{meta.icon}</span>
+                        <span className="font-black text-sm">{meta.label}</span>
+                        <span className="text-[10px] text-white/70">{meta.sub}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-white/30 mt-8">Demo resets automatically · No data is saved · GPS map shows simulated Kolkata routes</p>
+              </div>
+            </section>
+
             {/* ── CONTACT / CTA BANNER ─────────────────────────────────── */}
             <section className="w-full bg-[#166534] py-14 px-4 md:px-10">
               <div className="max-w-4xl mx-auto text-center text-white">
@@ -3407,6 +3479,14 @@ export default function App() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "dark dark-theme-active" : "bg-[#F4F7FE]"} flex flex-col font-sans`}>
+      {/* DEMO MODE banner */}
+      {demoMode && (
+        <div className="bg-[#FF9800] text-white text-center text-xs font-black py-1.5 px-4 flex items-center justify-center gap-3 tracking-wide z-50">
+          <span className="animate-pulse">●</span>
+          DEMO MODE — Read-only preview. No changes are saved.
+          <button onClick={() => { setUserSession(null); setDemoMode(false); }} className="underline opacity-80 hover:opacity-100 font-bold">Exit Demo</button>
+        </div>
+      )}
       {/* Dynamic Master Header */}
       <header className="bg-[#0B1F4D] text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 shadow-md border-b border-slate-800">
         <div className="flex items-center gap-3">
@@ -3485,6 +3565,7 @@ export default function App() {
                 setAgencyStats(null); setAgencyCampaigns([]);
               }
               setUserSession(null);
+              setDemoMode(false);
               setLoginError("");
             }}
             className="flex items-center gap-1 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 transition rounded-lg text-xs font-mono font-bold"

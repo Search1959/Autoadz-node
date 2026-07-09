@@ -288,6 +288,133 @@ setInterval(flushGpsBuffer, 5000);
   } catch (_) {}
 })();
 
+// ─── DEMO DATA SEED ──────────────────────────────────────────────────────────
+// Demo IDs — fixed so we can reference them in GPS simulation
+const DEMO_ADV_EMAIL    = "demo-advertiser@autoadz.in";
+const DEMO_AGENCY_EMAIL = "demo-agency@autoadz.in";
+const DEMO_DRIVER_PHONE = "9000000001";
+const DEMO_CAMP_ID      = "demo_camp_senco_2026";
+const DEMO_CAMP2_ID     = "demo_camp_haldi_2026";
+const DEMO_CAMP3_ID     = "demo_camp_kp_2026";
+const DEMO_DRIVER_IDS   = ["demo_drv_1", "demo_drv_2", "demo_drv_3"];
+
+// Kolkata route waypoints for GPS simulation
+const DEMO_ROUTES = [
+  [ [22.5958, 88.3697], [22.5900, 88.3720], [22.5850, 88.3680], [22.5800, 88.3650] ], // Shyambazar loop
+  [ [22.5195, 88.3617], [22.5220, 88.3580], [22.5260, 88.3540], [22.5230, 88.3610] ], // Gariahat loop
+  [ [22.5514, 88.3473], [22.5540, 88.3510], [22.5560, 88.3490], [22.5530, 88.3460] ], // Park Street loop
+];
+const demoRouteIdx = [0, 0, 0]; // current waypoint index per demo driver
+
+async function seedDemoData() {
+  try {
+    const hash = await bcrypt.hash("Demo@2026!", 10);
+
+    // Demo advertiser user
+    const [advExist] = await db("SELECT id FROM users WHERE email = ?", [DEMO_ADV_EMAIL]);
+    let advId;
+    if (advExist) {
+      advId = advExist.id;
+    } else {
+      await db(
+        "INSERT INTO users (email, password_hash, name, company, phone, role, is_active, commission_rate) VALUES (?, ?, ?, ?, ?, 'advertiser', 1, 0)",
+        [DEMO_ADV_EMAIL, hash, "Senco Jewellery", "Senco Jewellery Pvt Ltd", "9000000099"]
+      );
+      const [row] = await db("SELECT id FROM users WHERE email = ?", [DEMO_ADV_EMAIL]);
+      advId = row.id;
+    }
+
+    // Demo agency user
+    const [agencyExist] = await db("SELECT id FROM users WHERE email = ?", [DEMO_AGENCY_EMAIL]);
+    let agencyId;
+    if (agencyExist) {
+      agencyId = agencyExist.id;
+    } else {
+      await db(
+        "INSERT INTO users (email, password_hash, name, company, phone, role, is_active, commission_rate) VALUES (?, ?, ?, ?, ?, 'agency', 1, 15)",
+        [DEMO_AGENCY_EMAIL, hash, "BrandOnWheelz Demo", "BrandOnWheelz", "9000000002"]
+      );
+      const [row] = await db("SELECT id FROM users WHERE email = ?", [DEMO_AGENCY_EMAIL]);
+      agencyId = row.id;
+    }
+
+    // Demo driver
+    const [drvExist] = await db("SELECT id FROM drivers WHERE phone = ?", [DEMO_DRIVER_PHONE]);
+    if (!drvExist) {
+      await db(
+        "INSERT INTO drivers (id, name, phone, auto_number, status, current_campaign_id, lat, lng, total_earnings, wallet_balance) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, 3450, 3450)",
+        [DEMO_DRIVER_IDS[0], "Rajesh Kumar", DEMO_DRIVER_PHONE, "WB 47 D 1234", DEMO_CAMP_ID, 22.5958, 88.3697]
+      );
+    }
+
+    // Extra demo drivers for fleet map
+    const extraDrivers = [
+      { id: DEMO_DRIVER_IDS[1], name: "Amit Sarkar",  phone: "9000000003", auto: "WB 23 C 5678", lat: 22.5195, lng: 88.3617 },
+      { id: DEMO_DRIVER_IDS[2], name: "Suresh Das",   phone: "9000000004", auto: "WB 14 B 9012", lat: 22.5514, lng: 88.3473 },
+    ];
+    for (const d of extraDrivers) {
+      const [ex] = await db("SELECT id FROM drivers WHERE phone = ?", [d.phone]);
+      if (!ex) {
+        await db(
+          "INSERT INTO drivers (id, name, phone, auto_number, status, current_campaign_id, lat, lng, total_earnings, wallet_balance) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, 2800, 2800)",
+          [d.id, d.name, d.phone, d.auto, DEMO_CAMP_ID, d.lat, d.lng]
+        );
+      }
+    }
+
+    // Demo campaigns
+    const campDefs = [
+      { id: DEMO_CAMP_ID,  title: "Senco Jewellery — Durga Puja 2026", client: "Senco Jewellery",  city: "Kolkata", area: "Garihat — Parkstreet", budget: 50000, autos: 10, kms: 1247, qr: 89,  status: "active",  advId, agencyId, brand: "Senco Jewellery",  start: "2026-07-01", end: "2026-07-31" },
+      { id: DEMO_CAMP2_ID, title: "Haldiram's Brand Awareness",          client: "Haldiram's",       city: "Kolkata", area: "Tollygunge — Jadavpur", budget: 40000, autos: 8,  kms: 1894, qr: 143, status: "active",  advId, agencyId, brand: "Haldiram's",       start: "2026-06-15", end: "2026-07-15" },
+      { id: DEMO_CAMP3_ID, title: "Kolkata Police — Road Safety",        client: "Kolkata Police",   city: "Kolkata", area: "Citywide",             budget: 35000, autos: 7,  kms: 750,  qr: 47,  status: "active",  advId, agencyId, brand: "Kolkata Police",   start: "2026-07-05", end: "2026-08-05" },
+    ];
+    for (const c of campDefs) {
+      const [ex] = await db("SELECT id FROM campaigns WHERE id = ?", [c.id]);
+      if (!ex) {
+        await db(
+          `INSERT INTO campaigns (id, title, client, city, area, budget, autos_count, status, creative_status, creative_approved, start_date, end_date, kms_covered, qr_scans, advertiser_id, agency_id, client_brand)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved', 1, ?, ?, ?, ?, ?, ?, ?)`,
+          [c.id, c.title, c.client, c.city, c.area, c.budget, c.autos, c.status, c.start, c.end, c.kms, c.qr, c.advId, c.agencyId, c.brand]
+        );
+      } else {
+        // Keep KMs and QR scans up to date
+        await db("UPDATE campaigns SET kms_covered = ?, qr_scans = ? WHERE id = ?", [c.kms, c.qr, c.id]);
+      }
+    }
+
+    // Seed GPS buffer for demo drivers
+    for (let i = 0; i < DEMO_DRIVER_IDS.length; i++) {
+      const route = DEMO_ROUTES[i];
+      const wp = route[0];
+      const drvRow = await db("SELECT name, auto_number FROM drivers WHERE id = ?", [DEMO_DRIVER_IDS[i]]);
+      if (drvRow[0]) {
+        gpsBuffer.set(DEMO_DRIVER_IDS[i], {
+          lat: wp[0], lng: wp[1], updatedAt: new Date().toISOString(),
+          dirty: false, campaignId: DEMO_CAMP_ID,
+          name: drvRow[0].name, autoNumber: drvRow[0].auto_number, state: "tracking"
+        });
+      }
+    }
+
+    console.log("✅ Demo data seeded");
+  } catch (err) {
+    console.error("Demo seed error:", err.message);
+  }
+}
+
+// Simulate GPS movement for demo drivers — advances one waypoint every 4 seconds
+setInterval(() => {
+  for (let i = 0; i < DEMO_DRIVER_IDS.length; i++) {
+    const drvId = DEMO_DRIVER_IDS[i];
+    if (!gpsBuffer.has(drvId)) continue;
+    const route = DEMO_ROUTES[i];
+    demoRouteIdx[i] = (demoRouteIdx[i] + 1) % route.length;
+    const [lat, lng] = route[demoRouteIdx[i]];
+    const existing = gpsBuffer.get(drvId);
+    gpsBuffer.set(drvId, { ...existing, lat, lng, updatedAt: new Date().toISOString(), state: "tracking" });
+  }
+}, 4000);
+
 // ─── LIVE LOCATION ENDPOINTS ──────────────────────────────────────────────────
 
 // Driver pushes GPS — writes to RAM only, flushed to DB every 5s
@@ -1455,6 +1582,35 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// ─── DEMO LOGIN ──────────────────────────────────────────────────────────────
+app.post("/api/demo/login", async (req, res) => {
+  const { role } = req.body;
+  try {
+    if (role === "driver") {
+      const [driver] = await db("SELECT * FROM drivers WHERE phone = ?", [DEMO_DRIVER_PHONE]);
+      if (!driver) return res.status(404).json({ error: "Demo driver not found" });
+      const token = jwt.sign({ id: driver.id, role: "driver", name: driver.name, demo: true }, JWT_SECRET, { expiresIn: "2h" });
+      return res.json({ success: true, token, role: "driver", driverId: driver.id, name: driver.name, demo: true });
+    }
+    if (role === "admin") {
+      const token = jwt.sign({ id: "demo_admin", role: "admin", name: "AutoAdz Admin (Demo)", demo: true }, JWT_SECRET, { expiresIn: "2h" });
+      return res.json({ success: true, token, role: "admin", name: "AutoAdz Admin (Demo)", demo: true });
+    }
+    const email = role === "agency" ? DEMO_AGENCY_EMAIL : DEMO_ADV_EMAIL;
+    const [user] = await db("SELECT * FROM users WHERE email = ?", [email]);
+    if (!user) return res.status(404).json({ error: "Demo user not found — server may still be seeding" });
+    const token = jwt.sign({ id: user.id, role: user.role, name: user.name, demo: true }, JWT_SECRET, { expiresIn: "2h" });
+    res.json({
+      success: true, token, role: user.role, userId: user.id,
+      name: user.name, email: user.email, company: user.company,
+      phone: user.phone, gstin: user.gstin || "", office: user.office || "", demo: true,
+    });
+  } catch (err) {
+    console.error("Demo login error:", err.message);
+    res.status(500).json({ error: "Demo login failed" });
+  }
+});
+
 // Verify token
 app.get("/api/auth/verify", (req, res) => {
   const auth = req.headers.authorization;
@@ -1478,6 +1634,8 @@ async function startServer() {
     console.error("Please check your .env DB credentials and ensure the database exists.");
     process.exit(1);
   }
+
+  await seedDemoData();
 
   // Version check + direct agency repair endpoint (must be before catch-all)
   app.get("/api/version", (req, res) => res.json({ v: "2024-07-08-v8", ok: true }));
