@@ -296,7 +296,19 @@ app.post("/api/drivers/:id/location", async (req, res) => {
   const { lat, lng } = req.body;
   if (!lat || !lng) return res.status(400).json({ error: "lat and lng required" });
   const existing = gpsBuffer.get(id) || {};
-  gpsBuffer.set(id, { ...existing, lat: Number(lat), lng: Number(lng), updatedAt: ts(), dirty: true });
+  // If buffer entry is missing name/campaignId, refresh from DB once
+  if (!existing.name || !existing.campaignId) {
+    try {
+      const [row] = await db("SELECT name, auto_number, state, current_campaign_id FROM drivers WHERE id = ?", [id]);
+      if (row) {
+        existing.name = row.name;
+        existing.autoNumber = row.auto_number;
+        existing.state = row.state || "tracking";
+        existing.campaignId = row.current_campaign_id;
+      }
+    } catch (_) {}
+  }
+  gpsBuffer.set(id, { ...existing, lat: Number(lat), lng: Number(lng), updatedAt: ts(), state: "tracking", dirty: true });
   res.json({ success: true });
 });
 

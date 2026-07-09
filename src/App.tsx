@@ -1511,6 +1511,31 @@ export default function App() {
     return () => clearInterval(interval);
   }, [userSession, advertiserTab, campaigns]);
 
+  // Agency live tracking — poll server GPS positions every 3s when on Live Map tab
+  useEffect(() => {
+    if (userSession !== "agency" || agencyTab !== "tracking") return;
+    const pollAgencyLocations = async () => {
+      try {
+        const campIds = agencyCampaigns.filter((c: any) => c.status === "active").map((c: any) => c.id);
+        const res = await fetch(`/api/drivers/live-locations${campIds.length ? `?campaign_ids=${campIds.join(",")}` : ""}&_t=${Date.now()}`);
+        if (!res.ok) return;
+        const liveDrivers: any[] = await res.json();
+        if (liveDrivers.length > 0) {
+          setDriverPositions(prev => {
+            const next = { ...prev };
+            liveDrivers.forEach(d => {
+              if (d.lat && d.lng) next[d.id] = { ...next[d.id], lat: d.lat, lng: d.lng, name: d.name, autoNumber: d.autoNumber, state: d.state };
+            });
+            return next;
+          });
+        }
+      } catch {}
+    };
+    pollAgencyLocations();
+    const interval = setInterval(pollAgencyLocations, 3000);
+    return () => clearInterval(interval);
+  }, [userSession, agencyTab, agencyCampaigns]);
+
   // Post campaign
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
