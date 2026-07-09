@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AutoAdz × BrandOnWheelz — Partnership Presentation</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:#0B1F4D}
+
+  /* ── SLIDE ENGINE ── */
+  .deck{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;padding:52px 64px;opacity:0;transform:translateX(40px);transition:opacity .45s ease,transform .45s ease}
+  .slide.active{display:flex;opacity:1;transform:translateX(0)}
+  .slide.exit{display:flex;opacity:0;transform:translateX(-40px)}
+
+  /* ── SLIDE BACKGROUNDS ── */
+  .bg-dark{background:#0B1F4D}
+  .bg-navy{background:#0d2457}
+  .bg-green{background:#166534}
+  .bg-white{background:#f8fafc}
+  .bg-orange{background:#FF9800}
+  .bg-split-dw{background:linear-gradient(135deg,#0B1F4D 55%,#166534 55%)}
+  .bg-split-go{background:linear-gradient(135deg,#166534 55%,#FF9800 55%)}
+
+  /* ── TYPOGRAPHY ── */
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:18px}
+  .tag-orange{background:rgba(255,152,0,.2);color:#FF9800;border:1px solid rgba(255,152,0,.4)}
+  .tag-green{background:rgba(22,101,52,.25);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+  .tag-white{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)}
+  .tag-dark{background:rgba(11,31,77,.15);color:#0B1F4D;border:1px solid rgba(11,31,77,.2)}
+  h1{font-size:clamp(32px,4.5vw,58px);font-weight:800;line-height:1.1;letter-spacing:-.02em}
+  h2{font-size:clamp(24px,3.2vw,42px);font-weight:800;line-height:1.15;letter-spacing:-.01em}
+  h3{font-size:clamp(16px,2vw,24px);font-weight:700;line-height:1.3}
+  h4{font-size:clamp(13px,1.5vw,18px);font-weight:600}
+  p{font-size:clamp(13px,1.4vw,17px);line-height:1.65}
+  .white{color:#fff} .orange{color:#FF9800} .green{color:#4ade80} .muted{color:rgba(255,255,255,.55)} .dark{color:#0B1F4D} .slate{color:#475569} .emerald{color:#166534}
+
+  /* ── LAYOUT ── */
+  .center{text-align:center;width:100%}
+  .left{text-align:left;width:100%}
+  .cols{display:grid;gap:32px;width:100%;align-items:start}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:1fr 1fr 1fr}
+  .cols-60-40{grid-template-columns:1.5fr 1fr}
+
+  /* ── CARDS ── */
+  .card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 24px}
+  .card-white{background:#fff;border-radius:16px;padding:28px 24px;border:none}
+  .card-orange{background:#FF9800;border-radius:16px;padding:28px 24px}
+  .card-green{background:#166534;border-radius:16px;padding:28px 24px}
+  .card-dark{background:#0B1F4D;border-radius:16px;padding:28px 24px}
+  .card-light{background:rgba(255,255,255,.92);border-radius:16px;padding:24px;border:none}
+  .card-accent{border:2px solid #FF9800;border-radius:16px;padding:26px 22px;background:rgba(255,152,0,.06)}
+
+  /* ── UI PIECES ── */
+  .big-num{font-size:clamp(40px,5vw,68px);font-weight:900;line-height:1;letter-spacing:-.03em}
+  .check-list{list-style:none;display:flex;flex-direction:column;gap:12px;margin-top:16px}
+  .check-list li{display:flex;align-items:flex-start;gap:10px;font-size:clamp(13px,1.3vw,16px);color:rgba(255,255,255,.85);line-height:1.45}
+  .check-list li::before{content:'✓';min-width:22px;height:22px;background:rgba(74,222,128,.2);border:1px solid rgba(74,222,128,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4ade80;font-weight:900;margin-top:1px}
+  .cross-list li::before{content:'✗';background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#f87171}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .dot-green{background:#4ade80}
+  .dot-orange{background:#FF9800}
+  .dot-gray{background:rgba(255,255,255,.3)}
+  .pill{display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
+  .pill-green{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+  .pill-orange{background:rgba(255,152,0,.15);color:#FF9800;border:1px solid rgba(255,152,0,.3)}
+  .pill-white{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)}
+  .pill-dark{background:rgba(11,31,77,.12);color:#0B1F4D;border:1px solid rgba(11,31,77,.2)}
+  .divider{width:60px;height:3px;border-radius:2px;margin:16px 0}
+  .divider-orange{background:#FF9800}
+  .divider-green{background:#4ade80}
+  .divider-white{background:rgba(255,255,255,.25)}
+
+  /* ── TABLE ── */
+  .comp-table{width:100%;border-collapse:collapse;font-size:clamp(12px,1.1vw,15px)}
+  .comp-table th{padding:10px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);text-align:left}
+  .comp-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.75);vertical-align:middle}
+  .comp-table td:first-child{color:#fff;font-weight:600}
+  .win{color:#4ade80;font-weight:700}
+  .miss{color:rgba(255,255,255,.3)}
+  .quest{color:#fbbf24}
+
+  /* ── STEP FLOW ── */
+  .steps{display:flex;flex-direction:column;gap:0;width:100%}
+  .step-row{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  .step-row:last-child{border-bottom:none}
+  .step-n{min-width:32px;height:32px;border-radius:50%;background:#FF9800;color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .step-body h4{color:#fff;margin-bottom:4px}
+  .step-body p{color:rgba(255,255,255,.6);font-size:13px}
+
+  /* ── QUOTE / HIGHLIGHT ── */
+  .quote-box{background:rgba(255,152,0,.1);border-left:4px solid #FF9800;border-radius:0 12px 12px 0;padding:18px 22px;margin-top:20px}
+  .quote-box p{font-size:clamp(14px,1.5vw,19px);font-style:italic;color:#fff;line-height:1.6}
+
+  /* ── NAV ── */
+  #nav{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:40px;padding:10px 20px;z-index:100}
+  #nav button{background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:color .2s,background .2s}
+  #nav button:hover{color:#fff;background:rgba(255,255,255,.1)}
+  #slide-counter{font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;min-width:52px;text-align:center}
+  .dots-nav{display:flex;gap:5px;align-items:center}
+  .d{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .2s}
+  .d.on{width:18px;border-radius:3px;background:#FF9800}
+
+  /* ── SLIDE-NUM BADGE ── */
+  #slide-badge{position:fixed;top:20px;right:24px;font-size:10px;color:rgba(255,255,255,.3);font-family:monospace;z-index:100}
+
+  /* ── FULLSCREEN HINT ── */
+  #fs-hint{position:fixed;top:20px;left:24px;font-size:10px;color:rgba(255,255,255,.25);z-index:100;cursor:pointer}
+  #fs-hint:hover{color:rgba(255,255,255,.6)}
+
+  /* ── LOGO MARK ── */
+  .logo-mark{display:inline-flex;align-items:center;gap:8px;margin-bottom:20px}
+  .logo-mark .ico{font-size:28px}
+  .logo-mark .txt{font-size:22px;font-weight:900;color:#fff}.logo-mark .txt span{color:#FF9800}
+  .x-mark{font-size:18px;color:rgba(255,255,255,.35);margin:0 6px}
+
+  /* auto-rickshaw icon SVG */
+  .auto-icon{opacity:.06;position:absolute;right:-40px;bottom:-30px;pointer-events:none}
+
+  @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:#4ade80;display:inline-block;animation:pulse-dot 1.5s infinite}
+</style>
+</head>
+<body>
+
+<div id="fs-hint" onclick="toggleFS()" title="Toggle fullscreen">⛶ Fullscreen (F)</div>
+<div id="slide-badge">AutoAdz × BrandOnWheelz</div>
+
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-dark active" id="s1">
+  <div class="center">
+    <div class="logo-mark" style="justify-content:center">
+      <span class="ico">🛺</span>
+      <span class="txt">Auto<span>Adz</span></span>
+      <span class="x-mark">×</span>
+      <span class="txt" style="color:rgba(255,255,255,.7)">BrandOn<span style="color:#FF9800">Wheelz</span></span>
+    </div>
+    <div class="divider divider-orange" style="margin:0 auto 24px"></div>
+    <h1 class="white" style="max-width:780px;margin:0 auto">GPS-Verified Transit Advertising<br><span class="orange">Partnership Opportunity</span></h1>
+    <p class="muted" style="max-width:520px;margin:20px auto 0">A strategic partnership to offer India's most accountable auto-rickshaw ad platform to your clients</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap">
+      <span class="pill pill-orange">July 2026</span>
+      <span class="pill pill-white">Arun Jaiswal · AutoAdz.in</span>
+      <span class="pill pill-white">Confidential</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 2 — AGENDA
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-navy" id="s2">
+  <div style="width:100%">
+    <div class="tag tag-white">Today's agenda</div>
+    <h2 class="white" style="margin-bottom:8px">What we'll cover</h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-2" style="margin-top:28px;gap:20px">
+      <div class="step-row" style="border-bottom:1px solid rgba(255,255,255,.08);padding:16px 0">
+        <div class="step-n">1</div>
+        <div class="step-body"><h4>The GPS proof gap</h4><p>What your clients can't get anywhere else — and why they're asking for it</p></div>
+      </div>
+      <div class="step-row" style="border-bottom:1px solid rgba(255,255,255,.08);padding:16px 0">
+        <div class="step-n">2</div>
+        <div class="step-body"><h4>AutoAdz platform</h4><p>Live GPS tracking, photo proof, QR analytics — built for transit advertising</p></div>
+      </div>
+      <div class="step-row" style="border-bottom:1px solid rgba(255,255,255,.08);padding:16px 0">
+        <div class="step-n">3</div>
+        <div class="step-body"><h4>BrandOnWheelz + AutoAdz</h4><p>What you already have + what we add = something no competitor can match</p></div>
+      </div>
+      <div class="step-row" style="border-bottom:1px solid rgba(255,255,255,.08);padding:16px 0">
+        <div class="step-n">4</div>
+        <div class="step-body"><h4>Partnership models</h4><p>Three ways to work together — pick what fits your team best</p></div>
+      </div>
+      <div class="step-row" style="padding:16px 0">
+        <div class="step-n">5</div>
+        <div class="step-body"><h4>Revenue & next step</h4><p>Real numbers, a 30-day pilot, and how we get started this week</p></div>
+      </div>
+      <div class="step-row" style="padding:16px 0">
+        <div class="step-n" style="background:#4ade80;color:#0B1F4D">Q</div>
+        <div class="step-body"><h4>Open discussion</h4><p>Your questions, your clients, your terms</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 3 — THE PROBLEM
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-dark" id="s3">
+  <div style="width:100%">
+    <div class="tag tag-orange">The problem</div>
+    <h2 class="white" style="margin-bottom:8px">Your clients book campaigns.<br>They can't <span class="orange">prove</span> what ran.</h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-3" style="margin-top:32px">
+      <div class="card" style="text-align:center">
+        <div style="font-size:40px;margin-bottom:14px">❓</div>
+        <h4 class="white" style="margin-bottom:8px">No GPS proof</h4>
+        <p class="muted" style="font-size:13px">Clients have no way to verify which routes the auto actually drove</p>
+      </div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:40px;margin-bottom:14px">📋</div>
+        <h4 class="white" style="margin-bottom:8px">No photo verification</h4>
+        <p class="muted" style="font-size:13px">Was the creative actually installed? No proof before billing starts</p>
+      </div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:40px;margin-bottom:14px">📊</div>
+        <h4 class="white" style="margin-bottom:8px">No engagement data</h4>
+        <p class="muted" style="font-size:13px">How many people actually engaged with the ad? No answer available</p>
+      </div>
+    </div>
+    <div class="quote-box">
+      <p>"Traditional transit advertising is built on trust. Modern clients want <strong>data</strong>. The agency that brings proof wins the renewal."</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 4 — AUTOADZ SOLUTION
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-green" id="s4">
+  <div style="width:100%">
+    <div class="tag tag-white">AutoAdz solution</div>
+    <h2 class="white" style="margin-bottom:8px">India's first GPS-verified<br>auto-rickshaw ad platform</h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-2" style="margin-top:28px;align-items:stretch;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+          <div style="font-size:28px;min-width:36px">📍</div>
+          <div><h4 class="white" style="margin-bottom:4px">Live GPS tracking</h4><p class="muted" style="font-size:13px">Every driver's position updates every 3 seconds on a live map your client can watch in real time</p></div>
+        </div>
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+          <div style="font-size:28px;min-width:36px">📸</div>
+          <div><h4 class="white" style="margin-bottom:4px">Photo proof before billing</h4><p class="muted" style="font-size:13px">Driver uploads photo of installed creative — admin approves before campaign billing begins</p></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+          <div style="font-size:28px;min-width:36px">📱</div>
+          <div><h4 class="white" style="margin-bottom:4px">QR scan analytics</h4><p class="muted" style="font-size:13px">Every auto carries a trackable QR code — see who scanned, when, and from which auto</p></div>
+        </div>
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+          <div style="font-size:28px;min-width:36px">💰</div>
+          <div><h4 class="white" style="margin-bottom:4px">Pay per verified km</h4><p class="muted" style="font-size:13px">Client pays only for GPS-confirmed kilometres — the only OOH format with this guarantee</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 5 — PLATFORM DEMO (live screen share cue)
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-dark" id="s5">
+  <div style="width:100%">
+    <div class="tag tag-green"><span class="live-dot" style="margin-right:6px"></span> Live demo</div>
+    <h2 class="white" style="margin-bottom:8px">Let me show you the<br>platform <span class="orange">right now</span></h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-3" style="margin-top:28px">
+      <div class="card" style="text-align:center;border-color:rgba(74,222,128,.25)">
+        <div style="font-size:36px;margin-bottom:12px">🗺</div>
+        <h4 class="green" style="margin-bottom:6px">Live Map tab</h4>
+        <p class="muted" style="font-size:12px">Real-time GPS dots for every active auto on the campaign route</p>
+        <div style="margin-top:12px;font-size:10px;color:rgba(74,222,128,.6);font-family:monospace">autoadz.in → Agency → Live Map</div>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(255,152,0,.25)">
+        <div style="font-size:36px;margin-bottom:12px">📊</div>
+        <h4 class="orange" style="margin-bottom:6px">Campaign dashboard</h4>
+        <p class="muted" style="font-size:12px">KMs covered, QR scans, commission earned — all live per campaign</p>
+        <div style="margin-top:12px;font-size:10px;color:rgba(255,152,0,.6);font-family:monospace">autoadz.in → Agency → Campaigns</div>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(255,255,255,.15)">
+        <div style="font-size:36px;margin-bottom:12px">📄</div>
+        <h4 class="white" style="margin-bottom:6px">PDF client report</h4>
+        <p class="muted" style="font-size:12px">One-click auto-generated performance report you send to your client</p>
+        <div style="margin-top:12px;font-size:10px;color:rgba(255,255,255,.3);font-family:monospace">Agency portal → Export PDF</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:24px;padding:14px;background:rgba(255,152,0,.08);border:1px solid rgba(255,152,0,.2);border-radius:12px">
+      <p style="color:rgba(255,255,255,.6);font-size:13px">→ <em>Switching to live screen share now — autoadz.in</em></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 6 — TOGETHER (comparison)
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-dark" id="s6">
+  <div style="width:100%">
+    <div class="tag tag-orange">Better together</div>
+    <h2 class="white" style="margin-bottom:8px">BrandOnWheelz + AutoAdz =<br><span class="orange">Unbeatable combination</span></h2>
+    <div class="divider divider-orange"></div>
+    <div style="margin-top:24px;overflow-x:auto">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th style="width:32%">Capability</th>
+            <th style="text-align:center">BrandOnWheelz</th>
+            <th style="text-align:center">AutoAdz</th>
+            <th style="text-align:center;color:#FF9800">Together</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Transit ad network</td><td class="win" style="text-align:center">✓ South India</td><td class="win" style="text-align:center">✓ East India</td><td class="win" style="text-align:center">Pan-India reach</td></tr>
+          <tr><td>Own tech platform</td><td class="win" style="text-align:center">✓ AdzBasket</td><td class="win" style="text-align:center">✓ autoadz.in</td><td class="win" style="text-align:center">Dual-platform power</td></tr>
+          <tr><td>Live GPS tracking</td><td class="quest" style="text-align:center">—</td><td class="win" style="text-align:center">✓ Every 3 sec</td><td class="win" style="text-align:center">✓ Added to your clients</td></tr>
+          <tr><td>Photo proof per auto</td><td class="quest" style="text-align:center">—</td><td class="win" style="text-align:center">✓ Before billing</td><td class="win" style="text-align:center">✓ Added to your clients</td></tr>
+          <tr><td>QR scan analytics</td><td class="quest" style="text-align:center">—</td><td class="win" style="text-align:center">✓ Per auto</td><td class="win" style="text-align:center">✓ Added to your clients</td></tr>
+          <tr><td>East India presence</td><td class="miss" style="text-align:center">Not active</td><td class="win" style="text-align:center">✓ Kolkata-native</td><td class="win" style="text-align:center">✓ Covered</td></tr>
+          <tr><td>National client base</td><td class="win" style="text-align:center">✓ Established</td><td class="quest" style="text-align:center">Growing</td><td class="win" style="text-align:center">✓ Full reach</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="quote-box" style="margin-top:18px">
+      <p>"You built AdzBasket. We built GPS proof. <strong>Together you have something no other transit platform in India can offer.</strong>"</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 7 — PARTNERSHIP MODELS
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-navy" id="s7">
+  <div style="width:100%">
+    <div class="tag tag-white">How we work together</div>
+    <h2 class="white" style="margin-bottom:8px">Three partnership models —<br>you <span class="orange">choose</span></h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-3" style="margin-top:28px;align-items:stretch">
+
+      <div class="card-accent" style="display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <span class="pill pill-orange">Recommended</span>
+          <span style="font-size:22px">🤝</span>
+        </div>
+        <h3 class="white" style="margin-bottom:8px">White-label</h3>
+        <p class="muted" style="font-size:13px;flex:1">You offer GPS-tracked auto campaigns under the <strong style="color:#fff">BrandOnWheelz brand</strong>. AutoAdz runs all operations — GPS, drivers, reports — behind the scenes. Your clients never know we exist.</p>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)">
+          <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:6px">Your revenue share</div>
+          <div class="big-num orange" style="font-size:36px">25%</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">on every campaign billing</div>
+        </div>
+      </div>
+
+      <div class="card" style="display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <span class="pill pill-white">Easy start</span>
+          <span style="font-size:22px">💸</span>
+        </div>
+        <h3 class="white" style="margin-bottom:8px">Referral commission</h3>
+        <p class="muted" style="font-size:13px;flex:1">When your clients need East India campaigns or GPS tracking, refer them to AutoAdz. We fulfil. You earn commission every month with zero extra work.</p>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)">
+          <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:6px">Your commission</div>
+          <div class="big-num white" style="font-size:36px">15%</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">per referred campaign</div>
+        </div>
+      </div>
+
+      <div class="card" style="display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <span class="pill pill-green">Strategic</span>
+          <span style="font-size:22px">⚡</span>
+        </div>
+        <h3 class="white" style="margin-bottom:8px">Tech integration</h3>
+        <p class="muted" style="font-size:13px;flex:1">AutoAdz GPS tracking integrates directly into AdzBasket. Your clients see live GPS inside your own platform. Deepest collaboration — strongest competitive moat.</p>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)">
+          <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:6px">Revenue model</div>
+          <div class="big-num green" style="font-size:32px">Custom</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">revenue share on GPS campaigns</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 8 — REVENUE NUMBERS
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-dark" id="s8">
+  <div style="width:100%">
+    <div class="tag tag-green">Revenue calculator</div>
+    <h2 class="white" style="margin-bottom:8px">What this means for<br><span class="orange">BrandOnWheelz</span></h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-2" style="margin-top:28px;gap:24px;align-items:stretch">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card-light">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Example: 5 client campaigns/month</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0">
+              <span style="font-size:13px;color:#475569">Avg campaign billing</span>
+              <span style="font-size:13px;font-weight:700;color:#0B1F4D">₹50,000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0">
+              <span style="font-size:13px;color:#475569">Campaigns per month</span>
+              <span style="font-size:13px;font-weight:700;color:#0B1F4D">5</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0">
+              <span style="font-size:13px;color:#475569">Total billing</span>
+              <span style="font-size:13px;font-weight:700;color:#0B1F4D">₹2,50,000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0">
+              <span style="font-size:13px;color:#475569">Your share (25%)</span>
+              <span style="font-size:13px;font-weight:700;color:#166534">₹62,500</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;margin-top:4px">
+              <span style="font-size:14px;font-weight:700;color:#0B1F4D">Your monthly earnings</span>
+              <span style="font-size:20px;font-weight:900;color:#FF9800">₹62,500</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-light">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Your cost to earn this</div>
+          <div style="font-size:28px;font-weight:900;color:#166534">₹ Zero</div>
+          <p style="font-size:12px;color:#64748b;margin-top:4px">AutoAdz handles all driver operations, GPS infrastructure, billing and client reports. You bring the client. That's it.</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="text-align:center;padding:32px 24px">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Annual potential</div>
+          <div class="big-num orange">₹7.5L</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:8px">per year on just 5 campaigns/month</div>
+        </div>
+        <div class="card">
+          <h4 class="white" style="margin-bottom:12px">What you get in addition:</h4>
+          <ul class="check-list" style="gap:10px">
+            <li style="font-size:13px">GPS tracking differentiates your offering from every competitor</li>
+            <li style="font-size:13px">East India campaigns you currently can't service</li>
+            <li style="font-size:13px">Auto-generated PDF reports for your clients</li>
+            <li style="font-size:13px">Branded agency portal with live campaign dashboard</li>
+            <li style="font-size:13px">Client renewals go up when they see GPS proof</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 9 — PILOT PROPOSAL
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-green" id="s9">
+  <div style="width:100%">
+    <div class="tag tag-white">Pilot proposal</div>
+    <h2 class="white" style="margin-bottom:8px">Start with one campaign.<br><span class="orange">Zero risk.</span></h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-2" style="margin-top:28px;gap:24px">
+      <div>
+        <div class="steps">
+          <div class="step-row">
+            <div class="step-n" style="background:#FF9800">1</div>
+            <div class="step-body"><h4 class="white">Pick one client</h4><p class="muted" style="font-size:13px">Name a brand in your roster that needs a Kolkata or East India campaign — or wants GPS proof</p></div>
+          </div>
+          <div class="step-row">
+            <div class="step-n" style="background:#FF9800">2</div>
+            <div class="step-body"><h4 class="white">We set it up in 48 hrs</h4><p class="muted" style="font-size:13px">AutoAdz registers the campaign, assigns drivers, installs creative, starts GPS tracking</p></div>
+          </div>
+          <div class="step-row">
+            <div class="step-n" style="background:#FF9800">3</div>
+            <div class="step-body"><h4 class="white">30-day live campaign</h4><p class="muted" style="font-size:13px">Your client watches live GPS on dashboard. Gets a branded PDF report at end of month</p></div>
+          </div>
+          <div class="step-row">
+            <div class="step-n" style="background:#FF9800">4</div>
+            <div class="step-body"><h4 class="white">Client loves it → sign partnership</h4><p class="muted" style="font-size:13px">If results are strong, we sign the formal BrandOnWheelz partnership agreement and scale</p></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="border-color:rgba(255,255,255,.25)">
+          <h4 class="white" style="margin-bottom:10px">Pilot terms</h4>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+              <span class="muted">Duration</span><span class="white" style="font-weight:700">30 days</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+              <span class="muted">Minimum autos</span><span class="white" style="font-weight:700">5 autos</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+              <span class="muted">City</span><span class="white" style="font-weight:700">Kolkata / your choice</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+              <span class="muted">Your commission</span><span class="orange" style="font-weight:700">25%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0">
+              <span class="muted">Long-term commitment</span><span class="green" style="font-weight:700">None required</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="background:rgba(255,152,0,.15);border-color:rgba(255,152,0,.3);text-align:center;padding:20px">
+          <div style="font-size:30px;margin-bottom:8px">🎯</div>
+          <h4 class="white" style="margin-bottom:6px">Our ask today</h4>
+          <p class="muted" style="font-size:13px">Tell us: which client would you run the pilot for?</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 10 — WHY AUTOADZ (trust)
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-navy" id="s10">
+  <div style="width:100%">
+    <div class="tag tag-white">Why AutoAdz</div>
+    <h2 class="white" style="margin-bottom:8px">Built for accountability.<br><span class="orange">Not assumptions.</span></h2>
+    <div class="divider divider-orange"></div>
+    <div class="cols cols-3" style="margin-top:28px">
+      <div class="card" style="text-align:center">
+        <div class="big-num orange" style="font-size:42px;margin-bottom:8px">GPS</div>
+        <h4 class="white" style="margin-bottom:6px">Live every 3 seconds</h4>
+        <p class="muted" style="font-size:12px">Not approximated. Not estimated. Actual real-time location of every auto</p>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="big-num green" style="font-size:42px;margin-bottom:8px">₹0</div>
+        <h4 class="white" style="margin-bottom:6px">Setup cost to you</h4>
+        <p class="muted" style="font-size:12px">No investment required from BrandOnWheelz. We bear all technology and driver costs</p>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="big-num white" style="font-size:42px;margin-bottom:8px">48h</div>
+        <h4 class="white" style="margin-bottom:6px">Campaign goes live</h4>
+        <p class="muted" style="font-size:12px">From agreement to first GPS dot on map — 48 hours. No lengthy setup or integration</p>
+      </div>
+    </div>
+    <div class="cols cols-2" style="margin-top:20px;gap:20px">
+      <div class="card" style="display:flex;gap:14px;align-items:center">
+        <div style="font-size:32px">🛡</div>
+        <div><h4 class="white" style="margin-bottom:4px">Pay only for verified km</h4><p class="muted" style="font-size:12px">If the auto doesn't drive, your client doesn't pay. Only transit format with this guarantee</p></div>
+      </div>
+      <div class="card" style="display:flex;gap:14px;align-items:center">
+        <div style="font-size:32px">📈</div>
+        <div><h4 class="white" style="margin-bottom:4px">Client renewal rate increases</h4><p class="muted" style="font-size:12px">When clients see GPS proof, they trust the medium and renew. GPS proof = client retention for your agency</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 11 — CLOSE
+══════════════════════════════════════════════════════ -->
+<div class="slide bg-dark" id="s11">
+  <div class="center">
+    <div style="font-size:48px;margin-bottom:20px">🤝</div>
+    <div class="tag tag-orange">Let's build this together</div>
+    <h2 class="white" style="max-width:680px;margin:0 auto 12px">One client. One pilot. One month.<br><span class="orange">That's all it takes.</span></h2>
+    <div class="divider divider-orange" style="margin:16px auto"></div>
+    <p class="muted" style="max-width:520px;margin:0 auto">Name the client. We'll have a GPS-tracked campaign running for them in 48 hours. If they love the data, we sign the partnership and scale across your entire client base.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:32px;max-width:660px;margin-left:auto;margin-right:auto">
+      <div class="card" style="text-align:center;padding:18px">
+        <div style="font-size:20px;margin-bottom:8px">📧</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Email</div>
+        <div style="font-size:12px;color:#fff;font-weight:600">arun@autoadz.in</div>
+      </div>
+      <div class="card" style="text-align:center;padding:18px">
+        <div style="font-size:20px;margin-bottom:8px">📞</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">WhatsApp</div>
+        <div style="font-size:12px;color:#fff;font-weight:600">+91 76030-64791</div>
+      </div>
+      <div class="card" style="text-align:center;padding:18px">
+        <div style="font-size:20px;margin-bottom:8px">🌐</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Platform</div>
+        <div style="font-size:12px;color:#FF9800;font-weight:600">autoadz.in</div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px;padding:16px 24px;background:rgba(255,152,0,.1);border:1px solid rgba(255,152,0,.25);border-radius:12px;display:inline-block">
+      <p style="font-size:14px;color:rgba(255,255,255,.8)">Proposal: <span style="color:#FF9800;font-weight:700">autoadz.in/AutoAdz-Agency-Partnership-Proposal.html</span></p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<!-- NAV -->
+<div id="nav">
+  <button onclick="prev()" title="Previous (←)">‹</button>
+  <div class="dots-nav" id="dots"></div>
+  <button onclick="next()" title="Next (→ or Space)">›</button>
+  <span id="slide-counter">1 / 11</span>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+
+const dotsEl = document.getElementById('dots');
+slides.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = 'd' + (i===0?' on':'');
+  d.onclick = () => go(i);
+  dotsEl.appendChild(d);
+});
+
+function updateDots(){
+  document.querySelectorAll('.d').forEach((d,i) => d.className='d'+(i===cur?' on':''));
+  document.getElementById('slide-counter').textContent = (cur+1)+' / '+total;
+}
+
+function go(n){
+  if(n<0||n>=total) return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('exit');
+  setTimeout(()=>{ slides[cur].classList.remove('exit'); },500);
+  cur=n;
+  slides[cur].classList.add('active');
+  updateDots();
+}
+
+function next(){ go(Math.min(cur+1,total-1)); }
+function prev(){ go(Math.max(cur-1,0)); }
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown') { e.preventDefault(); next(); }
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') { e.preventDefault(); prev(); }
+  if(e.key==='f'||e.key==='F') toggleFS();
+  if(e.key==='Escape' && document.fullscreenElement) document.exitFullscreen();
+});
+
+// Touch swipe
+let tx=0;
+document.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50){ dx<0?next():prev(); }
+},{passive:true});
+
+function toggleFS(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
